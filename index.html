@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AJ's FM Stories Premium</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0b101c; --panel:#141b2b; --panel2:#1a2338; --line:#27324d; --gold:#d6ab4f; --gold-2:#f1d48a;
+  --text:#f3ecda; --muted:#98a2b8; --ok:#6cc59a; --bad:#e27b7b; --nav:62px;
+  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --sans:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--ink);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:2px}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 16px)}
+body.hasplayer{padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 150px)}
+.appbar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px}
+.brand{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--gold-2);line-height:1}
+.brand span{color:var(--text);font-weight:600}
+.ib{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--gold-2)}
+main{padding:0 0 8px}
+.pad{padding:0 18px}
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);margin:6px 0 12px}
+.promo{margin:4px 18px 14px;padding:14px 16px;border-radius:14px;background:linear-gradient(120deg,#3a2a0c,#171f35);border:1px solid var(--gold);color:var(--gold-2);font-weight:700}
+.promo small{display:block;color:var(--text);font-weight:400;opacity:.85}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 18px 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted)}
+.chip.on{border-color:var(--gold);color:var(--gold-2);background:rgba(214,171,79,.1)}
+.sec{font-family:var(--serif);font-size:24px;margin:8px 18px 10px;color:var(--text)}
+.rail{display:flex;gap:12px;overflow-x:auto;padding:0 18px 12px;scroll-snap-type:x proximity;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.rail .card{flex:none;width:140px;scroll-snap-align:start}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 18px}
+.card{display:block;text-align:left;background:none;border:0;padding:0}
+.cv{aspect-ratio:3/4;width:100%;border-radius:12px;background:linear-gradient(160deg,#243052,#0f1526);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;position:relative}
+.cv img{width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;top:8px;left:8px;background:var(--gold);color:#1a1405;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.card b{display:block;margin-top:8px;font-size:14.5px;line-height:1.25}
+.card small{display:block;color:var(--muted);font-size:12.5px}
+.card .pr{color:var(--gold-2);font-weight:700;margin-top:2px;display:block}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:4;height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;background:#0e1424;border-top:1px solid var(--line)}
+.bnav button{flex:1;background:none;border:0;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px}
+.bnav button.on{color:var(--gold-2)}
+.bnav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sheet{position:fixed;inset:0;background:var(--ink);overflow:auto;z-index:6;display:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px)}
+.sheet.open{display:block}
+body.hasplayer .sheet{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 190px)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px}
+.btn{border:1px solid var(--gold);background:var(--gold);color:#1a1405;font-weight:700;padding:11px 16px;border-radius:10px}
+.btn.ghost{background:transparent;color:var(--gold-2)}
+.btn.danger{background:transparent;border-color:var(--bad);color:var(--bad)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn.block{width:100%}
+.hero{padding:4px 18px 16px;text-align:center;background:linear-gradient(#1a2444,var(--ink))}
+.hero .cv{width:168px;margin:6px auto 14px;font-size:56px}
+h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px;color:var(--gold-2)}
+.by{color:var(--muted);font-size:13.5px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.tag{font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--text)}
+.tag.live{border-color:var(--ok);color:var(--ok)}
+.desc{margin:14px 18px 6px;color:#d4cdb9;white-space:pre-wrap}
+.desc.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.link{background:none;border:0;color:var(--gold-2);padding:0 18px;font-size:13.5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat small{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.stat b{font-size:15px}
+.h3{font-family:var(--serif);font-size:23px;margin:16px 18px 10px}
+.plans{display:grid;gap:10px;padding:0 18px}
+.plan{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;width:100%;padding:14px;border-radius:12px;border:1px solid var(--gold);background:rgba(214,171,79,.07)}
+.plan span{font-weight:700}
+.plan small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.plan b{color:var(--gold-2);font-size:17px;white-space:nowrap}
+.plan.free{border-color:var(--ok);background:rgba(108,197,154,.08)}
+.plan.free b{color:var(--ok)}
+.info{margin:0 18px 10px;padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+.info b{display:block;margin-bottom:2px}
+.info p{margin:0;color:var(--muted);font-size:13.5px}
+.row2{display:grid;grid-template-columns:1fr auto;gap:8px;padding:0 18px 10px}
+.row2 input{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
+.ep{display:flex;gap:10px;align-items:center;width:calc(100% - 36px);margin:0 18px 8px;text-align:left;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
+.ep.on{border-color:var(--gold);background:rgba(214,171,79,.1)}
+.ep.lock{opacity:.6}
+.ep .n{min-width:42px;color:var(--gold-2);font-weight:700}
+.ep .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep small{color:var(--muted)}
+.player{position:fixed;left:0;right:0;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px));z-index:9;background:#10172a;border-top:1px solid var(--gold);padding:10px 16px 8px;display:none}
+.player.show{display:block}
+.pt{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+.pc{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.pc button{background:none;border:0;color:var(--gold-2);font-size:18px;padding:8px;min-width:42px}
+.pc #pPlay{background:var(--gold);color:#1a1405;border-radius:50%;width:48px;height:48px;font-size:20px}
+#pSeek{width:100%;accent-color:var(--gold)}
+.field{display:block;margin:0 18px 12px}
+.field>span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field input,.field textarea,.field select,.optrow input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
+.field textarea{min-height:100px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 18px}
+.two .field{margin:0 0 12px}
+.optrow{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+.o4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+.o4 input{padding:8px 6px;font-size:13px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px}
+.note{font-size:12.5px;color:var(--muted);margin:8px 18px}
+.mrow{margin:0 18px 10px;padding:12px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+.mrow h4{margin:0;font-family:var(--serif);font-size:19px}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:var(--gold);color:#1a1405;padding:10px 16px;border-radius:999px;font-weight:700;z-index:20;display:none;max-width:90%;text-align:center}
+@media (prefers-reduced-motion:no-preference){.toast.show{animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand">AJ's FM <span>Stories</span></div>
+  <button class="ib" id="adminBtn" hidden>Admin</button>
+</header>
+<main id="view"></main>
+
+<nav class="bnav" aria-label="Main">
+  <button data-tab="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+  <button data-tab="genres"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Genres</button>
+  <button data-tab="library"><svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>Library</button>
+</nav>
+
+<section class="sheet" id="story" aria-label="Story"></section>
+
+<section class="sheet" id="admin" aria-label="Admin">
+  <div class="top"><strong>Admin panel</strong><button class="btn ghost small" id="closeAdmin">Close</button></div>
+  <h2 class="h3" id="formTitle" style="margin-top:4px">Add a story</h2>
+  <input type="hidden" id="f_id">
+  <label class="field"><span>Auto-fill from your channel's poster post (optional)</span><input id="f_poster" type="url" placeholder="https://t.me/c/1234567890/5"></label>
+  <div class="actions" style="margin-bottom:14px"><button class="btn ghost small" id="autofill" type="button">Auto-fill details</button></div>
+  <label class="field"><span>Title</span><input id="f_title"></label>
+  <label class="field"><span>Platform or author</span><input id="f_author" placeholder="Pocket FM"></label>
+  <div class="two">
+    <label class="field"><span>Genre</span><input id="f_genre" placeholder="Fantasy"></label>
+    <label class="field"><span>Language</span><input id="f_lang" placeholder="Hindi"></label>
+  </div>
+  <div class="two">
+    <label class="field"><span>Status</span><select id="f_status"><option>Ongoing</option><option>Completed</option></select></label>
+    <label class="field"><span>Voice</span><input id="f_voice" placeholder="Human"></label>
+  </div>
+  <label class="field"><span>Episodes label (optional, e.g. 1101 To 1150)</span><input id="f_epstext"></label>
+  <label class="field"><span>Cover emoji or image URL</span><input id="f_cover" placeholder="📖"></label>
+  <div class="field">
+    <span>Or upload a cover photo from your phone</span>
+    <input id="f_photo" type="file" accept="image/*">
+    <div id="photoPrev" style="display:none;margin-top:8px;align-items:center;gap:10px">
+      <div class="cv" id="photoThumb" style="width:60px"></div>
+      <button class="btn danger small" id="photoRemove" type="button">Remove photo</button>
+    </div>
+  </div>
+  <label class="field"><span>Description (shown to everyone)</span><textarea id="f_preview"></textarea></label>
+
+  <h2 class="h3" style="font-size:20px">Plans and prices</h2>
+  <p class="note" style="margin-top:-6px">Price 0 means free for everyone. Days 0 means keep forever. Fill From and To to sell a range of episodes.</p>
+  <div id="opts" style="padding:0 18px"></div>
+  <div class="actions"><button class="btn ghost small" id="addOpt" type="button">Add plan</button></div>
+  <div class="mrow" style="margin-top:12px">
+    <b>Make episode packs automatically</b>
+    <div class="o4" style="grid-template-columns:repeat(3,1fr)">
+      <input id="g_total" type="number" min="1" inputmode="numeric" placeholder="Total eps">
+      <input id="g_size" type="number" min="1" inputmode="numeric" placeholder="Pack size">
+      <input id="g_price" type="number" min="0" inputmode="numeric" placeholder="Price each">
+    </div>
+    <button class="btn ghost small" id="genPacks" type="button">Add packs</button>
+  </div>
+
+  <label class="field" style="margin-top:14px"><span>Episode 1 link (Telegram post link)</span><input id="f_ep1" type="url" placeholder="https://t.me/c/1234567890/10"></label>
+  <label class="field"><span>Last episode link</span><input id="f_epN" type="url" placeholder="https://t.me/c/1234567890/60"></label>
+  <p class="note">Leave both links empty if the episodes are already added. Saving with links reads the episodes from your channel in the background.</p>
+  <div class="actions">
+    <button class="btn" id="saveStory">Save story</button>
+    <button class="btn ghost" id="clearForm">Clear</button>
+  </div>
+
+  <h2 class="h3">Manage stories</h2>
+  <div id="manage"></div>
+  <div class="actions"><button class="btn ghost" id="importLocal" style="display:none"></button></div>
+</section>
+
+<div class="player" id="player">
+  <div class="pt" id="pTitle"></div>
+  <input type="range" id="pSeek" min="0" max="1" step="1" value="0" aria-label="Seek">
+  <div class="pm"><span id="pCur">0:00</span><span id="pDur">0:00</span></div>
+  <div class="pc">
+    <button id="pPrev" aria-label="Previous episode">&#9198;</button>
+    <button id="pBack" aria-label="Back 15 seconds">-15</button>
+    <button id="pPlay" aria-label="Play or pause">&#9654;</button>
+    <button id="pFwd" aria-label="Forward 15 seconds">+15</button>
+    <button id="pNext" aria-label="Next episode">&#9197;</button>
+    <button id="pRate" aria-label="Speed">1x</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ SETTINGS: edit these ============ */
+const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
+const BOT_USERNAME = "Saverestrictioncontentbyaj_bot";      // your bot, without @
+const CURRENCY     = "₹";
+const PROMO_TITLE  = "New stories every week";
+const PROMO_TEXT   = "Rent or buy a story and listen right here in the app.";
+const HOW_IT_WORKS = "Pick a plan, pay, and send the screenshot to our bot. Once it is confirmed, your episodes unlock in this app.";
+/* ============================================== */
+
+const tg = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
+if (tg){ tg.ready(); tg.expand(); try{ tg.setHeaderColor('#0b101c'); tg.setBackgroundColor('#0b101c'); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => Number(n) === 0 ? 'Free' : CURRENCY + Number(n);
+const clock = s => {
+  s = Math.max(0, Math.floor(s || 0));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60, p = n => String(n).padStart(2, '0');
+  return h ? `${h}:${p(m)}:${p(sec)}` : `${m}:${p(sec)}`;
+};
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', 2600);
+}
+async function api(path, opts = {}){
+  const r = await fetch(API_URL.replace(/\/$/, '') + path, {...opts,
+    headers: {'Content-Type':'application/json', 'X-Init-Data': tg ? tg.initData : '', ...(opts.headers || {})}});
+  if (!r.ok){ const e = new Error(await r.text().catch(() => '') || ('api ' + r.status)); e.status = r.status; throw e; }
+  return r.json();
+}
+function goBot(payload){
+  const url = `https://t.me/${BOT_USERNAME}?start=${payload}`;
+  if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); }
+  else window.open(url, '_blank');
+}
+
+/* ---------- state ---------- */
+const S = {tab:'home', stories:[], genre:'All', q:'', admin:false, loaded:false, failed:false, owned:null};
+const coverHtml = (c, badge) => `<div class="cv">${badge ? `<span class="badge">${esc(badge)}</span>` : ''}${
+  c && /^(https?:\/\/|data:image\/)/.test(c) ? `<img src="${esc(c)}" alt="" loading="lazy">` : esc(c || '📖')}</div>`;
+const minPrice = s => Math.min(...s.options.map(o => Number(o.price)));
+const priceLabel = s => { const p = minPrice(s); return p === 0 ? 'Free' : (s.options.length > 1 ? 'From ' : '') + money(p); };
+const hasFree = s => s.options.some(o => Number(o.price) === 0);
+const genres = () => [...new Set(S.stories.map(s => s.genre).filter(Boolean))].sort();
+const shown = () => S.stories.filter(s => (S.genre === 'All' || s.genre === S.genre) &&
+  (s.title + ' ' + (s.author || '') + ' ' + (s.genre || '')).toLowerCase().includes(S.q.toLowerCase()));
+
+const card = s => `<button class="card" data-story="${esc(s.id)}">${coverHtml(s.cover, hasFree(s) ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
+  <b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small>
+  <span class="pr">${priceLabel(s)}</span></button>`;
+
+/* ---------- main views ---------- */
+function chipsHtml(){
+  return `<div class="chips">${['All', ...genres()].map(g => `<button class="chip${S.genre === g ? ' on' : ''}" data-genre="${esc(g)}">${esc(g)}</button>`).join('')}</div>`;
+}
+function renderResults(){
+  const box = $('#results'); if (!box) return;
+  const list = shown();
+  if (!list.length){ box.innerHTML = '<div class="empty">No stories found.</div>'; return; }
+  box.innerHTML = (S.tab === 'home' && !S.q && S.genre === 'All')
+    ? `<h3 class="sec">Popular</h3><div class="rail">${list.slice(0, 10).map(card).join('')}</div><h3 class="sec">All stories</h3><div class="grid">${list.map(card).join('')}</div>`
+    : `<div class="grid">${list.map(card).join('')}</div>`;
+}
+async function render(){
+  const v = $('#view');
+  document.querySelectorAll('.bnav button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
+  if (!S.loaded){
+    v.innerHTML = `<div class="empty">${S.failed ? 'Could not reach the store. Check your internet and reopen the app.' : 'Loading stories...<br><small>The first load can take up to a minute.</small>'}</div>`;
+    return;
+  }
+  if (S.tab === 'library'){ return renderLibrary(); }
+  v.innerHTML = `${S.tab === 'home' ? `<div class="promo">${esc(PROMO_TITLE)}<small>${esc(PROMO_TEXT)}</small></div>` : ''}
+    <div class="pad"><input class="search" id="q" type="search" placeholder="Search stories" value="${esc(S.q)}"></div>
+    ${chipsHtml()}<div id="results"></div>`;
+  $('#q').addEventListener('input', e => { S.q = e.target.value; renderResults(); });
+  renderResults();
+}
+async function renderLibrary(){
+  const v = $('#view');
+  v.innerHTML = '<div class="empty">Loading your stories...</div>';
+  try{
+    const d = await api('/api/library'); S.owned = d.stories;
+    const items = d.stories.map(o => ({o, s: S.stories.find(x => x.id === o.id)})).filter(x => x.s);
+    v.innerHTML = `<h3 class="sec">My stories</h3>` + (items.length
+      ? `<div class="grid">${items.map(({o, s}) => `<button class="card" data-story="${esc(s.id)}">${coverHtml(s.cover)}<b>${esc(s.title)}</b>
+          <small>${o.expires ? 'Until ' + new Date(o.expires * 1000).toLocaleDateString() : 'Yours to keep'}</small></button>`).join('')}</div>`
+      : '<div class="empty">Nothing here yet. After your payment is confirmed, your story appears here.</div>');
+  }catch(e){
+    v.innerHTML = `<div class="empty">${e.status === 401 ? 'Please open this app from Telegram.' : 'Could not load your library. Try again in a moment.'}</div>`;
+  }
+}
+async function loadAll(){
+  try{
+    const [c, m] = await Promise.all([api('/api/catalog'), api('/api/me').catch(() => ({admin:false}))]);
+    S.stories = c.stories; S.admin = !!m.admin; S.loaded = true; S.failed = false;
+    $('#adminBtn').hidden = !S.admin;
+  }catch(e){ S.failed = true; }
+  render();
+}
+
+/* ---------- story page ---------- */
+const cur = {story:null, eps:[], start:0, total:0, resume:null, playing:null, playStoryId:null};
+function openSheet(id){ $('#' + id).classList.add('open'); if (tg) tg.BackButton.show(); }
+function closeSheet(id){
+  $('#' + id).classList.remove('open');
+  if (tg && !document.querySelector('.sheet.open')) tg.BackButton.hide();
+}
+function goBack(){
+  const open = [...document.querySelectorAll('.sheet.open')].pop();
+  if (open) closeSheet(open.id);
+}
+const planSub = o => [o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes', Number(o.days) > 0 ? `${o.days} days of access` : 'Yours to keep'].join(' | ');
+
+async function openStory(id){
+  const s = S.stories.find(x => x.id === id); if (!s) return;
+  Object.assign(cur, {story:s, eps:[], start:0, total:s.episodes || 0, resume:null});
+  $('#story').innerHTML = `
+    <div class="top"><button class="btn ghost small" id="storyBack">Back</button><span class="by">${esc(priceLabel(s))}</span></div>
+    <div class="hero">${coverHtml(s.cover)}
+      <h2 class="title">${esc(s.title)}</h2>
+      <div class="by">by ${esc(s.author || "AJ's FM")}</div>
+      <div class="tags">${s.genre ? `<span class="tag">${esc(s.genre)}</span>` : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
+        <span class="tag${s.status === 'Ongoing' ? ' live' : ''}">${esc(s.status || 'Ongoing')}</span></div>
+    </div>
+    ${s.preview ? `<div class="desc clamp" id="desc">${esc(s.preview)}</div><button class="link" id="more">Read more</button>` : ''}
+    <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div>
+      <div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || s.episodes || 0)}</b></div>
+      <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) : 0}</b></div></div>
+    ${s.episodes ? `<div class="pad"><button class="btn ghost block" id="demo">Click for demo</button></div>` : ''}
+    <h3 class="h3" id="plans">Choose a plan</h3>
+    <div class="plans">${s.options.map(o => Number(o.price) === 0
+      ? `<button class="plan free" data-free="${o.from || 1}"><span>${esc(o.label)}<small>${esc(planSub(o))}</small></span><b>Listen free</b></button>`
+      : `<button class="plan" data-buy="${esc(o.id)}"><span>${esc(o.label)}<small>${esc(planSub(o))}</small></span><b>${money(o.price)}</b></button>`).join('')}</div>
+    <h3 class="h3">How it works</h3>
+    <div class="info"><b>Listen inside the app</b><p>${esc(HOW_IT_WORKS)}</p></div>
+    <div class="info"><b>Questions before you buy?</b><p>Tap a plan to chat with our bot. It answers your doubts first, then shows how to pay.</p></div>
+    <h3 class="h3">Episodes</h3>
+    <div id="epBox"><div class="empty">Loading episodes...</div></div>`;
+  $('#story').scrollTop = 0; openSheet('story');
+  try{ await loadEps(0, false); renderEps(); }
+  catch(e){ $('#epBox').innerHTML = '<div class="empty">Could not load episodes.</div>'; }
+}
+async function loadEps(offset, append){
+  const d = await api(`/api/story/${encodeURIComponent(cur.story.id)}?offset=${offset}&limit=50`);
+  cur.total = d.total; cur.resume = d.resume;
+  cur.eps = append ? cur.eps.concat(d.eps) : d.eps;
+  if (!append) cur.start = offset;
+}
+const epRow = e => `<button class="ep${e.locked ? ' lock' : ''}${cur.playing && cur.playing.id === e.id ? ' on' : ''}" data-ep="${e.id}">
+  <span class="n">${e.no}</span><span class="t">${esc(e.title)}</span><small>${e.locked ? '&#128274;' : clock(e.duration)}</small></button>`;
+function renderEps(){
+  const end = cur.start + cur.eps.length;
+  $('#epBox').innerHTML = !cur.total ? '<div class="empty">Episodes will appear here soon.</div>' : `
+    ${cur.resume ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">Continue: Episode ${cur.resume.no} (${clock(cur.resume.pos)})</button></div>` : ''}
+    <div class="row2"><input id="goNo" type="number" min="1" inputmode="numeric" placeholder="Go to episode number"><button class="btn ghost" id="goBtn">Go</button></div>
+    ${cur.eps.map(epRow).join('')}
+    ${end < cur.total ? '<div class="pad"><button class="btn ghost block" id="moreEps">Load more</button></div>' : ''}`;
+}
+
+/* ---------- player ---------- */
+const audio = new Audio(); audio.preload = 'none';
+const RATES = [1, 1.25, 1.5, 1.75, 2]; let rate = 1;
+function markPlaying(){
+  document.querySelectorAll('.ep').forEach(b => b.classList.toggle('on', !!cur.playing && b.dataset.ep === String(cur.playing.id)));
+}
+async function play(ep, pos = 0){
+  if (ep.locked){ toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior:'smooth'}); return; }
+  try{
+    const d = await api(`/api/play/${ep.id}`, {method:'POST'});
+    cur.playing = ep; cur.playStoryId = cur.story ? cur.story.id : cur.playStoryId;
+    audio.src = d.url; audio.playbackRate = rate;
+    audio.addEventListener('loadedmetadata', () => { if (pos > 1) audio.currentTime = pos; }, {once:true});
+    await audio.play();
+    $('#player').classList.add('show'); document.body.classList.add('hasplayer');
+    $('#pTitle').textContent = `${ep.no}. ${ep.title || ''}`;
+    markPlaying(); setSession(ep);
+  }catch(e){
+    toast(e.status === 403 ? 'Locked. Choose a plan to unlock it.' : e.status === 401 ? 'Open this app from Telegram to listen' : 'Could not play this episode');
+  }
+}
+async function playNumber(n){
+  try{
+    const d = await api(`/api/story/${encodeURIComponent(cur.story.id)}?offset=${Math.max(0, n - 1)}&limit=1`);
+    if (d.eps[0]) play(d.eps[0], 0); else toast('Episodes are not ready yet');
+  }catch(e){ toast('Could not load that episode'); }
+}
+async function step(delta){
+  if (!cur.playing || !cur.playStoryId) return;
+  const off = cur.playing.no - 1 + delta; if (off < 0) return;
+  try{ const d = await api(`/api/story/${encodeURIComponent(cur.playStoryId)}?offset=${off}&limit=1`); if (d.eps[0]) play(d.eps[0], 0); }
+  catch(e){}
+}
+let lastSave = 0;
+function saveProgress(force){
+  if (!cur.playing || !cur.playStoryId) return;
+  const now = Date.now(); if (!force && now - lastSave < 15000) return; lastSave = now;
+  api('/api/progress', {method:'POST', body: JSON.stringify({episode_id: cur.playing.id, pos: Math.floor(audio.currentTime)})}).catch(() => {});
+}
+function setSession(ep){
+  if (!('mediaSession' in navigator)) return;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({title: ep.title || ('Episode ' + ep.no), artist: "AJ's FM Stories"});
+    navigator.mediaSession.setActionHandler('play', () => audio.play());
+    navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+    navigator.mediaSession.setActionHandler('previoustrack', () => step(-1));
+    navigator.mediaSession.setActionHandler('nexttrack', () => step(1));
+    navigator.mediaSession.setActionHandler('seekbackward', () => { audio.currentTime = Math.max(0, audio.currentTime - 15); });
+    navigator.mediaSession.setActionHandler('seekforward', () => { audio.currentTime += 15; });
+  }catch(e){}
+}
+let dragging = false;
+audio.addEventListener('timeupdate', () => {
+  $('#pCur').textContent = clock(audio.currentTime);
+  if (isFinite(audio.duration)){ $('#pDur').textContent = clock(audio.duration); $('#pSeek').max = Math.floor(audio.duration); if (!dragging) $('#pSeek').value = Math.floor(audio.currentTime); }
+  saveProgress(false);
+});
+audio.addEventListener('play',  () => { $('#pPlay').innerHTML = '&#10074;&#10074;'; });
+audio.addEventListener('pause', () => { $('#pPlay').innerHTML = '&#9654;'; saveProgress(true); });
+audio.addEventListener('ended', () => step(1));
+audio.addEventListener('error', () => { if (cur.playing) toast('Playback problem. Tap the episode to retry.'); });
+$('#pPlay').onclick = () => audio.paused ? audio.play() : audio.pause();
+$('#pBack').onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 15); };
+$('#pFwd').onclick = () => { audio.currentTime += 15; };
+$('#pPrev').onclick = () => step(-1);
+$('#pNext').onclick = () => step(1);
+$('#pRate').onclick = () => { rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length]; audio.playbackRate = rate; $('#pRate').textContent = rate + 'x'; };
+$('#pSeek').addEventListener('input', e => { dragging = true; $('#pCur').textContent = clock(e.target.value); });
+$('#pSeek').addEventListener('change', e => { dragging = false; audio.currentTime = Number(e.target.value); });
+
+/* ---------- admin ---------- */
+let coverData = '';
+function showPhoto(){
+  $('#photoPrev').style.display = coverData ? 'flex' : 'none';
+  $('#photoThumb').innerHTML = coverData ? `<img src="${coverData}" alt="">` : '';
+}
+function addOptRow(o = {}){
+  const d = document.createElement('div'); d.className = 'optrow';
+  d.innerHTML = `<input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}">
+    <div class="o4">
+      <input class="o-price" type="number" min="0" inputmode="numeric" placeholder="Price" value="${o.price ?? ''}">
+      <input class="o-days" type="number" min="0" inputmode="numeric" placeholder="Days" value="${o.days ?? ''}">
+      <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="From ep" value="${o.from ?? ''}">
+      <input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep" value="${o.to ?? ''}"></div>
+    <button type="button" class="btn danger small o-del">Remove plan</button>`;
+  $('#opts').appendChild(d);
+}
+function readOpts(){
+  return [...document.querySelectorAll('.optrow')].map(r => ({
+    label: r.querySelector('.o-label').value.trim(),
+    price: Number(r.querySelector('.o-price').value) || 0,
+    days: parseInt(r.querySelector('.o-days').value) || 0,
+    from: parseInt(r.querySelector('.o-from').value) || null,
+    to: parseInt(r.querySelector('.o-to').value) || null
+  })).filter(o => o.label);
+}
+function clearForm(){
+  ['id','title','author','genre','lang','voice','epstext','poster','cover','preview','ep1','epN','g_total','g_size','g_price'].forEach(k => { const el = $('#' + (k.startsWith('g_') ? k : 'f_' + k)); if (el) el.value = ''; });
+  $('#f_status').value = 'Ongoing'; $('#f_photo').value = ''; coverData = ''; showPhoto();
+  $('#opts').innerHTML = ''; addOptRow({label:'Full story, keep forever', days:0});
+  $('#formTitle').textContent = 'Add a story';
+}
+function manage(){
+  $('#manage').innerHTML = S.stories.map(s => `
+    <div class="mrow"><h4>${esc(s.title)}</h4>
+      <div class="by">${s.options.map(o => esc(o.label) + ' ' + money(o.price)).join(' | ')}</div>
+      <div class="by">ID: <b>${esc(s.id)}</b> | ${s.episodes || 0} episodes indexed</div>
+      <div class="actions" style="padding:8px 0 0">
+        <button class="btn ghost small" data-copyid="${esc(s.id)}">Copy ID</button>
+        <button class="btn ghost small" data-edit="${esc(s.id)}">Edit</button>
+        <button class="btn danger small" data-del="${esc(s.id)}">Delete</button></div></div>`).join('') || '<div class="empty">No stories yet.</div>';
+  let old = []; try{ old = JSON.parse(localStorage.getItem('ajfm_local') || '[]'); }catch(e){}
+  const b = $('#importLocal'); b.style.display = old.length ? 'inline-block' : 'none'; b.textContent = `Import ${old.length} stories saved on this phone`;
+}
+async function saveStory(){
+  const title = $('#f_title').value.trim();
+  if (!title) return toast('Add a title first');
+  const options = readOpts();
+  if (!options.length) return toast('Add at least one plan');
+  const free = options.filter(o => !o.price);
+  if (free.length && !confirm(`"${free[0].label}" has price 0, so everyone can listen for free. Continue?`)) return;
+  const story = {id: $('#f_id').value || 's' + Date.now(), title, author: $('#f_author').value.trim(), genre: $('#f_genre').value.trim(),
+    language: $('#f_lang').value.trim(), voice: $('#f_voice').value.trim(), episodes_text: $('#f_epstext').value.trim(), status: $('#f_status').value, cover: coverData || $('#f_cover').value.trim(),
+    preview: $('#f_preview').value.trim(), options};
+  const btn = $('#saveStory'); btn.disabled = true;
+  try{
+    const r = await api('/api/admin/story', {method:'POST', body: JSON.stringify({story, ep1: $('#f_ep1').value.trim(), epN: $('#f_epN').value.trim()})});
+    toast(r.note || 'Story saved'); clearForm(); await loadAll(); manage();
+  }catch(e){ toast('Could not save: ' + String(e.message).slice(0, 80)); }
+  btn.disabled = false;
+}
+async function importLocal(){
+  let old = []; try{ old = JSON.parse(localStorage.getItem('ajfm_local') || '[]'); }catch(e){}
+  let n = 0;
+  for (const s of old){
+    try{
+      const o = (s.options && s.options.length ? s.options : [{label:'Buy', price: s.price || 0, days:0}]);
+      await api('/api/admin/story', {method:'POST', body: JSON.stringify({story: {...s, options: o}})}); n++;
+    }catch(e){}
+  }
+  if (n === old.length){ try{ localStorage.removeItem('ajfm_local'); localStorage.removeItem('ajfm_removed'); }catch(e){} }
+  toast(`Imported ${n} of ${old.length}`); await loadAll(); manage();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target;
+  const tab = t.closest('.bnav button');
+  if (tab){ S.tab = tab.dataset.tab; document.querySelectorAll('.sheet.open').forEach(x => closeSheet(x.id)); return render(); }
+  const g = t.closest('[data-genre]'); if (g){ S.genre = g.dataset.genre; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === g)); return renderResults(); }
+  const c = t.closest('[data-story]'); if (c) return openStory(c.dataset.story);
+  if (t.closest('#storyBack')) return closeSheet('story');
+  if (t.closest('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); t.closest('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
+  if (t.closest('#demo')) return playNumber(1);
+  const fr = t.closest('[data-free]'); if (fr) return playNumber(parseInt(fr.dataset.free) || 1);
+  const by = t.closest('[data-buy]'); if (by) return goBot(`buy_${cur.story.id}_${by.dataset.buy}`);
+  const ep = t.closest('[data-ep]');
+  if (ep){ const x = cur.eps.find(v => String(v.id) === ep.dataset.ep); if (x) play(x, 0); return; }
+  if (t.closest('#moreEps')){ try{ await loadEps(cur.start + cur.eps.length, true); renderEps(); }catch(err){ toast('Could not load more'); } return; }
+  if (t.closest('#goBtn')){
+    const n = parseInt($('#goNo').value); if (!n || n < 1) return toast('Type an episode number');
+    try{ await loadEps(n - 1, false); renderEps(); }catch(err){ toast('Could not load that episode'); } return;
+  }
+  if (t.closest('#resume')) return play({id: cur.resume.episode_id, no: cur.resume.no, title: cur.resume.title}, cur.resume.pos);
+  if (t.closest('#adminBtn')){ manage(); return openSheet('admin'); }
+  if (t.closest('#closeAdmin')) return closeSheet('admin');
+  const cp = t.closest('[data-copyid]');
+  if (cp){ navigator.clipboard.writeText(cp.dataset.copyid).then(() => toast('ID copied')).catch(() => prompt('Story ID:', cp.dataset.copyid)); return; }
+  const ed = t.closest('[data-edit]');
+  if (ed){
+    const s = S.stories.find(x => x.id === ed.dataset.edit); if (!s) return;
+    $('#f_id').value = s.id; $('#f_title').value = s.title; $('#f_author').value = s.author || ''; $('#f_genre').value = s.genre || '';
+    $('#f_lang').value = s.language || ''; $('#f_voice').value = s.voice || ''; $('#f_epstext').value = s.episodes_text || ''; $('#f_status').value = s.status || 'Ongoing'; $('#f_preview').value = s.preview || '';
+    coverData = ''; $('#f_cover').value = s.cover || ''; showPhoto();
+    $('#opts').innerHTML = ''; s.options.forEach(addOptRow);
+    $('#formTitle').textContent = 'Edit story'; $('#admin').scrollTop = 0; return;
+  }
+  const del = t.closest('[data-del]');
+  if (del){
+    if (!confirm('Delete this story from the store? Buyers who already paid keep their orders.')) return;
+    try{ await api('/api/admin/delete', {method:'POST', body: JSON.stringify({id: del.dataset.del})}); toast('Story deleted'); await loadAll(); manage(); }
+    catch(err){ toast('Could not delete'); }
+    return;
+  }
+  if (t.closest('.o-del')) return t.closest('.optrow').remove();
+  if (t.closest('#addOpt')) return addOptRow();
+  if (t.closest('#genPacks')){
+    const total = parseInt($('#g_total').value), size = parseInt($('#g_size').value), price = Number($('#g_price').value) || 0;
+    if (!total || !size) return toast('Enter total episodes and pack size');
+    for (let a = 1; a <= total; a += size) addOptRow({label: `Episodes ${a}-${Math.min(a + size - 1, total)}`, price, days: 0, from: a, to: Math.min(a + size - 1, total)});
+    return;
+  }
+  if (t.closest('#autofill')){
+    const link = $('#f_poster').value.trim(); if (!link) return toast('Paste the poster post link first');
+    const b = $('#autofill'); b.disabled = true; b.textContent = 'Reading...';
+    try{
+      const r = await api('/api/admin/parse', {method:'POST', body: JSON.stringify({link})}), f = r.fields || {};
+      if (f.title) $('#f_title').value = f.title;
+      if (f.author) $('#f_author').value = f.author;
+      if (f.genre) $('#f_genre').value = f.genre;
+      if (f.language) $('#f_lang').value = f.language;
+      if (f.voice) $('#f_voice').value = f.voice;
+      if (f.status) $('#f_status').value = f.status;
+      if (f.episodes_text) $('#f_epstext').value = f.episodes_text;
+      if (f.description) $('#f_preview').value = f.description;
+      if (r.cover){ coverData = r.cover; showPhoto(); }
+      toast(r.cover ? 'Details and cover filled in' : 'Details filled in. Add the cover yourself.');
+    }catch(err){ toast(String(err.message).slice(0, 90) || 'Could not read that post'); }
+    b.disabled = false; b.textContent = 'Auto-fill details'; return;
+  }
+  if (t.closest('#saveStory')) return saveStory();
+  if (t.closest('#clearForm')) return clearForm();
+  if (t.closest('#importLocal')) return importLocal();
+  if (t.closest('#photoRemove')){ coverData = ''; $('#f_photo').value = ''; return showPhoto(); }
+});
+$('#f_photo').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0]; if (!file) return;
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    const W = 360, H = 480, r = Math.max(W / img.width, H / img.height);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'), w = img.width * r, h = img.height * r;
+    x.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+    coverData = c.toDataURL('image/jpeg', 0.8);
+    URL.revokeObjectURL(url); showPhoto(); toast('Photo added');
+  };
+  img.onerror = () => toast('Could not read that image');
+  img.src = url;
+});
+if (tg) tg.BackButton.onClick(goBack);
+
+/* ---------- start ---------- */
+clearForm();
+if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
+render();
+loadAll();
+</script>
+</body>
+</html>
