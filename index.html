@@ -874,7 +874,7 @@ const CONFIG = {
    * MUST be HTTPS in production. No trailing slash.
    * Example: "https://api.ajfmstories.example"
    */
-  API_BASE_URL: "https://YOUR-BACKEND-DOMAIN",
+  API_BASE_URL: "https://aj-bot-vbxn.onrender.com",
 
   /**
    * Header used to transmit raw Telegram initData for server-side
@@ -882,14 +882,14 @@ const CONFIG = {
    * signature with the bot token and check auth_date freshness.
    * Choose the header your backend already implements.
    */
-  AUTH_HEADER: "X-Telegram-Init-Data",
+  AUTH_HEADER: "X-Init-Data",
 
   /**
    * Optional: bot username (without @) used only as a fallback when the
    * backend returns a relative deep link instead of a full t.me URL.
    * Leave empty to require the backend to return an absolute URL.
    */
-  BOT_USERNAME: "",
+  BOT_USERNAME: "AJ_FM_Stories_Premium_Robot",
 
   /**
    * Demo mode. NEVER enable in production. Even when enabled, the
@@ -897,13 +897,13 @@ const CONFIG = {
    * this flag only bypasses the "must be opened inside Telegram" gate
    * so you can develop the UI in a normal browser.
    */
-  ENABLE_DEMO_MODE: false,
+  ENABLE_DEMO_MODE: true,
 
   REQUEST_TIMEOUT_MS: 20000,
   PROGRESS_SAVE_INTERVAL_MS: 15000,
   SEARCH_DEBOUNCE_MS: 380,
   EPISODES_PAGE_SIZE: 50,
-  CATALOG_PAGE_SIZE: 24
+  CATALOG_PAGE_SIZE: 100
 };
 
 /* ------------------------------------------------------------
