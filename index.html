@@ -57,13 +57,11 @@ h1,h2,h3,h4{margin:0}
 .empty .btn{margin-top:12px}
 .msg{margin:10px 16px;padding:12px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
 .msg.bad{border-color:var(--bad);color:var(--text)}
-/* skeletons */
 .sk{background:linear-gradient(90deg,#141b2b 25%,#1e2842 50%,#141b2b 75%);background-size:200% 100%;border-radius:12px}
 @media (prefers-reduced-motion:no-preference){.sk{animation:sh 1.3s linear infinite}@keyframes sh{to{background-position:-200% 0}}}
 .sk.card-sk{aspect-ratio:3/4;width:136px;flex:none}
 .sk.line{height:16px;margin:8px 16px}
 .sk.hero{height:150px;margin:6px 16px}
-/* featured + continue */
 .feat{display:flex;gap:14px;margin:6px 16px 12px;padding:12px;border-radius:16px;border:1px solid var(--gold);background:linear-gradient(130deg,#1d2646,#10172a);text-align:left;width:calc(100% - 32px)}
 .feat .cv{width:112px;flex:none}
 .feat h3{font-family:var(--serif);font-size:25px;line-height:1.05;color:var(--gold-2);overflow-wrap:anywhere}
@@ -75,12 +73,10 @@ h1,h2,h3,h4{margin:0}
 .cont small{color:var(--muted);display:block;font-size:12.5px}
 .bar{height:4px;border-radius:2px;background:var(--line);margin-top:8px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--gold)}
-/* nav */
 .bnav{position:fixed;left:0;right:0;bottom:0;z-index:4;height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;background:#0e1424;border-top:1px solid var(--line)}
 .bnav button{flex:1;background:none;border:0;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px}
 .bnav button.on{color:var(--gold-2)}
 .bnav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-/* sheets */
 .sheet{position:fixed;inset:0;background:var(--ink);overflow:auto;overflow-x:hidden;z-index:6;display:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px)}
 .sheet.open{display:block}
 body.hasplayer .sheet{padding-bottom:calc(var(--mini) + env(safe-area-inset-bottom,0px) + 40px)}
@@ -128,14 +124,14 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .ep{display:flex;gap:10px;align-items:center;width:calc(100% - 32px);margin:0 16px 8px;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);min-height:52px}
 .ep.on{border-color:var(--gold);background:rgba(214,171,79,.1)}
 .ep.lock{opacity:.65}
-.ep .n{min-width:42px;color:var(--gold-2);font-weight:700}
+.ep .n{min-width:42px;color:var(--gold-2);font-weight:700;white-space:nowrap;flex:none}
+.ep .n.wide{min-width:64px;font-size:13.5px;letter-spacing:.02em}
 .ep .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ep .t b{font-weight:500;color:var(--text)}
 .ep .t small{color:var(--muted);font-size:12px}
 .ep small{color:var(--muted);white-space:nowrap}
 .pill{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
 .pill.free{border-color:var(--ok);color:var(--ok)}.pill.owned{border-color:var(--gold);color:var(--gold-2)}.pill.lock{border-color:var(--bad);color:var(--bad)}
-/* mini player */
 .mini{position:fixed;left:8px;right:8px;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 6px);z-index:9;background:#10172a;border:1px solid var(--gold);border-radius:14px;padding:8px 10px;display:none;align-items:center;gap:10px;height:var(--mini)}
 .mini.show{display:flex}
 .mini .mcv{width:44px;height:44px;border-radius:8px;overflow:hidden;flex:none;background:#243052;display:flex;align-items:center;justify-content:center}
@@ -147,7 +143,6 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .mini button#mPlay{background:var(--gold);color:#1a1405}
 .mini .mbar{position:absolute;left:12px;right:12px;bottom:3px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
 .mini .mbar i{display:block;height:100%;width:0;background:var(--gold)}
-/* full player */
 .fp{padding:0 20px 30px;text-align:center}
 .fp .cv{width:min(62vw,260px);margin:8px auto 16px}
 .fp .cv.has-img{width:auto;max-width:78%;display:inline-block}.fp .cv.has-img img{width:auto;max-width:100%;max-height:38vh}
@@ -166,7 +161,6 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .fp .bufbar{height:4px;border-radius:2px;background:var(--line);margin:-2px 0 4px;overflow:hidden}.fp .bufbar i{display:block;height:100%;width:0;background:rgba(214,171,79,.45)}
 .fp .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .fp .chiprow button.on{border-color:var(--gold);background:rgba(214,171,79,.15)}
-/* forms and admin */
 .field{display:block;margin:0 16px 12px}
 .field>span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 .field input,.field textarea,.field select,.optrow input,.box input,.box select,.box textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);min-height:44px}
@@ -199,6 +193,7 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 <nav class="bnav" aria-label="Main">
   <button data-tab="home" class="on" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
   <button data-tab="browse" aria-label="Browse and search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Browse</button>
+  <button data-tab="files" aria-label="Files"><svg viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Files</button>
   <button data-tab="library" aria-label="My library"><svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>Library</button>
 </nav>
 
@@ -219,12 +214,13 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
+const BOT_USERNAME = "Saverestrictioncontentbyaj_bot";      // your bot, without @
 const CURRENCY     = "₹";
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and listen right here in the app.";
 const HOW_IT_WORKS = "Pick a plan, pay, and send the payment screenshot to our bot. Once it is confirmed, your episodes unlock in this app.";
 const PAGE_SIZE    = 50;
+const FILES_PAGE_SIZE = 50;
 /* ============================================== */
 
 const tg = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
@@ -248,12 +244,12 @@ function toast(msg, ms = 2800){
   clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', ms);
 }
 const busy = new Set();
-async function once(key, fn){            // ignores repeated taps while the same action is still running
+async function once(key, fn){
   if (busy.has(key)) return; busy.add(key);
   try{ return await fn(); } finally { busy.delete(key); }
 }
 const ctls = {};
-function fresh(key){ if (ctls[key]) ctls[key].abort(); ctls[key] = new AbortController(); return ctls[key].signal; }   // newest request wins
+function fresh(key){ if (ctls[key]) ctls[key].abort(); ctls[key] = new AbortController(); return ctls[key].signal; }
 
 async function api(path, opts = {}){
   const {timeout = 25000, retry = (opts.method || 'GET') === 'GET', ...init} = opts;
@@ -285,7 +281,7 @@ const errText = e => e.status === 401 ? 'Please open this app from Telegram.' : 
 const isImg = c => !!c && /^(https?:\/\/|data:image\/)/.test(c);
 const cover = (c, badge) => `<div class="cv${isImg(c) ? ' has-img' : ''}">${badge ? `<span class="badge">${esc(badge)}</span>` : ''}${
   isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="📖">` : esc(c || '📖')}</div>`;
-document.addEventListener('error', e => {          // a cover that fails to load becomes the book icon
+document.addEventListener('error', e => {
   const t = e.target;
   if (t && t.tagName === 'IMG' && t.dataset.fb !== undefined){ const s = document.createElement('span'); s.className = 'fb'; s.textContent = t.dataset.fb; t.replaceWith(s); }
 }, true);
@@ -297,7 +293,7 @@ function goBack(){ const id = stack[stack.length - 1]; if (id) closeSheet(id); }
 
 function goBot(payload){
   const url = `https://t.me/${BOT_USERNAME}?start=${payload}`;
-  if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); if (audio.paused) setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); }   // stay open if audio is playing
+  if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); if (audio.paused) setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); }
   else window.open(url, '_blank');
 }
 
@@ -313,6 +309,8 @@ const CONT = {}, HIST = {};
 const S = {tab:'home', admin:false, home:null, homeState:'idle', homeErr:''};
 const B = {q:'', genre:'', status:'', language:'', sort:'newest', items:[], total:0, state:'idle', err:'', facets:null};
 const L = {seg:'owned'};
+const F = {q:'', filter:'all', page:1, items:[], total:0, state:'idle', err:'', root:'', notConfigured:false};
+const FILE_STATUS = {};
 
 /* ---------- home ---------- */
 async function loadHome(){
@@ -382,7 +380,7 @@ async function loadBrowse(reset){
   for (const k of ['q', 'genre', 'status', 'language']) if (B[k]) qs.set(k, B[k]);
   try{
     const d = await api('/api/catalog?' + qs, {signal: sig, timeout: 60000});
-    B.items = reset ? d.stories : B.items.concat(d.stories.filter(s => !B.items.some(x => x.id === s.id)));    // never show a story twice
+    B.items = reset ? d.stories : B.items.concat(d.stories.filter(s => !B.items.some(x => x.id === s.id)));
     B.total = d.total; if (d.facets){ B.facets = d.facets; browseChips(); } B.state = 'ok';
   }catch(e){ if (e.aborted) return; B.state = 'error'; B.err = errText(e); }
   browseResults();
@@ -391,6 +389,115 @@ const browseSearch = deb(() => { loadBrowse(true); browseChips(); }, 350);
 function viewAll(key){
   Object.assign(B, {q:'', genre:'', language:'', status: key === 'completed' ? 'Completed' : '', sort: {trending:'popular', recent:'newest', updated:'updated', completed:'updated'}[key] || 'newest', state:'idle'});
   setTab('browse');
+}
+
+/* ---------- files ---------- */
+function renderFiles(){
+  const pages = Math.max(1, Math.ceil(F.total / FILES_PAGE_SIZE));
+  $('#view').innerHTML = `
+    <div class="sechead"><h2 class="sec">Files</h2><button class="link" id="filesRefresh" aria-label="Rescan folder">Rescan</button></div>
+    <div class="pad"><input class="search" id="fq" type="search" placeholder="Search episode number or title" value="${esc(F.q)}" aria-label="Search files"></div>
+    <div class="ctl" style="grid-template-columns:1fr;padding-top:10px">
+      <select id="ffilter" aria-label="Filter files">
+        <option value="all">All episodes</option>
+        <option value="single">Single episodes</option>
+        <option value="range">Episode ranges</option>
+        <option value="list">Explicit lists</option>
+        <option value="unnumbered">Unnumbered</option>
+      </select>
+    </div>
+    <div class="pager">
+      <button class="btn ghost small" id="fPrev" ${F.page <= 1 ? 'disabled' : ''} aria-label="Previous page">Prev</button>
+      <span>Page ${F.page} of ${pages}<br>${F.total} file${F.total === 1 ? '' : 's'}</span>
+      <button class="btn ghost small" id="fNext" ${F.page >= pages ? 'disabled' : ''} aria-label="Next page">Next</button>
+    </div>
+    <div class="jump">
+      <input id="fJump" type="number" min="1" max="${pages}" inputmode="numeric" placeholder="Go to page (1-${pages})" aria-label="Jump to page">
+      <button class="btn ghost small" id="fGo">Go</button>
+    </div>
+    <div id="fList"></div>`;
+  $('#ffilter').value = F.filter;
+  paintFiles();
+}
+function fileRow(e){
+  const wide = e.displayEpisodeNumber && e.displayEpisodeNumber.length > 4;
+  const num = e.displayEpisodeNumber || (e.episodeNumbers && e.episodeNumbers[0]) || '';
+  const title = e.displayTitle || e.originalFilename || '';
+  const dur = e.audioDuration ? clock(e.audioDuration) : '';
+  return `<button class="ep" data-file="${esc(e.id)}" aria-label="${esc(num)} ${esc(title)}">
+    <span class="n${wide ? ' wide' : ''}">${esc(num)}</span>
+    <span class="t"><b>${esc(title)}</b></span>
+    <small>${esc(dur)}</small></button>`;
+}
+function paintFiles(){
+  const box = $('#fList'); if (!box) return;
+  if (F.notConfigured){
+    box.innerHTML = '<div class="empty">No folder is configured. Set <b>LOCAL_AUDIO_DIR</b> on the server to enable this view.</div>';
+    return;
+  }
+  if (F.state === 'error' && !F.items.length){ box.innerHTML = retryBox(F.err, 'retryFiles'); return; }
+  if (F.state === 'loading' && !F.items.length){
+    box.innerHTML = Array.from({length: 8}, () => '<div class="sk line" style="height:52px"></div>').join('');
+    return;
+  }
+  if (!F.items.length){
+    box.innerHTML = `<div class="empty">${F.q || F.filter !== 'all' ? 'No files match your search or filter.' : 'No audio files found in the configured folder.'}</div>`;
+    return;
+  }
+  box.innerHTML = F.items.map(fileRow).join('');
+}
+async function loadFiles(){
+  const sig = fresh('files');
+  F.state = 'loading'; paintFiles();
+  const qs = new URLSearchParams({offset: (F.page - 1) * FILES_PAGE_SIZE, limit: FILES_PAGE_SIZE, filter: F.filter});
+  if (F.q) qs.set('q', F.q);
+  try{
+    const d = await api('/api/folder?' + qs, {signal: sig, timeout: 60000});
+    F.items = d.entries; F.total = d.total; F.root = d.root || '';
+    F.items.forEach(e => FILE_STATUS[e.id] = e);
+    F.state = 'ok'; F.notConfigured = false;
+  }catch(e){
+    if (e.aborted) return;
+    if (e.status === 503){ F.notConfigured = true; F.items = []; F.total = 0; F.state = 'ok'; }
+    else { F.state = 'error'; F.err = errText(e); }
+  }
+  paintFiles();
+}
+async function rescanFiles(){
+  await once('rescan', async () => {
+    try{ await api('/api/admin/folder/rescan', {method: 'POST', retry: false, body: '{}'}); toast('Folder rescanned'); }
+    catch(e){ /* admin-only endpoint; buyers just refresh normally */ }
+    loadFiles();
+  });
+}
+const filesSearch = deb(() => { F.page = 1; loadFiles(); }, 350);
+async function playLocalFile(entry){
+  if (!entry) return;
+  const seq = ++P.seq; discardNext();
+  P.sid = '__files__';
+  P.story = {id:'__files__', title:F.root || 'Files', cover:''};
+  P.ep = {
+    id: entry.id,
+    no: (entry.episodeNumbers && entry.episodeNumbers[0]) || entry.rangeStart || 0,
+    title: entry.displayTitle || entry.originalFilename,
+    duration: entry.audioDuration || 0,
+    display_label: entry.displayEpisodeNumber || '',
+  };
+  P.state = 'loading'; P.err = ''; P.userPaused = false; P.retries = 0;
+  showMini(); if ($('#fullplayer').classList.contains('open')) renderFull(); else paintAll();
+  try{
+    const d = await api('/api/folder/play/' + encodeURIComponent(entry.id), {method: 'POST', retry: false});
+    if (seq !== P.seq) return;
+    audio.src = d.url; audio.defaultPlaybackRate = P.rate; audio.playbackRate = P.rate;
+    await audio.play();
+    if (seq !== P.seq) return;
+    P.state = 'playing'; setSession();
+  }catch(e){
+    if (seq !== P.seq) return;
+    P.state = 'error';
+    P.err = e.status === 404 ? 'This file is no longer available.' : errText(e);
+  }
+  paintAll();
 }
 
 /* ---------- library ---------- */
@@ -434,8 +541,8 @@ async function loadLibrary(){
   }
 }
 
-/* ---------- player (one audio element, one authoritative state) ---------- */
-let audio = makeAudio();                     // the element that is playing now; the next episode is buffered in a second one and swapped in
+/* ---------- player ---------- */
+let audio = makeAudio();
 const P = {next:null, preloading:false, sid:null, story:null, ep:null, state:'idle', err:'', userPaused:false, repeat:false, rate:1, sleepAt:0, sleepEnd:false, seq:0, retries:0, lastSave:0, dragging:false};
 try{ const r = parseFloat(localStorage.getItem('ajfm_rate')); if (r >= 0.5 && r <= 5) P.rate = r; }catch(e){}
 let rateWarned = false;
@@ -517,7 +624,7 @@ function paintAll(){ paintMini(); paintFull(); }
 function markPlaying(){ $$('#story .ep').forEach(b => b.classList.toggle('on', !!P.ep && b.dataset.ep === String(P.ep.id) && V.id === P.sid)); }
 
 async function playEpisode(ep, story, pos = 0, retries = 0){
-  const seq = ++P.seq; discardNext();                // a newer request always replaces an older one
+  const seq = ++P.seq; discardNext();
   P.sid = story.id; P.story = {id: story.id, title: story.title, cover: story.cover};
   P.ep = {id: ep.id, no: ep.no, title: ep.title, duration: ep.duration, display_label: ep.display_label};
   P.state = 'loading'; P.err = ''; P.userPaused = false; P.retries = retries;
@@ -540,10 +647,11 @@ async function playEpisode(ep, story, pos = 0, retries = 0){
 async function recover(){
   if (!P.ep || P.state === 'loading') return;
   if (P.retries >= 2){ P.state = 'error'; P.err = 'Playback stopped. Check your connection and try again.'; paintAll(); return; }
-  await playEpisode(P.ep, P.story, audio.currentTime || 0, P.retries + 1);       // fetches a fresh link, in case the old one expired
+  await playEpisode(P.ep, P.story, audio.currentTime || 0, P.retries + 1);
 }
 async function goNeighbor(dir, auto){
-  if (!P.ep) return; const seq = P.seq;
+  if (!P.ep || P.sid === '__files__'){ if (auto){ P.state = 'paused'; paintAll(); } return; }
+  const seq = P.seq;
   try{
     const d = await api(`/api/story/${encodeURIComponent(P.sid)}?${dir}=${P.ep.no}&limit=1`);
     if (seq !== P.seq) return;
@@ -554,7 +662,7 @@ async function goNeighbor(dir, auto){
   }catch(e){ if (!e.aborted) toast(errText(e)); }
 }
 function saveProgress(force, completed = false, keepalive = false){
-  if (!P.ep || !P.sid) return;
+  if (!P.ep || !P.sid || P.sid === '__files__') return;
   const now = Date.now(); if (!force && now - P.lastSave < 15000) return; P.lastSave = now;
   const d = isFinite(audio.duration) ? Math.floor(audio.duration) : 0;
   api('/api/progress', {method: 'POST', retry: false, keepalive, body: JSON.stringify({episode_id: P.ep.id, pos: Math.floor(audio.currentTime || 0), duration: d, completed})}).catch(() => {});
@@ -581,7 +689,7 @@ function toggle(){ if (!P.ep) return; if (audio.paused){ P.userPaused = false; i
 
 function makeAudio(){ const a = new Audio(); a.preload = 'auto'; wireAudio(a); return a; }
 function wireAudio(a){
-  const on = (ev, fn) => a.addEventListener(ev, (...x) => { if (a === audio) fn(...x); });         // a buffering spare element never changes the player state
+  const on = (ev, fn) => a.addEventListener(ev, (...x) => { if (a === audio) fn(...x); });
   on('playing', () => { P.state = 'playing'; paintAll(); });
   on('waiting', () => { if (P.state === 'playing'){ P.state = 'buffering'; paintAll(); } });
   on('canplay', () => { if (P.state === 'buffering'){ P.state = audio.paused ? 'paused' : 'playing'; paintAll(); } });
@@ -589,14 +697,14 @@ function wireAudio(a){
   on('pause', () => {
     if (P.state === 'playing' || P.state === 'buffering') P.state = 'paused';
     paintAll(); saveProgress(true);
-    if (!P.userPaused && !audio.ended && document.hidden) keepAlive();         // the phone paused it while the app was minimised
+    if (!P.userPaused && !audio.ended && document.hidden) keepAlive();
   });
   on('ended', async () => {
     saveProgress(true, true);
     if (P.sleepEnd){ clearSleep(); P.state = 'paused'; paintAll(); toast('Sleep timer: stopped after this episode'); return; }
     if (P.repeat){ audio.currentTime = 0; audio.play().catch(() => {}); return; }
-    if (P.next && P.next.forNo === P.ep.no) return swapToNext();                // already buffered: starts at once, even in the background
-    await goNeighbor('after', true);                                          // otherwise the server decides whether the next episode may play
+    if (P.next && P.next.forNo === P.ep.no) return swapToNext();
+    await goNeighbor('after', true);
   });
   on('error', () => { if (P.ep && P.state !== 'loading') recover(); });
   on('timeupdate', () => {
@@ -607,14 +715,14 @@ function wireAudio(a){
 }
 function discardNext(){ if (P.next){ try{ P.next.audio.removeAttribute('src'); P.next.audio.load(); }catch(e){} P.next = null; } }
 function maybePreload(){
-  if (!P.ep || P.next || P.preloading) return;
+  if (!P.ep || P.next || P.preloading || P.sid === '__files__') return;
   const d = isFinite(audio.duration) ? audio.duration : 0;
-  if (!d || audio.currentTime < d * 0.5) return;                                // starts buffering the next episode from the half-way point
+  if (!d || audio.currentTime < d * 0.5) return;
   P.preloading = true; const seq = P.seq, sid = P.sid, no = P.ep.no;
   (async () => {
     try{
       const r = await api(`/api/story/${encodeURIComponent(sid)}?after=${no}&limit=1`), n = r.eps[0];
-      if (seq !== P.seq || !n || n.locked) return;                              // never buffer or play what the member may not hear
+      if (seq !== P.seq || !n || n.locked) return;
       const u = await api(`/api/play/${n.id}`, {method: 'POST', retry: false});
       if (seq !== P.seq) return;
       const na = makeAudio(); na.defaultPlaybackRate = P.rate; na.playbackRate = P.rate; na.src = u.url; na.load();
@@ -734,7 +842,7 @@ async function playFirst(from){
 const A = {tab:'stories', sq:'', pub:'', oq:'', ostatus:''};
 const M = {sid:null, title:'', page:1, q:'', eps:[], total:0, state:'idle'};
 const E = {id:null, cover:'', photo:''};
-const INFO = {};                                       // remembers cards so a tap can start playback without another request
+const INFO = {};
 const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
 function renderAdmin(){
   $('#admin').innerHTML = `<div class="top"><strong>Admin panel</strong><button class="btn ghost small" id="closeAdmin">Close</button></div>
@@ -805,7 +913,6 @@ async function adminDelete(id, title){
   await once('del' + id, async () => { try{ await api('/api/admin/delete', {method:'POST', retry:false, body: JSON.stringify({id})}); toast('Story removed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
 }
 
-/* ---- story editor (metadata only) ---- */
 function optRow(o = {}){
   return `<div class="optrow"><input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}" aria-label="Plan name">
     <div class="o4"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-days" type="number" min="0" inputmode="numeric" placeholder="Days" value="${o.days ?? ''}" aria-label="Days of access, 0 for lifetime">
@@ -894,7 +1001,6 @@ function downscale(file, max = 1200){
   });
 }
 
-/* ---- episode manager (links, bulk details, single edits) ---- */
 function openEpisodes(sid, title){
   Object.assign(M, {sid, title, page: 1, q: '', eps: [], total: 0, state: 'loading'});
   $('#epman').innerHTML = `<div class="top"><button class="btn ghost small" id="emClose">Back</button><strong>Episodes</strong></div><h3 class="h3" style="margin-top:0">${esc(title)}</h3>
@@ -956,13 +1062,13 @@ async function runImport(dry){
     try{ rows = parseEpisodeData($('#m_data').value); }catch(e){ out.textContent = 'That is not valid JSON or CSV.'; return; }
     if (!rows.length){ out.textContent = 'Paste or choose some rows first.'; return; }
     const seen = new Set(), clean = [], dups = [];
-    rows.forEach((r, i) => { const n = parseInt(r.ep_no); if (seen.has(n)){ dups.push(i + 1); } else { seen.add(n); clean.push(r); } });     // duplicates across the whole file
+    rows.forEach((r, i) => { const n = parseInt(r.ep_no); if (seen.has(n)){ dups.push(i + 1); } else { seen.add(n); clean.push(r); } });
     let updated = 0; const errors = [];
     try{
       for (let i = 0; i < clean.length; i += 500){
         out.textContent = `${dry ? 'Checking' : 'Importing'} ${Math.min(i + 500, clean.length)} of ${clean.length}...`;
         const r = await api('/api/admin/episodes/import', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({story_id: M.sid, rows: clean.slice(i, i + 500), dry_run: dry})});
-        updated += r.updated; r.errors.forEach(x => errors.push({...x, row: x.row + i})); await sleep(0);       // lets the screen stay responsive
+        updated += r.updated; r.errors.forEach(x => errors.push({...x, row: x.row + i})); await sleep(0);
       }
     }catch(e){ out.textContent = 'Stopped: ' + adminErr(e); return; }
     out.innerHTML = `<b>${dry ? 'Check finished' : 'Import finished'}:</b> ${updated} ${dry ? 'can be updated' : 'updated'}, ${errors.length} problems, ${dups.length} duplicate rows skipped.` +
@@ -976,7 +1082,9 @@ function setTab(t){
   S.tab = t; $$('.bnav button').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
   [...stack].forEach(closeSheet); $('#view').scrollTop = 0; window.scrollTo(0, 0);
   if (t === 'home'){ if (S.home) renderHome(); else loadHome(); if (S.home && S.homeState !== 'loading') loadHome(); }
-  else if (t === 'browse') renderBrowse(); else renderLibrary();
+  else if (t === 'browse') renderBrowse();
+  else if (t === 'files'){ renderFiles(); if (F.state !== 'loading') loadFiles(); }
+  else renderLibrary();
 }
 
 /* ---------- events ---------- */
@@ -991,6 +1099,7 @@ document.addEventListener('click', async e => {
   if (c('#retryEps')) return loadStoryPage(V.page);
   if (c('#retryAdmin')) return loadAdmin();
   if (c('#retryManage')) return loadManage();
+  if (c('#retryFiles')) return loadFiles();
   if (c('#libRefresh')) return loadLibrary();
   if ((m = c('[data-viewall]'))) return viewAll(m.dataset.viewall);
   if ((m = c('[data-cont]'))){ const i = CONT[m.dataset.cont]; if (i) playEpisode({id: i.episode.id, no: i.episode.no, title: i.episode.title, duration: i.episode.duration, display_label: i.episode.display_label}, i.story, i.pos); return; }
@@ -1004,6 +1113,16 @@ document.addEventListener('click', async e => {
     if (m.dataset.avail === '0') return toast('This story is no longer in the store. Your purchase is kept.');
     return openStory(m.dataset.story);
   }
+  /* files */
+  if (c('#filesRefresh')) return rescanFiles();
+  if (c('#fPrev')){ if (F.page > 1){ F.page--; return loadFiles(); } return; }
+  if (c('#fNext')){ const pages = Math.max(1, Math.ceil(F.total / FILES_PAGE_SIZE)); if (F.page < pages){ F.page++; return loadFiles(); } return; }
+  if (c('#fGo')){
+    const p = parseInt($('#fJump').value), pages = Math.max(1, Math.ceil(F.total / FILES_PAGE_SIZE));
+    if (!p || p < 1 || p > pages) return toast(`Type a page from 1 to ${pages}`);
+    F.page = p; return loadFiles();
+  }
+  if ((m = c('[data-file]'))){ const ent = FILE_STATUS[m.dataset.file]; if (ent) return playLocalFile(ent); return; }
   /* story page */
   if (c('#storyBack')) return closeSheet('story');
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
@@ -1022,7 +1141,7 @@ document.addEventListener('click', async e => {
   if (c('#mPlay')) return toggle();
   if (c('#mOpen')){ if (P.state === 'error') return recover(); renderFull(); return openSheet('fullplayer'); }
   if (c('#fClose')) return closeSheet('fullplayer');
-  if (c('#fStory')){ closeSheet('fullplayer'); return openStory(P.sid); }
+  if (c('#fStory')){ closeSheet('fullplayer'); if (P.sid && P.sid !== '__files__') return openStory(P.sid); return; }
   if (c('#fPlay')) return toggle();
   if (c('#fRetryBtn')) return recover();
   if (c('#fBack') && P.ep){ audio.currentTime = Math.max(0, audio.currentTime - 15); return; }
@@ -1031,7 +1150,7 @@ document.addEventListener('click', async e => {
   if (c('#fNext')) return goNeighbor('after');
   if ((m = c('#fullplayer [data-rate]'))) return setRate(parseFloat(m.dataset.rate));
   if ((m = c('[data-sleep]'))) return setSleep(m.dataset.sleep);
-  if ((m = c('#rMinus, #rPlus')) && e.detail === 0) return setRate(P.rate + (m.id === 'rPlus' ? 0.05 : -0.05));   // keyboard use
+  if ((m = c('#rMinus, #rPlus')) && e.detail === 0) return setRate(P.rate + (m.id === 'rPlus' ? 0.05 : -0.05));
   if (c('#fRepeat')){ P.repeat = !P.repeat; return paintFull(); }
   if (c('#dOpen')) return openRoomLink(c('#dOpen').dataset.link);
   if (c('#dGo')){
@@ -1119,10 +1238,11 @@ document.addEventListener('input', e => {
   if (id === 'asq'){ A.sq = e.target.value.trim(); return adminSearch(); }
   if (id === 'aoq'){ A.oq = e.target.value.trim(); return adminSearch(); }
   if (id === 'm_q'){ M.q = e.target.value.trim(); M.page = 1; return manageSearch(); }
+  if (id === 'fq'){ F.q = e.target.value.trim(); return filesSearch(); }
   if (id === 'fSeek'){ P.dragging = true; $('#fCur').textContent = clock(e.target.value); }
   if (id === 'rSlide') setRate(parseFloat(e.target.value));
 });
-const epSearch = deb(() => loadStoryPage(1), 350), adminSearch = deb(() => loadAdmin(), 350), manageSearch = deb(() => loadManage(), 350);
+const epSearch = deb(() => loadStoryPage(1), 350), adminSearch = deb(() => loadAdmin(), 350), manageSearch = deb(() => loadManage(), 350), filesSearch = deb(() => { F.page = 1; loadFiles(); }, 350);
 document.addEventListener('change', async e => {
   const id = e.target.id;
   if (id === 'bsort'){ B.sort = e.target.value; return loadBrowse(true); }
@@ -1131,12 +1251,16 @@ document.addEventListener('change', async e => {
   if (id === 'epf'){ V.filter = e.target.value; return loadStoryPage(1); }
   if (id === 'apub'){ A.pub = e.target.value; return loadAdmin(); }
   if (id === 'aost'){ A.ostatus = e.target.value; return loadAdmin(); }
+  if (id === 'ffilter'){ F.filter = e.target.value; F.page = 1; return loadFiles(); }
   if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
   if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
   if (id === 'm_file' && e.target.files[0]){ $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); });
-document.addEventListener('pointerdown', e => {                   // hold the speed buttons to keep stepping by 0.05x
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click();
+  if (e.key === 'Enter' && e.target.id === 'fJump') $('#fGo').click();
+});
+document.addEventListener('pointerdown', e => {
   const b = e.target.closest('#rMinus, #rPlus'); if (!b) return;
   const d = b.id === 'rPlus' ? 0.05 : -0.05; setRate(P.rate + d);
   clearInterval(window._rt); window._rt = setInterval(() => setRate(P.rate + d), 150);
