@@ -213,9 +213,9 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 
 <script>
 /* ============ SETTINGS: edit these ============ */
-const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
-const CURRENCY     = "₹";
+const API_URL      = "https://aj-bot-vbxn.onrender.com";
+const BOT_USERNAME = "Saverestrictioncontentbyaj_bot";
+const CURRENCY     = "\u20b9";
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and listen right here in the app.";
 const HOW_IT_WORKS = "Pick a plan, pay, and send the payment screenshot to our bot. Once it is confirmed, your episodes unlock in this app.";
@@ -227,7 +227,7 @@ const tg = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
 if (tg){ tg.ready(); tg.expand(); try{ tg.setHeaderColor('#0b101c'); tg.setBackgroundColor('#0b101c'); }catch(e){} }
 
 /* ---------- helpers ---------- */
-const $ = (s, r = document) => r.querySelector(s);
+const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -246,7 +246,7 @@ function toast(msg, ms = 2800){
 const busy = new Set();
 async function once(key, fn){
   if (busy.has(key)) return; busy.add(key);
-  try{ return await fn(); } finally { busy.delete(key); }
+  try { return await fn(); } finally { busy.delete(key); }
 }
 const ctls = {};
 function fresh(key){ if (ctls[key]) ctls[key].abort(); ctls[key] = new AbortController(); return ctls[key].signal; }
@@ -280,7 +280,7 @@ const errText = e => e.status === 401 ? 'Please open this app from Telegram.' : 
 
 const isImg = c => !!c && /^(https?:\/\/|data:image\/)/.test(c);
 const cover = (c, badge) => `<div class="cv${isImg(c) ? ' has-img' : ''}">${badge ? `<span class="badge">${esc(badge)}</span>` : ''}${
-  isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="📖">` : esc(c || '📖')}</div>`;
+  isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="\ud83d\udcd6">` : esc(c || '\ud83d\udcd6')}</div>`;
 document.addEventListener('error', e => {
   const t = e.target;
   if (t && t.tagName === 'IMG' && t.dataset.fb !== undefined){ const s = document.createElement('span'); s.className = 'fb'; s.textContent = t.dataset.fb; t.replaceWith(s); }
@@ -311,6 +311,13 @@ const B = {q:'', genre:'', status:'', language:'', sort:'newest', items:[], tota
 const L = {seg:'owned'};
 const F = {q:'', filter:'all', page:1, items:[], total:0, state:'idle', err:'', root:'', notConfigured:false};
 const FILE_STATUS = {};
+
+/* ---------- debounced searchers ---------- */
+const browseSearch = deb(() => { loadBrowse(true); browseChips(); }, 350);
+const epSearch     = deb(() => loadStoryPage(1), 350);
+const adminSearch  = deb(() => loadAdmin(), 350);
+const manageSearch = deb(() => loadManage(), 350);
+const filesSearch  = deb(() => { F.page = 1; loadFiles(); }, 350);
 
 /* ---------- home ---------- */
 async function loadHome(){
@@ -385,7 +392,6 @@ async function loadBrowse(reset){
   }catch(e){ if (e.aborted) return; B.state = 'error'; B.err = errText(e); }
   browseResults();
 }
-const browseSearch = deb(() => { loadBrowse(true); browseChips(); }, 350);
 function viewAll(key){
   Object.assign(B, {q:'', genre:'', language:'', status: key === 'completed' ? 'Completed' : '', sort: {trending:'popular', recent:'newest', updated:'updated', completed:'updated'}[key] || 'newest', state:'idle'});
   setTab('browse');
@@ -465,12 +471,11 @@ async function loadFiles(){
 }
 async function rescanFiles(){
   await once('rescan', async () => {
-    try{ await api('/api/admin/folder/rescan', {method: 'POST', retry: false, body: '{}'}); toast('Folder rescanned'); }
+    try { await api('/api/admin/folder/rescan', {method: 'POST', retry: false, body: '{}'}); toast('Folder rescanned'); }
     catch(e){ /* admin-only endpoint; buyers just refresh normally */ }
     loadFiles();
   });
 }
-const filesSearch = deb(() => { F.page = 1; loadFiles(); }, 350);
 async function playLocalFile(entry){
   if (!entry) return;
   const seq = ++P.seq; discardNext();
@@ -544,13 +549,13 @@ async function loadLibrary(){
 /* ---------- player ---------- */
 let audio = makeAudio();
 const P = {next:null, preloading:false, sid:null, story:null, ep:null, state:'idle', err:'', userPaused:false, repeat:false, rate:1, sleepAt:0, sleepEnd:false, seq:0, retries:0, lastSave:0, dragging:false};
-try{ const r = parseFloat(localStorage.getItem('ajfm_rate')); if (r >= 0.5 && r <= 5) P.rate = r; }catch(e){}
+try { const r = parseFloat(localStorage.getItem('ajfm_rate')); if (r >= 0.5 && r <= 5) P.rate = r; }catch(e){}
 let rateWarned = false;
 const rateLabel = r => r.toFixed(2).replace(/\.?0+$/, '') + 'x';
 function setRate(v){
   P.rate = Math.min(5, Math.max(0.5, Math.round(v * 100) / 100));
   audio.playbackRate = P.rate; audio.defaultPlaybackRate = P.rate;
-  try{ localStorage.setItem('ajfm_rate', String(P.rate)); }catch(e){}
+  try { localStorage.setItem('ajfm_rate', String(P.rate)); }catch(e){}
   if (P.rate > 4 && !rateWarned){ rateWarned = true; toast('Above 4x some phones play no sound. If it goes silent, lower the speed.', 4500); }
   paintFull();
 }
@@ -560,7 +565,7 @@ function showMini(){ $('#mini').classList.add('show'); document.body.classList.a
 function paintMini(){
   if (!P.ep) return;
   const c = P.story && P.story.cover;
-  $('#mCover').innerHTML = isImg(c) ? `<img src="${esc(c)}" alt="" data-fb="📖">` : esc(c || '📖');
+  $('#mCover').innerHTML = isImg(c) ? `<img src="${esc(c)}" alt="" data-fb="\ud83d\udcd6">` : esc(c || '\ud83d\udcd6');
   $('#mTitle').textContent = `${P.story ? P.story.title : ''}`;
   const lbl = P.ep.display_label || ('Episode ' + P.ep.no);
   $('#mSub').textContent = P.state === 'loading' ? 'Loading...' : P.state === 'buffering' ? 'Buffering...' : P.state === 'error' ? 'Problem. Tap to retry' : `${lbl}: ${P.ep.title || ''}`;
@@ -607,7 +612,7 @@ function paintFull(){
   $('#fRepeat').textContent = `Repeat this episode: ${P.repeat ? 'on' : 'off'}`; $('#fRepeat').classList.toggle('on', P.repeat); $('#fRepeat').setAttribute('aria-pressed', P.repeat);
 }
 const D = {info: null, fetched: 0};
-async function loadDelivery(){ try{ D.info = await api('/api/delivery'); D.fetched = Date.now(); paintDelivery(); }catch(e){} }
+async function loadDelivery(){ try { D.info = await api('/api/delivery'); D.fetched = Date.now(); paintDelivery(); }catch(e){} }
 function paintDelivery(){
   const box = $('#dStatus'), go = $('#dGo'); if (!box) return;
   const d = D.info && D.info.delivery;
@@ -713,7 +718,7 @@ function wireAudio(a){
   });
   on('loadedmetadata', paintAll);
 }
-function discardNext(){ if (P.next){ try{ P.next.audio.removeAttribute('src'); P.next.audio.load(); }catch(e){} P.next = null; } }
+function discardNext(){ if (P.next){ try { P.next.audio.removeAttribute('src'); P.next.audio.load(); }catch(e){} P.next = null; } }
 function maybePreload(){
   if (!P.ep || P.next || P.preloading || P.sid === '__files__') return;
   const d = isFinite(audio.duration) ? audio.duration : 0;
@@ -734,15 +739,15 @@ async function swapToNext(){
   const n = P.next; P.next = null; const old = audio, seq = ++P.seq;
   P.ep = {id: n.ep.id, no: n.ep.no, title: n.ep.title, duration: n.ep.duration, display_label: n.ep.display_label};
   P.state = 'buffering'; P.userPaused = false; P.retries = 0;
-  audio = n.audio; try{ old.removeAttribute('src'); old.load(); }catch(e){}
+  audio = n.audio; try { old.removeAttribute('src'); old.load(); }catch(e){}
   paintAll(); markPlaying(); setSession();
-  try{ await audio.play(); if (seq !== P.seq) return; P.state = 'playing'; }
+  try { await audio.play(); if (seq !== P.seq) return; P.state = 'playing'; }
   catch(e){ if (seq !== P.seq) return; if (e.name === 'NotAllowedError') P.state = 'paused'; else { P.state = 'error'; P.err = 'Could not start the next episode.'; } }
   paintAll();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden){ saveProgress(true, false, true); keepAlive(); } });
 window.addEventListener('pagehide', () => saveProgress(true, false, true));
-if (tg && tg.onEvent){ try{ tg.onEvent('deactivated', () => { saveProgress(true, false, true); keepAlive(); }); }catch(e){} }
+if (tg && tg.onEvent){ try { tg.onEvent('deactivated', () => { saveProgress(true, false, true); keepAlive(); }); }catch(e){} }
 
 /* ---------- story page ---------- */
 const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle'};
@@ -842,7 +847,6 @@ async function playFirst(from){
 const A = {tab:'stories', sq:'', pub:'', oq:'', ostatus:''};
 const M = {sid:null, title:'', page:1, q:'', eps:[], total:0, state:'idle'};
 const E = {id:null, cover:'', photo:''};
-const INFO = {};
 const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
 function renderAdmin(){
   $('#admin').innerHTML = `<div class="top"><strong>Admin panel</strong><button class="btn ghost small" id="closeAdmin">Close</button></div>
@@ -907,10 +911,10 @@ async function orderAction(oid, action){
     loadAdmin();
   });
 }
-async function adminPublish(id, to){ await once('pub' + id, async () => { try{ await api('/api/admin/publish', {method:'POST', retry:false, body: JSON.stringify({id, published: !!to})}); toast(to ? 'Story published' : 'Story hidden from the store'); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadHome(); }); }
+async function adminPublish(id, to){ await once('pub' + id, async () => { try { await api('/api/admin/publish', {method:'POST', retry:false, body: JSON.stringify({id, published: !!to})}); toast(to ? 'Story published' : 'Story hidden from the store'); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadHome(); }); }
 async function adminDelete(id, title){
   if (!confirm(`Remove "${title}" from the store?\n\nBuyers keep their purchase records. Episodes stay in the database.`)) return;
-  await once('del' + id, async () => { try{ await api('/api/admin/delete', {method:'POST', retry:false, body: JSON.stringify({id})}); toast('Story removed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+  await once('del' + id, async () => { try { await api('/api/admin/delete', {method:'POST', retry:false, body: JSON.stringify({id})}); toast('Story removed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
 }
 
 function optRow(o = {}){
@@ -924,7 +928,7 @@ async function openEditor(id){
   let s = {options: [{label: 'Full story, keep forever', days: 0}], status: 'Ongoing', published: true};
   openSheet('editor'); $('#editor').innerHTML = '<div class="sk hero"></div>';
   if (id){
-    try{ s = (await api('/api/admin/story/' + encodeURIComponent(id))).story; }
+    try { s = (await api('/api/admin/story/' + encodeURIComponent(id))).story; }
     catch(e){ $('#editor').innerHTML = `<div class="top"><button class="btn ghost small" id="edClose">Back</button></div>` + retryBox(adminErr(e), 'edClose'); return; }
   }
   E.cover = s.cover || '';
@@ -938,7 +942,7 @@ async function openEditor(id){
     <label class="field"><span>Episodes label (optional, e.g. 1101 To 1150)</span><input id="e_epstext" value="${esc(s.episodes_text || '')}"></label>
     <label class="field check"><input type="checkbox" id="e_pub" ${s.published === false ? '' : 'checked'}><span style="margin:0">Published (visible in the store)</span></label>
     <label class="field check"><input type="checkbox" id="e_feat" ${s.featured ? 'checked' : ''}><span style="margin:0">Feature on the home page</span></label>
-    <label class="field"><span>Cover emoji or image link</span><input id="e_cover" value="${esc(/^data:/.test(E.cover) ? '' : E.cover)}" placeholder="📖"></label>
+    <label class="field"><span>Cover emoji or image link</span><input id="e_cover" value="${esc(/^data:/.test(E.cover) ? '' : E.cover)}" placeholder="\ud83d\udcd6"></label>
     <div class="field"><span>Or upload a cover photo (keeps its own shape)</span><input id="e_photo" type="file" accept="image/*"><div id="e_prev" style="margin-top:8px"></div></div>
     <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
     <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Price 0 means free for everyone. Days 0 means keep forever. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
@@ -951,7 +955,7 @@ async function openEditor(id){
 }
 function paintPhoto(){
   const src = E.photo || (isImg(E.cover) ? E.cover : '');
-  $('#e_prev').innerHTML = src ? `<div class="cv has-img" style="width:90px;display:inline-block"><img src="${esc(src)}" alt="Cover preview" data-fb="📖"></div> <button class="btn danger small" id="photoRemove" type="button">Remove cover image</button>` : '';
+  $('#e_prev').innerHTML = src ? `<div class="cv has-img" style="width:90px;display:inline-block"><img src="${esc(src)}" alt="Cover preview" data-fb="\ud83d\udcd6"></div> <button class="btn danger small" id="photoRemove" type="button">Remove cover image</button>` : '';
 }
 function readPlans(){
   return $$('#e_opts .optrow').map(r => ({label: r.querySelector('.o-label').value.trim(), price: r.querySelector('.o-price').value === '' ? 0 : Number(r.querySelector('.o-price').value),
@@ -972,7 +976,7 @@ async function saveEditor(){
     try{
       let r;
       for (;;){
-        try{ r = await api('/api/admin/story', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify(body)}); break; }
+        try { r = await api('/api/admin/story', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify(body)}); break; }
         catch(e){
           const code = e.data && e.data.error;
           if (e.status === 409 && code === 'free_plan'){ if (!confirm(e.message + '\n\nPress OK only if this plan is meant to be free.')) return; body.allow_free = true; continue; }
@@ -985,7 +989,7 @@ async function saveEditor(){
       if (isNew && confirm('Story saved. Add its episodes now?')) openEpisodes(story.id, story.title);
       loadAdmin(); loadHome(); B.state = 'idle';
     }catch(e){ toast(adminErr(e), 5000); }
-    finally{ const b = $('#saveStory'); if (b){ b.disabled = false; b.textContent = 'Save story'; } }
+    finally { const b = $('#saveStory'); if (b){ b.disabled = false; b.textContent = 'Save story'; } }
   });
 }
 function downscale(file, max = 1200){
@@ -1035,7 +1039,7 @@ async function loadManage(){
   }catch(e){ if (!e.aborted && $('#m_list')) $('#m_list').innerHTML = retryBox(adminErr(e), 'retryManage'); }
 }
 async function editEpisode(id, patch){
-  await once('ep' + id, async () => { try{ await api('/api/admin/episode', {method: 'POST', retry: false, body: JSON.stringify({id: +id, ...patch})}); toast('Saved'); }catch(e){ toast(adminErr(e)); } loadManage(); });
+  await once('ep' + id, async () => { try { await api('/api/admin/episode', {method: 'POST', retry: false, body: JSON.stringify({id: +id, ...patch})}); toast('Saved'); }catch(e){ toast(adminErr(e)); } loadManage(); });
 }
 function parseCsv(text){
   const rows = []; let row = [], cur = '', q = false;
@@ -1059,7 +1063,7 @@ function parseEpisodeData(text){
 async function runImport(dry){
   await once('import', async () => {
     const out = $('#m_result'); let rows;
-    try{ rows = parseEpisodeData($('#m_data').value); }catch(e){ out.textContent = 'That is not valid JSON or CSV.'; return; }
+    try { rows = parseEpisodeData($('#m_data').value); }catch(e){ out.textContent = 'That is not valid JSON or CSV.'; return; }
     if (!rows.length){ out.textContent = 'Paste or choose some rows first.'; return; }
     const seen = new Set(), clean = [], dups = [];
     rows.forEach((r, i) => { const n = parseInt(r.ep_no); if (seen.has(n)){ dups.push(i + 1); } else { seen.add(n); clean.push(r); } });
@@ -1178,7 +1182,7 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-oact]'))) return orderAction(+m.dataset.oid, m.dataset.oact);
   if ((m = c('[data-rend]'))){
     if (!confirm('Close this room now? The episodes are deleted and the member is removed.')) return;
-    return once('rend' + m.dataset.rend, async () => { try{ await api(`/api/admin/rooms/${m.dataset.rend}/end`, {method: 'POST', retry: false, body: '{}'}); toast('Room closed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+    return once('rend' + m.dataset.rend, async () => { try { await api(`/api/admin/rooms/${m.dataset.rend}/end`, {method: 'POST', retry: false, body: '{}'}); toast('Room closed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
   }
   if (c('#edClose') || c('#edClose2')) return closeSheet('editor');
   if (c('#emClose')) return closeSheet('epman');
@@ -1212,7 +1216,7 @@ document.addEventListener('click', async e => {
   if (c('#saveLinks')){
     const ep1 = $('#m_ep1').value.trim(), epN = $('#m_epN').value.trim(); if (!ep1) return toast('Paste the Episode 1 link');
     return once('links', async () => {
-      try{ const r = await api('/api/admin/links', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, ep1, epN: epN || ep1, append: $('#m_append').checked})}); toast(r.note || 'Links saved', 6000); }
+      try { const r = await api('/api/admin/links', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, ep1, epN: epN || ep1, append: $('#m_append').checked})}); toast(r.note || 'Links saved', 6000); }
       catch(err){ toast(adminErr(err), 5000); }
     });
   }
@@ -1220,7 +1224,7 @@ document.addEventListener('click', async e => {
     const kind = m.dataset.ejob;
     if (kind === 'renumber' && !confirm('Give every episode the number written in its file name?\n\nPlans that sell episode ranges use these numbers, so check them afterwards. Listening history is kept.')) return;
     return once('ejob', async () => {
-      try{ const r = await api(`/api/admin/episodes/${kind}`, {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, all: kind === 'reread'})}); toast(r.note || 'Started', 6000); }
+      try { const r = await api(`/api/admin/episodes/${kind}`, {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, all: kind === 'reread'})}); toast(r.note || 'Started', 6000); }
       catch(err){ toast(adminErr(err), 6000); }
     });
   }
@@ -1242,7 +1246,6 @@ document.addEventListener('input', e => {
   if (id === 'fSeek'){ P.dragging = true; $('#fCur').textContent = clock(e.target.value); }
   if (id === 'rSlide') setRate(parseFloat(e.target.value));
 });
-const epSearch = deb(() => loadStoryPage(1), 350), adminSearch = deb(() => loadAdmin(), 350), manageSearch = deb(() => loadManage(), 350), filesSearch = deb(() => { F.page = 1; loadFiles(); }, 350);
 document.addEventListener('change', async e => {
   const id = e.target.id;
   if (id === 'bsort'){ B.sort = e.target.value; return loadBrowse(true); }
@@ -1253,7 +1256,7 @@ document.addEventListener('change', async e => {
   if (id === 'aost'){ A.ostatus = e.target.value; return loadAdmin(); }
   if (id === 'ffilter'){ F.filter = e.target.value; F.page = 1; return loadFiles(); }
   if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
-  if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
+  if (id === 'e_photo' && e.target.files[0]){ try { E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
   if (id === 'm_file' && e.target.files[0]){ $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
 document.addEventListener('keydown', e => {
