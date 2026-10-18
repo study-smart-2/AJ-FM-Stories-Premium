@@ -406,6 +406,20 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 .sb-plan{min-width:0}.sb-plan small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sb-plan b{font-size:20px;color:var(--gold-2)}
 .sb-btns{display:grid;grid-template-columns:1fr 1.3fr;gap:8px}
 .sb-btns .btn{min-height:46px;padding:10px 8px;font-size:14px}
+/* coupons and offers */
+#couponed{z-index:9}
+.cpbox{margin:0 16px 12px;padding:12px;border-radius:14px;border:1px dashed var(--gold);background:var(--panel);display:grid;gap:8px}
+.cp-row{display:flex;gap:8px}
+.cp-row input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);min-height:44px;text-transform:uppercase}
+.cp-on{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ok);font-size:13.5px}
+.obn{flex:none;width:280px;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;border:1px solid var(--gold);background:linear-gradient(120deg,var(--feat-a),var(--surf));text-align:left;padding:0;scroll-snap-align:start}
+.obn img{width:100%;aspect-ratio:16/7;object-fit:cover;display:block}
+.obn .obt{padding:10px 12px;display:flex;flex-direction:column;gap:2px}.obn b{color:var(--gold-2);font-size:15px}.obn small{color:var(--soft);font-size:12.5px}
+.ocard{margin:0 16px 12px;border-radius:16px;overflow:hidden;border:1px solid var(--gold);background:var(--panel)}
+.ocard img{width:100%;display:block}.ocard .obody{padding:12px 14px}.ocard p{margin:4px 0 0;color:var(--soft);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.cpcard{display:flex;gap:10px;align-items:center;margin:0 16px 10px;padding:12px;border-radius:16px;border:1px dashed var(--gold);background:var(--panel)}
+.cpcard .cpl{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.cpcard small{color:var(--muted);font-size:12px}
+.cpcode{align-self:flex-start;padding:2px 10px;border-radius:8px;background:rgba(var(--gold-rgb),.16);color:var(--gold-2);font-weight:800;letter-spacing:.08em;font-size:15px}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -446,6 +460,8 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 <section class="sheet" id="topics" aria-label="Topics"></section>
 <section class="sheet" id="epman" aria-label="Episode manager"></section>
 <section class="sheet" id="topiced" aria-label="Topic editor"></section>
+<section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
+<section class="sheet" id="couponed" aria-label="Coupon editor"></section>
 <section class="sheet" id="fullplayer" aria-label="Player"></section>
 
 <div class="mini" id="mini" role="region" aria-label="Now playing">
@@ -567,7 +583,8 @@ Object.assign(S, {wish:new Set(), tier:0, notices:[], io:null, feed:{items:[], o
 /* ---------- language, theme, header ---------- */
 const store = {get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }};
 const TR = {
-  en: {rqtitle:'Request a Story', rqnew:'New Request', rqmine:'Already Requested Stories', rqname:'Story name', rqnameph:'Title of the story you want', rqplat:'Platform', rqplatph:'Pocket FM, Kuku FM, YouTube...', rqlang:'Language', rqstat:'Story status', rqlink:'Story link (web page only)', rqlinkph:'https://...', rqcover:'Story cover image (optional)', rqpick:'Choose image', rqsubmit:'Submit Your Request', rqsending:'Sending...', rqstore:'Already in the store:', rqdone:'Request sent. Track it under Already Requested Stories.', rqempty:'No requests yet', rqemptynote:'Stories you request show up here with their progress.', rqrej:'Rejected', rqrejnote:'The owner could not take this story up.', rqs1:'Pending', rqs2:'Searching', rqs3:'Posting', rqs4:'Completed', rqd1:'We search for it, check availability, and update you if we can take it up.', rqd2:'The team is checking where the story is available.', rqd3:'Approved stories are published episode by episode.', rqd4:'Everything is live on the platform. The request is marked completed.', rqbadlink:'Only a web page link is allowed. It must start with http:// or https://', rqneed:'Fill in the story name, platform, language and status.', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
+  en: {poff:'Available Coupons & Offers', otitle:'Coupons & Offers', cpph:'Promo code', cpapply:'Apply', cpremove:'Remove', cpapplied:'Coupon {c} applied', cpsave:'You save {a}', cpnone:'No coupons are running right now. Check back soon.', cpcopy:'Copy', cpcopied:'Code copied', cpuse:'Use in cart', cpmin:'Min order {m}', cpexp:'Valid till {d}', cpavail:'{n} coupons available', cdisc:'Discount',
+    rqtitle:'Request a Story', rqnew:'New Request', rqmine:'Already Requested Stories', rqname:'Story name', rqnameph:'Title of the story you want', rqplat:'Platform', rqplatph:'Pocket FM, Kuku FM, YouTube...', rqlang:'Language', rqstat:'Story status', rqlink:'Story link (web page only)', rqlinkph:'https://...', rqcover:'Story cover image (optional)', rqpick:'Choose image', rqsubmit:'Submit Your Request', rqsending:'Sending...', rqstore:'Already in the store:', rqdone:'Request sent. Track it under Already Requested Stories.', rqempty:'No requests yet', rqemptynote:'Stories you request show up here with their progress.', rqrej:'Rejected', rqrejnote:'The owner could not take this story up.', rqs1:'Pending', rqs2:'Searching', rqs3:'Posting', rqs4:'Completed', rqd1:'We search for it, check availability, and update you if we can take it up.', rqd2:'The team is checking where the story is available.', rqd3:'Approved stories are published episode by episode.', rqd4:'Everything is live on the platform. The request is marked completed.', rqbadlink:'Only a web page link is allowed. It must start with http:// or https://', rqneed:'Fill in the story name, platform, language and status.', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
     recent:'Recently added', ongoing:'Ongoing stories', completed:'Completed stories', upcoming:'Upcoming stories', viewall:'View all', listen:'Listen now', searchph:'Search title, author, genre or language',
     recents:'Recent searches', tops:'Top searches', clear:'Clear', notif:'Notifications', nonotif:'No notifications yet.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
@@ -741,6 +758,71 @@ function homeClick(c){
 }
 
 /* ---------- cart and me tabs (placeholders until their own screens are built) ---------- */
+/* ---------- coupons and offers ---------- */
+const CP = {code: store.get('ajcp', ''), res: {}, msg: '', draft: '', offers: {banners: [], coupons: []}};
+const cpKey = (sid, oid) => sid + '|' + oid;
+const cpRes = (sid, oid) => { const r = CP.res[cpKey(sid, oid)]; return CP.code && r && r.ok ? r : null; };        // the checked result for a plan, or null
+const buyPayload = (sid, oid) => { const base = `buy_${sid}_${oid}`, p = cpRes(sid, oid) ? base + '_' + CP.code : base; return p.length <= 64 ? p : base; };   // the bot checks the code again
+const CP_DEAD = ['not_found', 'expired', 'inactive', 'used_up', 'user_limit', 'scheduled'];
+async function cpValidate(items){
+  if (!CP.code || !items.length) return;
+  try{
+    const d = await api('/api/coupon/validate', {method: 'POST', retry: false, body: JSON.stringify({code: CP.code, items: items.map(i => ({story_id: i.sid, option_id: i.oid}))})});
+    d.results.forEach(r => { CP.res[cpKey(r.story_id, r.option_id)] = r; });
+    CP.msg = d.valid ? '' : ((d.results[0] && d.results[0].message) || 'That code is not valid.');
+  }catch(e){ CP.msg = errText(e); }
+}
+async function cpApply(raw, items){
+  const code = String(raw || '').replace(/\s+/g, '').toUpperCase();
+  if (!code){ toast(tr('cpph')); return; }
+  CP.code = code; CP.res = {}; CP.msg = '';
+  if (!items.length){ store.set('ajcp', code); CP.draft = ''; toast(tr('cpapplied', {c: code})); return; }       // nothing to check against yet: it is checked when a plan is picked
+  await cpValidate(items);
+  if (!items.some(i => cpRes(i.sid, i.oid))){ const m = CP.msg || 'That code is not valid.'; cpRemove(); CP.msg = m; toast(m, 4500); return; }
+  store.set('ajcp', code); CP.draft = ''; CP.msg = ''; toast(tr('cpapplied', {c: code}));
+}
+function cpRemove(){ CP.code = ''; CP.res = {}; CP.msg = ''; store.set('ajcp', ''); }
+function cpDropDead(){                                  // a saved code that no longer works for anything is forgotten
+  const rs = Object.values(CP.res);
+  if (CP.code && rs.length && rs.every(r => !r.ok && CP_DEAD.includes(r.reason))){ toast(rs[0].message, 4500); cpRemove(); }
+}
+const cartCalc = () => { let sub = 0, saved = 0; CART.forEach(i => { const r = cpRes(i.sid, i.oid); sub += Number(i.price); if (r) saved += Number(r.discount); }); return {sub, saved, total: sub - saved}; };
+const cpHint = i => { const r = CP.code && CP.res[cpKey(i.sid, i.oid)]; return r && !r.ok ? `<small style="color:var(--warn)">${esc(r.message)}</small>` : ''; };
+function cpBoxHtml(){
+  if (CP.code && CART.some(i => cpRes(i.sid, i.oid))) return `<div class="cpbox"><div class="cp-on"><span>&#127991;&#65039; <b>${esc(CP.code)}</b> | ${esc(tr('cpsave', {a: money(cartCalc().saved)}))}</span><button class="link" id="cpRemove">${tr('cpremove')}</button></div></div>`;
+  return `<div class="cpbox"><div class="cp-row"><input id="cp_in" placeholder="${esc(tr('cpph'))}" value="${esc(CP.draft || CP.code || '')}" autocapitalize="characters" autocomplete="off" maxlength="20" aria-label="${esc(tr('cpph'))}"><button class="btn small" id="cpApply">${tr('cpapply')}</button></div>` +
+    `${CP.msg ? `<div class="rq-hint bad">${esc(CP.msg)}</div>` : ''}<button class="link" data-offers="1" style="justify-self:start">${tr('poff')}</button></div>`;
+}
+async function cpStory(){                               // check the code for the plans of the open story
+  if (!CP.code || !V.story) return; const id = V.id;
+  await cpValidate(visOpts().filter(o => +o.price > 0).map(o => ({sid: id, oid: o.id})));
+  if (V.id === id) paintPlanBar();
+}
+async function loadOffers(){
+  try{ CP.offers = await api('/api/offers'); }catch(e){ return; }
+  if (S.tab === 'home' && S.home) renderHome(); else if (S.tab === 'me') renderMe();
+  if ($('#offerpage').classList.contains('open')) renderOffers();
+}
+function offersStrip(){
+  const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
+  if (bn.length) return `<div class="rail">${bn.map(b => `<button class="obn" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="" loading="lazy">` : ''}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}</span></button>`).join('')}</div>`;
+  if (cs.length) return `<button class="promo" data-offers="1" style="display:block;width:calc(100% - 32px);text-align:left">&#127991;&#65039; ${esc(tr('cpavail', {n: cs.length}))}<small>${esc(cs.slice(0, 3).map(c => c.code + ' - ' + c.text).join(' | '))}</small></button>`;
+  return '';
+}
+function renderOffers(){
+  const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
+  $('#offerpage').innerHTML = `<div class="top"><button class="btn ghost small" id="offBack">Back</button><strong>${tr('otitle')}</strong><span style="width:60px"></span></div>` +
+    bn.map(b => `<div class="ocard">${b.image ? `<img src="${esc(b.image)}" alt="" loading="lazy">` : ''}<div class="obody"><b>${esc(b.title)}</b>${b.body ? `<p>${esc(b.body)}</p>` : ''}</div></div>`).join('') +
+    (cs.length ? cs.map(c => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(c.code)}</span><b>${esc(c.text)}</b>${c.title ? `<small>${esc(c.title)}</small>` : ''}<small>${esc([c.min_order ? tr('cpmin', {m: money(c.min_order)}) : '', c.expires_at ? tr('cpexp', {d: dateStr(c.expires_at)}) : ''].filter(Boolean).join(' | '))}</small></div>` +
+      `<div class="lact"><button class="lbtn" data-cpcopy="${esc(c.code)}">${tr('cpcopy')}</button><button class="lbtn" data-cpuse="${esc(c.code)}">${tr('cpuse')}</button></div></div>`).join('') : `<div class="empty">${tr('cpnone')}</div>`);
+}
+function openOffers(){ renderOffers(); openSheet('offerpage'); $('#offerpage').scrollTop = 0; loadOffers(); }
+async function copyText(t, msg){
+  try{ await navigator.clipboard.writeText(t); }
+  catch(e){ const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); try{ document.execCommand('copy'); }catch(e2){} x.remove(); }
+  toast(msg);
+}
+
 /* ---------- cart (kept on this device; the bot takes one story per checkout) ---------- */
 let CART = (() => { try{ const v = JSON.parse(store.get('ajcart', '[]')); return Array.isArray(v) ? v : []; }catch(e){ return []; } })();
 const cartSave = () => { store.set('ajcart', JSON.stringify(CART)); updateCartBadge(); };
@@ -777,14 +859,21 @@ async function refreshCart(){                       // drop what is already owne
 function paintCart(){
   const v = $('#view'); if (S.tab !== 'cart' || !v) return;
   if (!CART.length){ v.innerHTML = `<div class="empty"><div style="font-size:44px">&#128722;</div><b style="color:var(--text);font-size:17px">${tr('cempty')}</b><small style="display:block;margin:6px 0 14px">${tr('cemptynote')}</small><button class="btn" id="cartBrowse">${tr('cbrowse')}</button></div>`; return; }
-  const total = CART.reduce((t, i) => t + Number(i.price), 0);
+  const {sub, saved, total} = cartCalc();
   v.innerHTML = `<div class="sechead"><h2 class="sec">${tr('ctitle')}</h2><span class="by">${tr('citems', {n: CART.length})}</span></div>` +
-    CART.map(i => `<div class="crow"><button class="lmain" data-story="${esc(i.sid)}" aria-label="Open ${esc(i.title)}">${lthumb(i.cover)}<span class="cmt"><span class="cplan">${esc(i.label)}</span><b>${esc(i.title)}</b><small>${i.from ? `Episodes ${i.from} to ${i.to}` : 'All episodes'} | ${Number(i.days) > 0 ? i.days + ' days' : tr('lkeep')}</small><span class="cpr">${money(i.price)}</span></span></button>
+    CART.map(i => `<div class="crow"><button class="lmain" data-story="${esc(i.sid)}" aria-label="Open ${esc(i.title)}">${lthumb(i.cover)}<span class="cmt"><span class="cplan">${esc(i.label)}</span><b>${esc(i.title)}</b><small>${i.from ? `Episodes ${i.from} to ${i.to}` : 'All episodes'} | ${Number(i.days) > 0 ? i.days + ' days' : tr('lkeep')}</small><span class="cpr">${cpRes(i.sid, i.oid) ? `<s style="opacity:.55;font-weight:400;margin-right:5px">${money(i.price)}</s>${money(cpRes(i.sid, i.oid).final)}` : money(i.price)}</span>${cpHint(i)}</span></button>
       <div class="lact"><button class="lbtn" data-cartpay="${esc(i.sid)}|${esc(i.oid)}">${tr('cpay')}</button><button class="lbtn rm" data-cartrm="${esc(i.sid)}|${esc(i.oid)}">${tr('crem')}</button></div></div>`).join('') +
-    `<div class="cbill"><div><span>${tr('csub')}</span><span>${money(total)}</span></div><div class="tot"><span>${tr('ctotal')}</span><span>${money(total)}</span></div><small class="by">${tr('cnote')}</small></div>
+    cpBoxHtml() +
+    `<div class="cbill"><div><span>${tr('csub')}</span><span>${money(sub)}</span></div>${saved ? `<div style="color:var(--ok)"><span>${tr('cdisc')} (${esc(CP.code)})</span><span>-${money(saved)}</span></div>` : ''}<div class="tot"><span>${tr('ctotal')}</span><span>${money(total)}</span></div><small class="by">${tr('cnote')}</small></div>
     <div class="pad"><button class="btn block" id="cartGo">${tr('cgo')} &rarr;</button></div>`;
 }
-function renderCart(){ paintCart(); refreshCart(); }
+function renderCart(){
+  paintCart();
+  refreshCart().then(async () => {
+    if (CP.code && CART.length){ CP.res = {}; await cpValidate(CART.map(i => ({sid: i.sid, oid: i.oid}))); cpDropDead(); }
+    paintCart();
+  });
+}
 function askConfirm(msg, ok){ if (tg && tg.showConfirm) tg.showConfirm(msg, y => { if (y) ok(); }); else if (confirm(msg)) ok(); }
 function renderMe(){
   const sel = `<div class="thsel">${['dark','light','warm'].map(k => `<button class="thopt${THEME === k ? ' on' : ''}" data-set-theme="${k}" aria-pressed="${THEME === k}"><span class="sw">${THEME_SW[k].map(c2 => `<i style="background:${c2}"></i>`).join('')}</span>${THEME_ICON[k]} ${tr({dark:'tdark', light:'tlight', warm:'twarm'}[k])}</button>`).join('')}</div>`;
@@ -905,6 +994,7 @@ function discoverRows(){
   const all = B.all || [], f = B.facets || {}, byUpd = (a, b) => b.updated - a.updated;
   const rows = [], mk = (sec, key, icon, title, items, see) => rows.push({sec, key, icon, title, items, see});
   mk('dcol', 'trend', '\uD83D\uDD25', tr('dtrend'), all.filter(s => s.listeners > 0).sort((a, b) => b.listeners - a.listeners || byUpd(a, b)), {sort:'popular'});
+  mk('dcol', 'new', '\u2728', tr('recent'), all.slice().sort((a, b) => b.created - a.created), {sort:'newest'});
   mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
   mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
   (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
@@ -921,6 +1011,10 @@ function paintDiscover(){
     const head = r.sec !== sec ? `<h3 class="dsec">${tr(r.sec)}</h3>` : ''; sec = r.sec;
     return head + `<div class="dcard${B.open === r.key ? ' open' : ''}" data-dkey="${esc(r.key)}"><button class="drow" data-drow="${esc(r.key)}" aria-expanded="${B.open === r.key}"><span class="dic">${r.icon}</span><span class="dtx"><b>${esc(r.title)}</b><small>${tr('dcount', {n: r.items.length})}</small></span><span class="dchev"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span></button><div class="dbody"><div>${B.open === r.key ? dPreview(r) : ''}</div></div></div>`;
   }).join('') || `<div class="empty">${tr('dnone')}</div>`);
+  if (B.focus){                                                   // arrived from "View all": bring that category into view
+    const key = B.focus; B.focus = '';
+    setTimeout(() => { const c = $$('#bbody .dcard').find(x => x.dataset.dkey === key); if (c) c.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 60);
+  }
 }
 const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([s.genre, s.status, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
 const dPreview = r => `<div class="dpv">${r.items.slice(0, 3).map(dMini).join('')}<button class="btn ghost block" data-dsee="${esc(r.key)}">${tr('dsee', {n: r.items.length})} &rarr;</button></div>`;
@@ -972,8 +1066,9 @@ async function loadBrowse(reset){
   browseResults();
 }
 const browseSearch = deb(() => { loadBrowse(true); browseChips(); }, 350);
-function viewAll(key){
-  Object.assign(B, {q:'', genre: key.startsWith('g:') ? key.slice(2) : '', language:'', status: key === 'completed' ? 'Completed' : key === 'ongoing' ? 'Ongoing' : '', sort: {trending:'popular', recent:'newest', updated:'updated', completed:'updated', ongoing:'updated'}[key] || 'newest', view:'list', state:'idle'});
+function viewAll(key){                                   // "View all" on Home = go to the Discover tab and open that category
+  const row = {trending:'trend', recent:'new', updated:'upd', completed:'s:Completed', ongoing:'s:Ongoing'}[key] || key;      // genre rows already use g:<name>
+  Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover', open: row, focus: row});
   setTab('browse');
 }
 
@@ -1582,7 +1677,7 @@ async function saveEditor(){
     finally{ const b = $('#saveStory'); if (b){ b.disabled = false; b.textContent = 'Save story'; } }
   });
 }
-function downscale(file, max = 1200){
+function downscale(file, max = 1600){
   return new Promise((res, rej) => {
     const img = new Image(), url = URL.createObjectURL(file);
     img.onload = () => {
@@ -1763,8 +1858,15 @@ document.addEventListener('click', async e => {
   if (c('#retryManage')) return loadManage();
   if ((m = c('[data-cartadd]'))){ const on = cartToggle(m.dataset.cartadd); m.classList.toggle('on', on); m.setAttribute('aria-pressed', on); m.textContent = on ? '\u2713' : '\uD83D\uDED2'; return; }
   if ((m = c('[data-cartrm]'))){ const [sid, oid] = m.dataset.cartrm.split('|'); CART = CART.filter(i => !(i.sid === sid && String(i.oid) === oid)); cartSave(); toast(tr('cremd')); return paintCart(); }
-  if ((m = c('[data-cartpay]'))){ const [sid, oid] = m.dataset.cartpay.split('|'); return once('buy', async () => { goBot(`buy_${sid}_${oid}`); await sleep(1200); }); }
-  if (c('#cartGo')){ const i = CART[0]; if (i) return once('buy', async () => { goBot(`buy_${i.sid}_${i.oid}`); await sleep(1200); }); return; }
+  if ((m = c('[data-cartpay]'))){ const [sid, oid] = m.dataset.cartpay.split('|'); return once('buy', async () => { goBot(buyPayload(sid, oid)); await sleep(1200); }); }
+  if (c('#cartGo')){ const i = CART[0]; if (i) return once('buy', async () => { goBot(buyPayload(i.sid, i.oid)); await sleep(1200); }); return; }
+  if (c('#cpApply')) return cpApply(($('#cp_in') || {}).value, CART.map(i => ({sid: i.sid, oid: i.oid}))).then(paintCart);
+  if (c('#sbApply')) return cpApply(($('#sbCode') || {}).value, visOpts().filter(o => +o.price > 0).map(o => ({sid: V.id, oid: o.id}))).then(paintPlanBar);
+  if (c('#cpRemove')){ cpRemove(); paintPlanBar(); paintCart(); return; }
+  if (c('#offBtn') || c('[data-offers]')) return openOffers();
+  if (c('#offBack')) return closeSheet('offerpage');
+  if ((m = c('[data-cpcopy]'))) return copyText(m.dataset.cpcopy, tr('cpcopied'));
+  if ((m = c('[data-cpuse]'))){ const code = m.dataset.cpuse; return once('cpuse', async () => { await cpApply(code, CART.map(i => ({sid: i.sid, oid: i.oid}))); setTab('cart'); }); }
   if (c('#cartBrowse')) return setTab('home');
   if ((m = c('[data-pgo]'))){ const k = m.dataset.pgo; if (k === 'cart') return setTab('cart'); L.seg = k; return setTab('library'); }
   if (c('[data-pbot]')){ goBot(''); return; }
@@ -1956,7 +2058,7 @@ document.addEventListener('change', async e => {
   if (id === 'apub'){ A.pub = e.target.value; return loadAdmin(); }
   if (id === 'aost'){ A.ostatus = e.target.value; return loadAdmin(); }
   if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
-  if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 900); paintRqPhoto(); }catch(err){ toast(err.message); } }
+  if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 1200); paintRqPhoto(); }catch(err){ toast(err.message); } }
   if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
   if (id === 'm_file' && e.target.files[0]){ M.fileName = e.target.files[0].name; $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
