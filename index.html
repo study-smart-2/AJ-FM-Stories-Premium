@@ -84,7 +84,7 @@ h1,h2,h3,h4{margin:0}
 .sheet{position:fixed;inset:0;background:var(--ink);overflow:auto;overflow-x:hidden;z-index:6;display:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px)}
 .sheet.open{display:block}
 body.hasplayer .sheet{padding-bottom:calc(var(--mini) + env(safe-area-inset-bottom,0px) + 40px)}
-#fullplayer{z-index:10}#editor,#epman{z-index:8}#admin{z-index:7}
+#fullplayer{z-index:10}#editor,#epman,#topics{z-index:8}#topiced{z-index:9}#admin{z-index:7}
 .top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;gap:10px}
 .btn{border:1px solid var(--gold);background:var(--gold);color:#1a1405;font-weight:700;padding:11px 16px;border-radius:10px;min-height:44px}
 .btn.ghost{background:transparent;color:var(--gold-2)}
@@ -434,7 +434,9 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 <section class="sheet" id="story" aria-label="Story"></section>
 <section class="sheet" id="admin" aria-label="Admin panel"></section>
 <section class="sheet" id="editor" aria-label="Story editor"></section>
+<section class="sheet" id="topics" aria-label="Topics"></section>
 <section class="sheet" id="epman" aria-label="Episode manager"></section>
+<section class="sheet" id="topiced" aria-label="Topic editor"></section>
 <section class="sheet" id="fullplayer" aria-label="Player"></section>
 
 <div class="mini" id="mini" role="region" aria-label="Now playing">
@@ -1214,17 +1216,27 @@ window.addEventListener('pagehide', () => saveProgress(true, false, true));
 if (tg && tg.onEvent){ try{ tg.onEvent('deactivated', () => { saveProgress(true, false, true); keepAlive(); }); }catch(e){} }
 
 /* ---------- story page ---------- */
-const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle'};
+const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null};
 const storyTag = s => ({id: s.id, title: s.title, cover: s.cover});
 async function openStory(id){
-  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading'});
+  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null});
   renderStory(); openSheet('story'); $('#story').scrollTop = 0;
   await loadStoryPage(1);
+  if (V.id === id && V.state === 'ok' && V.topic === null){                       // stories with topics open on their first topic
+    const t = shownTopics()[0]; V.topic = t ? t.id : '';
+    if (t){ pickPlan(); renderStory(); await loadStoryPage(1); }
+  }
+}
+const shownTopics = () => ((V.story && V.story.topics) || []).filter(t => t.episodes > 0 || (V.access && V.access.admin));
+const visOpts = () => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === V.topic);
+function topicPillsHtml(){
+  const s = V.story, pill = (id, name, n) => `<button class="pill2${V.topic === id ? ' on' : ''}" data-topic="${esc(id)}" aria-pressed="${V.topic === id}"><b>${esc(name)}</b><small>${n} episodes</small></button>`;
+  return shownTopics().map(t => pill(t.id, t.name, t.episodes)).join('') + (s.episodes_unassigned && shownTopics().length ? pill('_none', 'More episodes', s.episodes_unassigned) : '');
 }
 async function loadStoryPage(page){
   const sig = fresh('story'), id = V.id;
   V.page = page; V.epState = 'loading'; if (V.state === 'ok') renderEps();
-  const qs = new URLSearchParams({offset: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE, filter: V.filter}); if (V.q) qs.set('q', V.q);
+  const qs = new URLSearchParams({offset: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE, filter: V.filter}); if (V.q) qs.set('q', V.q); if (V.topic) qs.set('topic', V.topic);
   try{
     const d = await api(`/api/story/${encodeURIComponent(id)}?${qs}`, {signal: sig, timeout: 60000});
     if (V.id !== id) return;
@@ -1247,11 +1259,12 @@ function ownedSummary(a){
 const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
 const planSub = o => `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
 function pickPlan(){
-  const opts = (V.story && V.story.options) || [], ok = o => +o.price > 0 && !planOwned(o);
+  const opts = visOpts(), ok = o => +o.price > 0 && !planOwned(o);
   if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
 }
 function planPillsHtml(){
-  return V.story.options.map(o => {
+  if (!visOpts().length) return '<div class="by" style="padding:0 16px">No plans for this topic yet.</div>';
+  return visOpts().map(o => {
     const sub = esc(planSub(o));
     if (Number(o.price) === 0) return `<button class="pill2 free" data-free="${o.from || 1}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Listen free</span></button>`;
     if (planOwned(o)) return `<div class="pill2 have"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Owned</span></div>`;
@@ -1259,7 +1272,7 @@ function planPillsHtml(){
   }).join('');
 }
 function sbarHtml(){
-  const o = V.story.options.find(x => String(x.id) === String(V.sel)); if (!o) return '';
+  const o = visOpts().find(x => String(x.id) === String(V.sel)); if (!o) return '';
   const inCart = cartHas(V.id, o.id);
   return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}</small><b>${money(o.price)}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
     <div class="sb-btns">${V.totalAll ? '<button class="btn ghost" data-demo="1">Click for Demo</button>' : '<span></span>'}<button class="btn${inCart ? ' ok' : ''}" id="sbCart">${inCart ? '&#10003; In cart' : '&#128722; ADD TO CART'}</button></div>`;
@@ -1285,6 +1298,7 @@ function renderStory(){
     <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
       <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}<div class="pad" style="margin-bottom:6px">${act}</div>
+    ${shownTopics().length ? `<h3 class="h3">Topics</h3><div class="pills" id="topicPills">${topicPillsHtml()}</div>` : ''}
     ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div class="pills" id="planPills">${planPillsHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
@@ -1327,7 +1341,7 @@ async function playFirst(from){
 
 /* ---------- admin ---------- */
 const A = {tab:'stories', sq:'', pub:'', oq:'', ostatus:''};
-const M = {sid:null, title:'', page:1, q:'', eps:[], total:0, state:'idle'};
+const M = {sid:null, title:'', topic:'', tname:'', scope:'', page:1, q:'', eps:[], total:0, state:'idle', edit:null, fileName:''};
 const E = {id:null, cover:'', photo:''};
 const INFO = {};                                       // remembers cards so a tap can start playback without another request
 const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
@@ -1352,7 +1366,7 @@ async function loadAdmin(){
         <div class="actions" style="margin-bottom:12px"><button class="btn" id="newStory">Add a story</button></div>` +
         (d.stories.map(s => `<div class="mrow"><h4>${esc(s.title)}</h4><div style="margin:4px 0">${s.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${s.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${s.episodes} eps</span></div>
           <div class="by">${s.options.map(o => esc(o.label) + ' ' + money(o.price)).join(' | ')}</div><div class="by">ID: <b>${esc(s.id)}</b></div>
-          <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
+          <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-atop="${esc(s.id)}" data-title="${esc(s.title)}">Topics</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
           <button class="btn ghost small" data-apub="${esc(s.id)}" data-to="${s.published ? 0 : 1}">${s.published ? 'Unpublish' : 'Publish'}</button><button class="btn danger small" data-adel="${esc(s.id)}" data-title="${esc(s.title)}">Delete</button></div></div>`).join('') || '<div class="empty">No stories found.</div>');
       $('#apub').value = A.pub;
     } else if (tab === 'orders'){
@@ -1405,7 +1419,7 @@ async function adminDelete(id, title){
 
 /* ---- story editor (metadata only) ---- */
 function optRow(o = {}){
-  return `<div class="optrow"><input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}" aria-label="Plan name">
+  return `<div class="optrow" data-id="${esc(o.id || '')}"><input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}" aria-label="Plan name">
     <div class="o4"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-days" type="number" min="0" inputmode="numeric" placeholder="Days" value="${o.days ?? ''}" aria-label="Days of access, 0 for lifetime">
     <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="From ep" value="${o.from ?? ''}" aria-label="From episode"><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep" value="${o.to ?? ''}" aria-label="To episode"></div>
     <button type="button" class="btn danger small o-del">Remove plan</button></div>`;
@@ -1433,10 +1447,10 @@ async function openEditor(id){
     <div class="field"><span>Or upload a cover photo (keeps its own shape)</span><input id="e_photo" type="file" accept="image/*"><div id="e_prev" style="margin-top:8px"></div></div>
     <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
     <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Price 0 means free for everyone. Days 0 means keep forever. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
-    <div style="padding:0 16px" id="e_opts">${(s.options || []).map(optRow).join('')}</div><div class="actions"><button class="btn ghost small" id="addOpt" type="button">Add plan</button></div>
-    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="g_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="g_total" type="number" min="1" inputmode="numeric" placeholder="Total eps" aria-label="Total episodes"><input id="g_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="g_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
+    <div style="padding:0 16px" id="e_opts">${(s.options || []).filter(o => !o.topic).map(optRow).join('')}</div><div class="actions"><button class="btn ghost small" id="addOpt" type="button">Add plan</button></div>
+    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="g_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="g_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="g_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="g_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
       <button class="btn ghost small" id="genPacks" type="button">Add packs</button></div>
-    <p class="note">Episode links are added separately: save the story, then tap Episodes.</p>
+    <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
   $('#e_status').value = s.status || 'Ongoing'; paintPhoto();
 }
@@ -1444,9 +1458,19 @@ function paintPhoto(){
   const src = E.photo || (isImg(E.cover) ? E.cover : '');
   $('#e_prev').innerHTML = src ? `<div class="cv has-img" style="width:90px;display:inline-block"><img src="${esc(src)}" alt="Cover preview" data-fb="📖"></div> <button class="btn danger small" id="photoRemove" type="button">Remove cover image</button>` : '';
 }
-function readPlans(){
-  return $$('#e_opts .optrow').map(r => ({label: r.querySelector('.o-label').value.trim(), price: r.querySelector('.o-price').value === '' ? 0 : Number(r.querySelector('.o-price').value),
+function readPlans(sel = '#e_opts'){
+  return $$(sel + ' .optrow').map(r => ({id: r.dataset.id || '', label: r.querySelector('.o-label').value.trim(), price: r.querySelector('.o-price').value === '' ? 0 : Number(r.querySelector('.o-price').value),
     days: parseInt(r.querySelector('.o-days').value) || 0, from: parseInt(r.querySelector('.o-from').value) || null, to: parseInt(r.querySelector('.o-to').value) || null})).filter(o => o.label);
+}
+function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
+  const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
+  if (!size) return toast('Enter the pack size');
+  let start = parseInt(g('start').value);
+  if (!start) start = Math.max(0, ...$$(sel + ' .o-to').map(i => parseInt(i.value) || 0)) + 1;      // carries on after the last pack
+  const end = total ? start + total - 1 : start + size - 1;                                        // total blank (ongoing story): one pack at a time
+  if (Math.ceil((end - start + 1) / size) > 100) return toast('That makes more than 100 packs. Use a bigger pack size.');
+  for (let a = start; a <= end; a += size) $(sel).insertAdjacentHTML('beforeend', optRow({label: `Episodes ${a}-${Math.min(a + size - 1, end)}`, price, days: 0, from: a, to: Math.min(a + size - 1, end)}));
+  if (!total){ g('start').value = ''; toast(`Pack ${start}-${end} added. Total is blank, so tap Add packs again for the next pack.`, 5000); }
 }
 async function saveEditor(){
   await once('save', async () => {
@@ -1473,7 +1497,7 @@ async function saveEditor(){
       }
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
       toast(r.note || 'Story saved'); const isNew = !E.id; closeSheet('editor');
-      if (isNew && confirm('Story saved. Add its episodes now?')) openEpisodes(story.id, story.title);
+      if (isNew && confirm('Story saved. Add its topics and episodes now?')) openTopics(story.id, story.title);
       loadAdmin(); loadHome(); B.state = 'idle';
     }catch(e){ toast(adminErr(e), 5000); }
     finally{ const b = $('#saveStory'); if (b){ b.disabled = false; b.textContent = 'Save story'; } }
@@ -1492,80 +1516,147 @@ function downscale(file, max = 1200){
   });
 }
 
-/* ---- episode manager (links, bulk details, single edits) ---- */
-function openEpisodes(sid, title){
-  Object.assign(M, {sid, title, page: 1, q: '', eps: [], total: 0, state: 'loading'});
-  $('#epman').innerHTML = `<div class="top"><button class="btn ghost small" id="emClose">Back</button><strong>Episodes</strong></div><h3 class="h3" style="margin-top:0">${esc(title)}</h3>
+/* ---- topics (categories) of a story ---- */
+const T = {sid: null, title: '', story: null}, TE = {id: null};
+async function openTopics(sid, title){
+  Object.assign(T, {sid, title, story: null});
+  $('#topics').innerHTML = `<div class="top"><button class="btn ghost small" id="tpClose">Back</button><strong>Topics</strong></div><h3 class="h3" style="margin-top:0">${esc(title)}</h3><div id="tpBody"><div class="sk line" style="height:60px"></div></div>`;
+  openSheet('topics'); loadTopics();
+}
+async function loadTopics(){
+  const sid = T.sid;
+  try{ const d = await api(`/api/story/${encodeURIComponent(sid)}?limit=1`); if (T.sid !== sid) return; T.story = d.story; paintTopics(); }
+  catch(e){ if ($('#tpBody')) $('#tpBody').innerHTML = retryBox(adminErr(e), 'retryTopics'); }
+}
+function paintTopics(){
+  const s = T.story, tps = s.topics || [], plans = id => (s.options || []).filter(o => o.topic === id).length;
+  $('#tpBody').innerHTML = `<p class="note">A topic is a part of the story, for example Season 1. Each topic has its own episodes and its own plans. Select a topic to import its episodes.</p>
+    <div class="actions" style="margin-bottom:12px"><button class="btn" id="tpAdd">＋ Add topic</button></div>` +
+    (tps.map(t => `<div class="mrow"><h4>${esc(t.name)}</h4><div style="margin:4px 0"><span class="tag">${t.episodes} eps</span> <span class="tag">${plans(t.id)} plans</span></div>
+      <div class="actions" style="padding:8px 0 0"><button class="btn small" data-tsel="${esc(t.id)}">Select</button><button class="btn ghost small" data-tedit="${esc(t.id)}">Edit</button><button class="btn danger small" data-tdel="${esc(t.id)}">Delete</button></div></div>`).join('') || '<div class="empty">No topics yet. Tap Add topic.</div>') +
+    (s.episodes_unassigned ? `<div class="mrow"><h4>Episodes without a topic</h4><div class="by">${s.episodes_unassigned} episodes</div><div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-tsel="">Open</button></div></div>` : '');
+}
+async function topicCall(body){
+  for (;;){
+    try{ return await api('/api/admin/topic', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({story_id: T.sid, ...body})}); }
+    catch(e){
+      if (e.status === 409 && e.data && e.data.error === 'free_plan'){ if (!confirm(e.message + '\n\nPress OK only if this is meant to be free.')) return null; body.allow_free = true; continue; }
+      throw e;
+    }
+  }
+}
+function openTopicEditor(tid){
+  const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
+  TE.id = tid;
+  $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Edit topic</strong></div>
+    <label class="field"><span>Topic name *</span><input id="te_name" value="${esc(t.name)}" maxlength="60"></label>
+    <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Every plan needs From and To episode numbers. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
+    <div style="padding:0 16px" id="te_opts">${(s.options || []).filter(o => o.topic === tid).map(optRow).join('')}</div><div class="actions"><button class="btn ghost small" id="teAddOpt" type="button">Add plan</button></div>
+    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="tg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="tg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="tg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="tg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
+      <button class="btn ghost small" id="teGen" type="button">Add packs</button><p class="note" style="margin:8px 0 0">Ongoing story and the total is not known? Leave Total blank. One pack is made; tap Add packs again for the next pack when more episodes arrive.</p></div>
+    <div class="actions"><button class="btn" id="teSave">Save topic</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
+  openSheet('topiced');
+}
+async function saveTopic(){
+  await once('tesave', async () => {
+    const name = $('#te_name').value.trim(); if (!name) return toast('Give the topic a name');
+    const options = readPlans('#te_opts'), bad = options.find(o => !o.from || !o.to || o.from > o.to);
+    if (bad) return toast(`Plan "${bad.label}": fill From and To (From must not be greater than To)`);
+    try{
+      const r = await topicCall({action: 'edit', id: TE.id, name, options}); if (!r) return;
+      if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
+      toast('Topic saved'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
+    }catch(e){ toast(adminErr(e), 5000); }
+  });
+}
+
+/* ---- episode screen (import, saved import, list with edit / free / hide / delete) ---- */
+function openEpisodes(sid, title, topic = '', tname = '', scope = ''){
+  Object.assign(M, {sid, title, topic, tname, scope, page: 1, q: '', eps: [], total: 0, state: 'loading', edit: null, fileName: ''});
+  $('#epman').innerHTML = `<div class="top"><button class="btn ghost small" id="emClose">Back</button><strong>Episodes</strong></div><h3 class="h3" style="margin-top:0">${esc(title)}${tname ? ' / ' + esc(tname) : ''}</h3>
     <div class="box" id="m_info" aria-live="polite"><b>Episodes in the app</b><div class="by">Loading...</div></div>
-    <div class="box"><b>Keep episodes up to date</b><p class="note" style="margin:0 0 8px">New episodes of ongoing stories are found by themselves every 30 minutes. Posters, stickers and text between the episodes are skipped, and each episode gets the number written in its file name (for example Ep.1101).</p>
-      <div class="actions" style="padding:0"><button class="btn small" data-ejob="sync">Check for new episodes</button><button class="btn ghost small" data-ejob="reread">Read all posts again</button><button class="btn ghost small" data-ejob="renumber">Number from file names</button></div></div>
-    <div class="box"><b>1. Add episodes from your channel</b><label class="field" style="margin:0 0 8px"><span>Episode 1 link</span><input id="m_ep1" type="url" placeholder="https://t.me/c/1234567890/10"></label>
-      <label class="field" style="margin:0 0 8px"><span>Last episode link</span><input id="m_epN" type="url" placeholder="https://t.me/c/1234567890/60"></label>
-      <label class="field check" style="margin:0 0 8px"><input type="checkbox" id="m_append"><span style="margin:0">Add to the existing episodes instead of replacing the range</span></label>
-      <button class="btn block" id="saveLinks">Save links and read episodes</button><p class="note" style="margin:8px 0 0">The bot reads the posts in the background and messages you when it is done.</p></div>
-    <div class="box"><b>2. Import episode details (CSV or JSON)</b><p class="note" style="margin:0 0 8px">Columns: ep_no, title, free (1/0), published (1/0). Only episodes already read from the channel can be updated.</p>
-      <textarea id="m_data" placeholder="ep_no,title,free,published&#10;1,The Beginning,1,1" aria-label="Episode details"></textarea><input type="file" id="m_file" accept=".csv,.json,.txt" style="margin-top:8px">
+    <div class="box"><b>Import episodes${tname && topic ? ' into ' + esc(tname) : ''}</b>
+      <p class="note" style="margin:0 0 8px">One episode per line (CSV, TXT or JSON, any one):<br><b>file name | link | ep no | title</b><br>File name = the original file name. Link = the post link. Ep no and Title are shown in the app. Use | or a comma between the parts. Episodes go only into the selected topic.</p>
+      <p class="note" style="margin:0 0 8px">Public channel: import works directly. Private channel: it works when the bot has access (share access). Without access, make the bot an admin of the channel.</p>
+      <button class="btn block" id="m_bot" style="margin-bottom:8px">Import in the bot</button>
+      <textarea id="m_data" placeholder="file name | link | ep no | title&#10;Ep.1.mp3 | https://t.me/c/1234567890/10 | 1 | The Beginning" aria-label="Import rows"></textarea><input type="file" id="m_file" accept=".csv,.json,.txt" style="margin-top:8px">
       <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" id="m_check">Check only</button><button class="btn small" id="m_apply">Import</button></div><div id="m_result" class="by" style="margin-top:8px" aria-live="polite"></div></div>
-    <div class="box"><b>3. Episode list</b><div class="ctl" style="padding:0"><input id="m_q" type="search" placeholder="Search number or title" aria-label="Search episodes"><div class="by" id="m_total"></div></div></div><div id="m_list"></div>`;
-  openSheet('epman'); loadManage();
+    <div class="box" id="m_saved"><b>Saved import</b><div class="by">Loading...</div><div class="actions" style="padding:8px 0 0"><button class="btn small" data-ejob="reread">Read all posts again</button></div></div>
+    <div class="box"><b>Episode list</b><div class="ctl" style="padding:0"><input id="m_q" type="search" placeholder="Search number or title" aria-label="Search episodes"><div class="by" id="m_total"></div></div></div><div id="m_list"></div>`;
+  openSheet('epman'); loadManage(); loadSaved();
+}
+async function openEpisodesOrTopics(sid, title){
+  try{
+    const s = (await api('/api/admin/story/' + encodeURIComponent(sid))).story;
+    if ((s.topics || []).length) return openTopics(sid, title);
+    openEpisodes(sid, title);
+  }catch(e){ toast(adminErr(e)); }
+}
+async function loadSaved(){
+  const sid = M.sid, topic = M.topic;
+  try{
+    const d = await api(`/api/admin/imports?story_id=${encodeURIComponent(sid)}&topic=${encodeURIComponent(topic)}`);
+    const el = $('#m_saved .by'); if (!el || M.sid !== sid) return;
+    el.textContent = d.saved ? `${d.rows} posts are saved from ${d.name || 'your import'}. Read all posts again checks every one of them once more.`
+      : d.legacy_ranges && !topic ? 'No import file is saved. This story still has its old channel range, and Read all posts again uses it.' : 'Nothing saved yet. The CSV, TXT or JSON you import is kept here.';
+  }catch(e){}
 }
 async function loadManage(){
   const sig = fresh('manage'), sid = M.sid, list = $('#m_list'); if (!list) return;
   list.innerHTML = '<div class="sk line" style="height:60px"></div>';
-  const qs = new URLSearchParams({offset: (M.page - 1) * 30, limit: 30}); if (M.q) qs.set('q', M.q);
+  const qs = new URLSearchParams({offset: (M.page - 1) * 30, limit: 30}); if (M.q) qs.set('q', M.q); if (M.scope) qs.set('topic', M.scope);
   try{
     const d = await api(`/api/story/${encodeURIComponent(sid)}?${qs}`, {signal: sig}); if (M.sid !== sid) return;
-    M.eps = d.eps; M.total = d.total; const pages = Math.max(1, Math.ceil(d.total / 30));
+    M.eps = d.eps; M.total = d.total;
     $('#m_total').textContent = `${d.total} episodes`;
     const g = d.range || {};
-    $('#m_info').innerHTML = `<b>Episodes in the app</b><div class="by">${g.count ? `${g.count} episodes, numbers ${g.first} to ${g.last}` : 'No episodes yet. Add the links below.'}</div>` +
-      (g.gaps ? `<div class="by" style="color:var(--warn)">Missing numbers: ${esc(g.gaps)}. If they should exist, tap "Read all posts again".</div>` : g.count ? '<div class="by" style="color:var(--ok)">No missing numbers.</div>' : '');
-    list.innerHTML = (d.eps.map(e => `<div class="mrow"><b>${e.no}.</b> ${esc(e.title)}<div style="margin:4px 0"><span class="pill ${e.free ? 'free' : 'owned'}">${e.free ? 'Free' : 'Premium'}</span> <span class="pill ${e.published ? 'free' : 'lock'}">${e.published ? 'Published' : 'Hidden'}</span></div>
-      <div class="actions" style="padding:0"><button class="btn ghost small" data-eren="${e.id}">Rename</button><button class="btn ghost small" data-efree="${e.id}" data-to="${e.free ? 0 : 1}">${e.free ? 'Make premium' : 'Make free'}</button>
-      <button class="btn ghost small" data-epub="${e.id}" data-to="${e.published ? 0 : 1}">${e.published ? 'Hide' : 'Publish'}</button></div></div>`).join('') || '<div class="empty">No episodes yet. Add the links above.</div>') +
-      (d.total > 30 ? `<div class="pager"><button class="btn ghost small" data-mpg="-1" ${M.page <= 1 ? 'disabled' : ''}>Prev</button><span>Page ${M.page} of ${pages}</span><button class="btn ghost small" data-mpg="1" ${M.page >= pages ? 'disabled' : ''}>Next</button></div>` : '');
+    $('#m_info').innerHTML = `<b>Episodes in the app</b><div class="by">${g.count ? `${g.count} episodes, numbers ${g.first} to ${g.last}` : 'No episodes yet. Import a file below.'}</div>` +
+      (g.gaps ? `<div class="by" style="color:var(--warn)">Missing numbers: ${esc(g.gaps)}.</div>` : g.count ? '<div class="by" style="color:var(--ok)">No missing numbers.</div>' : '');
+    renderManageList();
   }catch(e){ if (!e.aborted && $('#m_list')) $('#m_list').innerHTML = retryBox(adminErr(e), 'retryManage'); }
+}
+function renderManageList(){
+  const list = $('#m_list'); if (!list) return; const pages = Math.max(1, Math.ceil(M.total / 30));
+  const row = e => `<div class="mrow"><b>${e.no}.</b> ${esc(e.title)}<div style="margin:4px 0"><span class="pill ${e.free ? 'free' : 'owned'}">${e.free ? 'Free' : 'Premium'}</span> <span class="pill ${e.published ? 'free' : 'lock'}">${e.published ? 'Published' : 'Hidden'}</span></div>
+      ${e.fname ? `<div class="by">${esc(e.fname)}</div>` : ''}
+      <div class="actions" style="padding:0"><button class="btn ghost small" data-eedit="${e.id}">Edit</button><button class="btn ghost small" data-efree="${e.id}" data-to="${e.free ? 0 : 1}">${e.free ? 'Make premium' : 'Make free'}</button>
+      <button class="btn ghost small" data-epub="${e.id}" data-to="${e.published ? 0 : 1}">${e.published ? 'Hide' : 'Publish'}</button><button class="btn danger small" data-edel="${e.id}">Delete</button></div></div>`;
+  const form = e => `<div class="mrow"><b>Edit episode ${e.no}</b>
+      <label class="field"><span>File name</span><input id="x_fname" value="${esc(e.fname || '')}" maxlength="200"></label>
+      <label class="field"><span>Episode link</span><input id="x_link" type="url" value="${esc(e.link || '')}" placeholder="https://t.me/c/1234567890/10"></label>
+      <div class="two"><label class="field"><span>Episode no</span><input id="x_no" type="number" min="1" inputmode="numeric" value="${e.no}"></label><label class="field"><span>Ep title</span><input id="x_title" value="${esc(e.title || '')}" maxlength="200"></label></div>
+      <div class="actions" style="padding:0"><button class="btn small" data-esave="${e.id}">Save</button><button class="btn ghost small" id="x_cancel">Cancel</button></div></div>`;
+  list.innerHTML = (M.eps.map(e => M.edit === e.id ? form(e) : row(e)).join('') || '<div class="empty">No episodes yet. Import a file above.</div>') +
+    (M.total > 30 ? `<div class="pager"><button class="btn ghost small" data-mpg="-1" ${M.page <= 1 ? 'disabled' : ''}>Prev</button><span>Page ${M.page} of ${pages}</span><button class="btn ghost small" data-mpg="1" ${M.page >= pages ? 'disabled' : ''}>Next</button></div>` : '');
+}
+async function saveEpisodeEdit(id){
+  const title = $('#x_title').value.trim(); if (!title) return toast('The episode needs a title');
+  await once('ep' + id, async () => {
+    try{ await api('/api/admin/episode', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: +id, fname: $('#x_fname').value.trim(), link: $('#x_link').value.trim(), no: $('#x_no').value, title})}); toast('Saved'); M.edit = null; }
+    catch(e){ toast(adminErr(e), 5000); return; }
+    loadManage();
+  });
+}
+async function deleteEpisode(id){
+  const ep = M.eps.find(x => String(x.id) === String(id));
+  if (!confirm(`Delete episode ${ep ? ep.no + ': ' + ep.title : ''}?\n\nIt is removed from the app and from the saved import. Listening history for it is removed too.`)) return;
+  await once('epd' + id, async () => { try{ await api('/api/admin/episode/delete', {method: 'POST', retry: false, body: JSON.stringify({id: +id})}); toast('Episode deleted'); }catch(e){ toast(adminErr(e)); } loadManage(); loadSaved(); });
 }
 async function editEpisode(id, patch){
   await once('ep' + id, async () => { try{ await api('/api/admin/episode', {method: 'POST', retry: false, body: JSON.stringify({id: +id, ...patch})}); toast('Saved'); }catch(e){ toast(adminErr(e)); } loadManage(); });
 }
-function parseCsv(text){
-  const rows = []; let row = [], cur = '', q = false;
-  for (let i = 0; i < text.length; i++){
-    const c = text[i];
-    if (q){ if (c === '"' && text[i + 1] === '"'){ cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
-    else if (c === '"') q = true; else if (c === ',' || c === ';' || c === '\t'){ row.push(cur); cur = ''; }
-    else if (c === '\n' || c === '\r'){ if (c === '\r' && text[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
-    else cur += c;
-  }
-  if (cur || row.length){ row.push(cur); rows.push(row); }
-  return rows.filter(r => r.some(x => x.trim()));
-}
-function parseEpisodeData(text){
-  text = text.trim(); if (!text) return [];
-  if (text[0] === '[' || text[0] === '{'){ let j = JSON.parse(text); if (!Array.isArray(j)) j = j.rows || j.episodes || []; return j.map(r => ({ep_no: r.ep_no ?? r.episode ?? r.no, title: r.title, free: r.free, published: r.published})); }
-  const rows = parseCsv(text), head = rows[0].map(h => h.trim().toLowerCase()), has = head.some(h => ['ep_no', 'episode', 'no'].includes(h));
-  const idx = k => has ? head.findIndex(h => (k === 'ep_no' ? ['ep_no', 'episode', 'no'] : [k]).includes(h)) : ['ep_no', 'title', 'free', 'published'].indexOf(k);
-  return rows.slice(has ? 1 : 0).map(r => ({ep_no: r[idx('ep_no')], title: idx('title') >= 0 ? (r[idx('title')] || '').trim() : undefined, free: idx('free') >= 0 ? r[idx('free')] : undefined, published: idx('published') >= 0 ? r[idx('published')] : undefined}));
-}
 async function runImport(dry){
   await once('import', async () => {
-    const out = $('#m_result'); let rows;
-    try{ rows = parseEpisodeData($('#m_data').value); }catch(e){ out.textContent = 'That is not valid JSON or CSV.'; return; }
-    if (!rows.length){ out.textContent = 'Paste or choose some rows first.'; return; }
-    const seen = new Set(), clean = [], dups = [];
-    rows.forEach((r, i) => { const n = parseInt(r.ep_no); if (seen.has(n)){ dups.push(i + 1); } else { seen.add(n); clean.push(r); } });     // duplicates across the whole file
-    let updated = 0; const errors = [];
+    const out = $('#m_result'), text = $('#m_data').value.trim();
+    if (!text){ out.textContent = 'Paste the lines or choose a file first.'; return; }
+    out.textContent = dry ? 'Checking...' : 'Importing...';
     try{
-      for (let i = 0; i < clean.length; i += 500){
-        out.textContent = `${dry ? 'Checking' : 'Importing'} ${Math.min(i + 500, clean.length)} of ${clean.length}...`;
-        const r = await api('/api/admin/episodes/import', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({story_id: M.sid, rows: clean.slice(i, i + 500), dry_run: dry})});
-        updated += r.updated; r.errors.forEach(x => errors.push({...x, row: x.row + i})); await sleep(0);       // lets the screen stay responsive
-      }
-    }catch(e){ out.textContent = 'Stopped: ' + adminErr(e); return; }
-    out.innerHTML = `<b>${dry ? 'Check finished' : 'Import finished'}:</b> ${updated} ${dry ? 'can be updated' : 'updated'}, ${errors.length} problems, ${dups.length} duplicate rows skipped.` +
-      (errors.slice(0, 8).map(x => `<div>Row ${x.row}${x.ep_no ? ' (ep ' + x.ep_no + ')' : ''}: ${esc(x.error)}</div>`).join('')) + (errors.length > 8 ? `<div>...and ${errors.length - 8} more</div>` : '') + (dups.length ? `<div>Duplicate rows: ${dups.slice(0, 10).join(', ')}</div>` : '');
-    if (!dry) loadManage();
+      const r = await api('/api/admin/episodes/import_files', {method: 'POST', retry: false, timeout: 120000, body: JSON.stringify({story_id: M.sid, topic: M.topic, text, name: M.fileName, dry_run: dry})});
+      const acc = (r.access || []).map(a => `<div style="color:var(--${a.ok ? 'ok' : 'warn'})">${esc(a.chat)}: ${esc(a.note)}</div>`).join('');
+      out.innerHTML = `<b>${dry ? 'Check finished' : 'Import started'}:</b> ${r.valid} rows are fine, ${r.error_count} have problems.` + (r.note ? `<div>${esc(r.note)}</div>` : '') + acc +
+        (r.errors || []).slice(0, 8).map(x => `<div>Row ${x.row}${x.ep_no ? ' (ep ' + x.ep_no + ')' : ''}: ${esc(x.error)}</div>`).join('') + (r.error_count > 8 ? `<div>...and ${r.error_count - 8} more</div>` : '');
+      if (!dry){ loadSaved(); setTimeout(() => { if (M.sid && $('#m_list')) loadManage(); }, 8000); }
+    }catch(e){ out.textContent = 'Stopped: ' + adminErr(e); }
   });
 }
 
@@ -1621,6 +1712,9 @@ document.addEventListener('click', async e => {
   /* story page */
   if (c('#storyBack')) return closeSheet('story');
   if (c('#storySearch')){ const i = $('#epq'); if (i){ i.scrollIntoView({behavior: 'smooth', block: 'center'}); setTimeout(() => i.focus(), 350); } return; }
+  if ((m = c('[data-topic]'))){
+    V.topic = m.dataset.topic; V.page = 1; pickPlan(); const tp = $('#topicPills'); if (tp) tp.innerHTML = topicPillsHtml(); paintPlanBar(); return loadStoryPage(1);
+  }
   if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; return paintPlanBar(); }
   if (c('#sbCart')){ if (V.sel) cartToggle(V.sel); return paintPlanBar(); }
   if (c('#sbBuy')){ const oid = V.sel; if (oid) return once('buy', async () => { goBot(`buy_${V.id}_${oid}`); await sleep(1200); }); return; }
@@ -1691,7 +1785,25 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-atab]'))){ A.tab = m.dataset.atab; $$('[data-atab]').forEach(b => b.classList.toggle('on', b === m)); return loadAdmin(); }
   if (c('#newStory')) return openEditor(null);
   if ((m = c('[data-aedit]'))) return openEditor(m.dataset.aedit);
-  if ((m = c('[data-aeps]'))) return openEpisodes(m.dataset.aeps, m.dataset.title);
+  if ((m = c('[data-aeps]'))) return openEpisodesOrTopics(m.dataset.aeps, m.dataset.title);
+  if ((m = c('[data-atop]'))) return openTopics(m.dataset.atop, m.dataset.title);
+  if (c('#retryTopics')) return loadTopics();
+  if (c('#tpClose')) return closeSheet('topics');
+  if (c('#teClose') || c('#teClose2')) return closeSheet('topiced');
+  if (c('#tpAdd')){ const name = (prompt('Topic name (for example Season 1):') || '').trim(); if (!name) return; return once('tpadd', async () => { try{ await topicCall({action: 'add', name}); toast('Topic added'); }catch(e){ toast(adminErr(e)); } loadTopics(); }); }
+  if ((m = c('[data-tsel]'))){
+    const id = m.dataset.tsel, t = ((T.story && T.story.topics) || []).find(x => x.id === id);
+    return id ? openEpisodes(T.sid, T.title, id, t ? t.name : '', id) : openEpisodes(T.sid, T.title, '', 'Episodes without a topic', '_none');
+  }
+  if ((m = c('[data-tedit]'))) return openTopicEditor(m.dataset.tedit);
+  if ((m = c('[data-tdel]'))){
+    const t = ((T.story && T.story.topics) || []).find(x => x.id === m.dataset.tdel);
+    if (!confirm(`Delete the topic "${t ? t.name : ''}"?\n\nIts plans are removed. Its episodes stay in the app without a topic. Existing purchases keep working.`)) return;
+    return once('tpdel', async () => { try{ await topicCall({action: 'delete', id: m.dataset.tdel}); toast('Topic deleted'); }catch(e){ toast(adminErr(e)); } loadTopics(); loadAdmin(); loadHome(); });
+  }
+  if (c('#teAddOpt')){ $('#te_opts').insertAdjacentHTML('beforeend', optRow()); return; }
+  if (c('#teGen')) return addPacks('#te_opts', 'tg_');
+  if (c('#teSave')) return saveTopic();
   if ((m = c('[data-apub]'))) return adminPublish(m.dataset.apub, +m.dataset.to);
   if ((m = c('[data-adel]'))) return adminDelete(m.dataset.adel, m.dataset.title);
   if ((m = c('[data-oact]'))) return orderAction(+m.dataset.oid, m.dataset.oact);
@@ -1703,14 +1815,7 @@ document.addEventListener('click', async e => {
   if (c('#emClose')) return closeSheet('epman');
   if (c('#addOpt')){ $('#e_opts').insertAdjacentHTML('beforeend', optRow()); return; }
   if (c('.o-del')) return c('.optrow').remove();
-  if (c('#genPacks')){
-    const start = parseInt($('#g_start').value) || 1, total = parseInt($('#g_total').value), size = parseInt($('#g_size').value), price = Number($('#g_price').value) || 0;
-    if (!total || !size) return toast('Enter total episodes and pack size');
-    if (Math.ceil(total / size) > 100) return toast('That makes more than 100 packs. Use a bigger pack size.');
-    const end = start + total - 1;
-    for (let a = start; a <= end; a += size) $('#e_opts').insertAdjacentHTML('beforeend', optRow({label: `Episodes ${a}-${Math.min(a + size - 1, end)}`, price, days: 0, from: a, to: Math.min(a + size - 1, end)}));
-    return;
-  }
+  if (c('#genPacks')) return addPacks('#e_opts', 'g_');
   if (c('#photoRemove')){ E.photo = ''; E.cover = ''; $('#e_cover').value = ''; $('#e_photo').value = ''; return paintPhoto(); }
   if (c('#saveStory')) return saveEditor();
   if (c('#autofill')){
@@ -1728,24 +1833,21 @@ document.addEventListener('click', async e => {
       b.disabled = false; b.textContent = 'Auto-fill details';
     });
   }
-  if (c('#saveLinks')){
-    const ep1 = $('#m_ep1').value.trim(), epN = $('#m_epN').value.trim(); if (!ep1) return toast('Paste the Episode 1 link');
-    return once('links', async () => {
-      try{ const r = await api('/api/admin/links', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, ep1, epN: epN || ep1, append: $('#m_append').checked})}); toast(r.note || 'Links saved', 6000); }
-      catch(err){ toast(adminErr(err), 5000); }
-    });
-  }
   if ((m = c('[data-ejob]'))){
     const kind = m.dataset.ejob;
     if (kind === 'renumber' && !confirm('Give every episode the number written in its file name?\n\nPlans that sell episode ranges use these numbers, so check them afterwards. Listening history is kept.')) return;
     return once('ejob', async () => {
-      try{ const r = await api(`/api/admin/episodes/${kind}`, {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, all: kind === 'reread'})}); toast(r.note || 'Started', 6000); }
+      try{ const r = await api(`/api/admin/episodes/${kind}`, {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, all: kind === 'reread', topic: M.topic})}); toast(r.note || 'Started', 6000); }
       catch(err){ toast(adminErr(err), 6000); }
     });
   }
   if (c('#m_check')) return runImport(true);
-  if (c('#m_apply')){ if (!confirm('Apply these changes to the episodes?')) return; return runImport(false); }
-  if ((m = c('[data-eren]'))){ const ep = M.eps.find(x => String(x.id) === m.dataset.eren); const v = prompt('New episode title:', ep ? ep.title : ''); if (v && v.trim()) return editEpisode(m.dataset.eren, {title: v.trim()}); return; }
+  if (c('#m_apply')){ if (!confirm('Import these episodes' + (M.tname && M.topic ? ' into ' + M.tname : '') + '?')) return; return runImport(false); }
+  if (c('#m_bot')) return goBot(`import_${M.sid}_${M.topic || '0'}`);
+  if ((m = c('[data-eedit]'))){ M.edit = +m.dataset.eedit; return renderManageList(); }
+  if (c('#x_cancel')){ M.edit = null; return renderManageList(); }
+  if ((m = c('[data-esave]'))) return saveEpisodeEdit(m.dataset.esave);
+  if ((m = c('[data-edel]'))) return deleteEpisode(m.dataset.edel);
   if ((m = c('[data-efree]'))) return editEpisode(m.dataset.efree, {free: !!+m.dataset.to});
   if ((m = c('[data-epub]'))) return editEpisode(m.dataset.epub, {published: !!+m.dataset.to});
   if ((m = c('[data-mpg]'))){ M.page = Math.max(1, M.page + +m.dataset.mpg); return loadManage(); }
@@ -1775,7 +1877,7 @@ document.addEventListener('change', async e => {
   if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
   if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 900); paintRqPhoto(); }catch(err){ toast(err.message); } }
   if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
-  if (id === 'm_file' && e.target.files[0]){ $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
+  if (id === 'm_file' && e.target.files[0]){ M.fileName = e.target.files[0].name; $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); });
 document.addEventListener('pointerdown', e => {                   // hold the speed buttons to keep stepping by 0.05x
