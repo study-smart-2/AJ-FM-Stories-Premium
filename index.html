@@ -945,4 +945,1532 @@ const rqCatalogCheck = deb(async () => {
     const d = await api('/api/catalog?limit=3&q=' + encodeURIComponent(q), {retry: false, signal: fresh('rqcat')});
     if ($('#rqHits')) $('#rqHits').innerHTML = d.stories.length ? `<div class="rq-hint" style="margin:0 0 6px">${tr('rqstore')}</div><div style="display:grid;gap:8px">${d.stories.map(dMini).join('')}</div>` : '';
   }catch(e){}
-}, 
+}, 450);
+async function loadRequests(){
+  R.state = 'loading'; paintRqList();
+  try{ const d = await api('/api/requests', {signal: fresh('rqlist')}); R.items = d.items; R.state = 'ok'; }
+  catch(e){ if (e.aborted) return; R.state = 'error'; R.err = errText(e); }
+  if (R.tab === 'mine') paintRqList();
+}
+function paintRqList(){
+  const b = $('#rqBody'); if (!b || R.tab !== 'mine') return;
+  const legend = `<div class="rq-legend">${[1, 2, 3, 4].map(n => `<div class="rq-lg"><span class="no">0${n}</span><span><b>${tr('rqs' + n)}</b><small>${tr('rqd' + n)}</small></span></div>`).join('')}</div>`;
+  let list;
+  if (R.state === 'loading' && !R.items) list = '<div class="sk hero"></div>';
+  else if (R.state === 'error' && !R.items) list = retryBox(R.err, 'retryRq');
+  else if (!R.items || !R.items.length) list = `<div class="empty"><b style="color:var(--text);font-size:16px">${tr('rqempty')}</b><small style="display:block;margin:6px 0 12px">${tr('rqemptynote')}</small><button class="btn" data-rqtab="new">${tr('rqnew')}</button></div>`;
+  else list = R.items.map(r => {
+    const rej = r.state === 'rejected', cur = RQ_STAGES.indexOf(r.state);
+    return `<div class="rq-card${rej ? ' rej' : ''}"><h4>${esc(r.title)}</h4><div class="by">REQ-${r.id} | ${esc([r.platform, r.language, r.status].filter(Boolean).join(' | '))} | ${dateStr(r.created)}</div>
+      <div class="rq-pipe">${[1, 2, 3, 4].map((n, i) => `<div class="rq-st${i <= cur ? ' on' : ''}${i === cur ? ' cur' : ''}"><i></i>0${n} ${tr('rqs' + n)}</div>`).join('')}</div>
+      ${rej ? `<div class="rq-note" style="color:var(--bad)"><b>${tr('rqrej')}.</b> ${tr('rqrejnote')}</div>` : `<div class="rq-note">${tr('rqd' + (cur + 1))}</div>`}</div>`;
+  }).join('');
+  const has = R.items && R.items.length;
+  b.innerHTML = has ? list + `<h3 class="lsub">How requests move</h3>` + legend : legend + list;
+}
+async function submitRequest(){
+  if (R.sending) return;
+  const d = R.d; d.name = ($('#rq_name').value || '').trim(); d.platform = ($('#rq_plat').value || '').trim(); d.link = ($('#rq_link').value || '').trim();
+  if (d.name.length < 2 || !d.platform || !d.language || !d.status) return toast(tr('rqneed'), 4000);
+  if (d.link && !validWebLink(d.link)){ const h = $('#rqLinkHint'); if (h){ h.textContent = tr('rqbadlink'); h.className = 'rq-hint bad'; } return toast(tr('rqbadlink'), 4000); }
+  R.sending = true; const b = $('#rqSubmit'); b.disabled = true; b.textContent = tr('rqsending');
+  try{
+    await api('/api/requests', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({...d, cover: R.photo})});
+    toast(tr('rqdone'), 5000);
+    R.d = {name:'', platform:'', language:'', status:'', link:''}; R.photo = ''; R.items = null; R.tab = 'mine'; renderRequest();
+  }catch(e){ toast(errText(e), 6000); const b2 = $('#rqSubmit'); if (b2){ b2.disabled = false; b2.textContent = tr('rqsubmit'); } }
+  finally{ R.sending = false; }
+}
+
+/* ---------- browse ---------- */
+function browseActive(){ return !!(B.q || B.genre || B.status || B.language || B.sort !== 'newest'); }
+const browseMode = () => (B.view === 'list' || browseActive()) ? 'list' : 'discover';
+function renderBrowse(){
+  $('#view').innerHTML = `<div class="pad"><input class="search" id="bq" type="search" placeholder="Search title, author, genre or language" value="${esc(B.q)}" aria-label="Search stories"></div><div id="bbody"></div>`;
+  paintBrowse();
+}
+function paintBrowse(){
+  const body = $('#bbody'); if (!body) return; B.painted = browseMode();
+  if (B.painted === 'discover'){ paintDiscover(); if (B.allState === 'idle') loadDiscover(); return; }
+  const sts = (B.facets && B.facets.statuses && B.facets.statuses.length) ? B.facets.statuses : ['Ongoing', 'Completed'];
+  body.innerHTML = `<div class="pad" style="padding-top:8px"><button class="link" id="dback">&larr; ${tr('dback')}</button></div>
+    <div class="ctl" style="padding-top:6px"><select id="bsort" aria-label="Sort"><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">A to Z</option><option value="popular">Most listened</option><option value="updated">Recently updated</option><option value="price_low">Price: Low to High</option><option value="price_high">Price: High to Low</option></select>
+    <select id="bstatus" aria-label="Status"><option value="">All stories</option>${sts.map(x => `<option>${esc(x)}</option>`).join('')}</select></div>
+    <div id="blang"></div><div class="chips" id="bchips" aria-label="Genres"></div><div class="actions" id="bclearbox" style="padding-bottom:8px"></div><div id="bres"></div>`;
+  $('#bsort').value = B.sort; $('#bstatus').value = B.status;
+  browseChips(); browseResults();
+  if (B.state === 'idle') loadBrowse(true);
+}
+/* ---- discover: 1 row = 1 card, tap to preview 3 stories, See all opens the full list ---- */
+const GENRE_ICON = [[/romanc|love/i,'\u2764\uFE0F'],[/horror|ghost|haunt/i,'\uD83D\uDC7B'],[/thrill|crime|detect/i,'\uD83D\uDD75\uFE0F'],[/mystery/i,'\uD83D\uDD0E'],[/fantas|magic/i,'\uD83E\uDDD9'],[/action|war/i,'\u2694\uFE0F'],[/comed|humou?r/i,'\uD83D\uDE02'],[/drama|family/i,'\uD83C\uDFAD'],[/sci|space/i,'\uD83D\uDE80'],[/mytholog|devot|spirit/i,'\uD83D\uDD49\uFE0F'],[/kid|child/i,'\uD83E\uDDF8']];
+const STATUS_ICON = {Completed:'\u2705', Ongoing:'\u26A1', Upcoming:'\uD83D\uDD52', Stopped:'\u23F8\uFE0F', Paused:'\u23F8\uFE0F'};
+function discoverRows(){
+  const all = B.all || [], f = B.facets || {}, byUpd = (a, b) => b.updated - a.updated;
+  const rows = [], mk = (sec, key, icon, title, items, see) => rows.push({sec, key, icon, title, items, see});
+  mk('dcol', 'trend', '\uD83D\uDD25', tr('dtrend'), all.filter(s => s.listeners > 0).sort((a, b) => b.listeners - a.listeners || byUpd(a, b)), {sort:'popular'});
+  mk('dcol', 'new', '\u2728', tr('recent'), all.slice().sort((a, b) => b.created - a.created), {sort:'newest'});
+  mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
+  mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
+  (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
+  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => (s.genre || '').split(',').map(x => x.trim()).includes(g.name)).sort(byUpd), {genre:g.name, sort:'updated'}); });
+  if ((f.languages || []).length > 1) f.languages.forEach(l => mk('dlang', 'l:' + l, '\uD83C\uDF10', l, all.filter(s => s.language === l).sort(byUpd), {language:l, sort:'updated'}));
+  return rows.filter(r => r.items.length);
+}
+function paintDiscover(){
+  const body = $('#bbody'); if (!body) return;
+  if (B.allState === 'error' && !B.all){ body.innerHTML = retryBox(B.allErr, 'retryDisc'); return; }
+  if (!B.all){ body.innerHTML = Array.from({length: 6}, () => '<div class="sk" style="height:64px;margin:0 16px 10px"></div>').join(''); return; }
+  const rows = discoverRows(); B.rows = rows; let sec = '';
+  body.innerHTML = `<h2 class="sec" style="padding:4px 16px 0">${tr('dtitle')}</h2>` + (rows.map(r => {
+    const head = r.sec !== sec ? `<h3 class="dsec">${tr(r.sec)}</h3>` : ''; sec = r.sec;
+    return head + `<div class="dcard${B.open === r.key ? ' open' : ''}" data-dkey="${esc(r.key)}"><button class="drow" data-drow="${esc(r.key)}" aria-expanded="${B.open === r.key}"><span class="dic">${r.icon}</span><span class="dtx"><b>${esc(r.title)}</b><small>${tr('dcount', {n: r.items.length})}</small></span><span class="dchev"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span></button><div class="dbody"><div>${B.open === r.key ? dPreview(r) : ''}</div></div></div>`;
+  }).join('') || `<div class="empty">${tr('dnone')}</div>`);
+  if (B.focus){                                                   // arrived from "View all": bring that category into view
+    const key = B.focus; B.focus = '';
+    setTimeout(() => { const c = $$('#bbody .dcard').find(x => x.dataset.dkey === key); if (c) c.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 60);
+  }
+}
+const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([s.genre, s.status, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
+const dPreview = r => `<div class="dpv">${r.items.slice(0, 3).map(dMini).join('')}<button class="btn ghost block" data-dsee="${esc(r.key)}">${tr('dsee', {n: r.items.length})} &rarr;</button></div>`;
+function toggleRow(key){
+  const card = $$('#bbody .dcard').find(c => c.dataset.dkey === key), r = (B.rows || []).find(x => x.key === key); if (!card || !r) return;
+  const open = !card.classList.contains('open');
+  $$('#bbody .dcard.open').forEach(c => { c.classList.remove('open'); c.querySelector('.drow').setAttribute('aria-expanded', 'false'); });
+  B.open = open ? key : '';
+  if (open){ const slot = card.querySelector('.dbody > div'); if (!slot.firstChild) slot.innerHTML = dPreview(r); card.classList.add('open'); card.querySelector('.drow').setAttribute('aria-expanded', 'true'); setTimeout(() => card.scrollIntoView({block:'nearest', behavior:'smooth'}), 320); }
+}
+function seeAllRow(key){
+  const r = (B.rows || []).find(x => x.key === key); if (!r) return;
+  Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', ...r.see, view:'list', state:'idle'}); renderBrowse();
+}
+async function loadDiscover(){
+  if (B.allState === 'loading') return; B.allState = 'loading'; paintDiscover();
+  try{ const d = await api('/api/catalog?limit=500&sort=updated', {timeout: 60000}); B.all = d.stories || []; if (d.facets) B.facets = d.facets; B.allState = 'ok'; }
+  catch(e){ B.allState = 'error'; B.allErr = errText(e); }
+  if (S.tab === 'browse' && browseMode() === 'discover') paintDiscover();
+}
+function browseChips(){
+  const g = (B.facets && B.facets.genres) || [];
+  const c = $('#bchips'); if (!c) return;
+  c.innerHTML = [`<button class="chip${B.genre ? '' : ' on'}" data-bgenre="">All genres</button>`, ...g.map(x => `<button class="chip${B.genre === x.name ? ' on' : ''}" data-bgenre="${esc(x.name)}">${esc(x.name)}</button>`)].join('');
+  const langs = (B.facets && B.facets.languages) || [];
+  $('#blang').innerHTML = langs.length > 1 ? `<div class="ctl" style="grid-template-columns:1fr"><select id="blangsel" aria-label="Language"><option value="">All languages</option>${langs.map(l => `<option${B.language === l ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>` : '';
+  $('#bclearbox').innerHTML = browseActive() ? '<button class="btn ghost small" id="bclear">Clear search and filters</button>' : '';
+}
+function browseResults(){
+  const r = $('#bres'); if (!r) return;
+  if (B.state === 'error' && !B.items.length){ r.innerHTML = retryBox(B.err, 'retryBrowse'); return; }
+  if (B.state === 'loading' && !B.items.length){ r.innerHTML = `<div class="grid">${Array.from({length: 6}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>`; return; }
+  if (!B.items.length){ r.innerHTML = `<div class="empty">No stories match${B.q ? ` "${esc(B.q)}"` : ' these filters'}.${browseActive() ? '<br><button class="btn ghost small" id="bclear2">Clear search and filters</button>' : ''}</div>`; return; }
+  r.innerHTML = `<div class="grid">${B.items.map(card).join('')}</div><div class="pad" style="margin:14px 0"><div class="by" style="text-align:center;margin-bottom:8px">${B.items.length} of ${B.total}</div>
+    ${B.items.length < B.total ? `<button class="btn ghost block" id="bmore"${B.state === 'loading' ? ' disabled' : ''}>${B.state === 'loading' ? 'Loading...' : 'Load more'}</button>` : ''}
+    ${B.state === 'error' ? `<div class="msg bad">${esc(B.err)} <button class="link" id="retryBrowse">Retry</button></div>` : ''}</div>`;
+}
+async function loadBrowse(reset){
+  const sig = fresh('browse');
+  if (reset){ B.items = []; }
+  B.state = 'loading'; browseResults();
+  const qs = new URLSearchParams({limit: 24, offset: B.items.length, sort: B.sort});
+  for (const k of ['q', 'genre', 'status', 'language']) if (B[k]) qs.set(k, B[k]);
+  try{
+    const d = await api('/api/catalog?' + qs, {signal: sig, timeout: 60000});
+    B.items = reset ? d.stories : B.items.concat(d.stories.filter(s => !B.items.some(x => x.id === s.id)));    // never show a story twice
+    B.total = d.total; if (d.facets){ B.facets = d.facets; browseChips(); } B.state = 'ok';
+  }catch(e){ if (e.aborted) return; B.state = 'error'; B.err = errText(e); }
+  browseResults();
+}
+const browseSearch = deb(() => { loadBrowse(true); browseChips(); }, 350);
+function viewAll(key){                                   // "View all" on Home = go to the Discover tab and open that category
+  const row = {trending:'trend', recent:'new', updated:'upd', completed:'s:Completed', ongoing:'s:Ongoing'}[key] || key;      // genre rows already use g:<name>
+  Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover', open: row, focus: row});
+  setTab('browse');
+}
+
+/* ---------- library ---------- */
+const STATUS = {approved:['Active','free'], pending:['Pending approval','warn'], expired:['Expired',''], rejected:['Rejected','bad'], revoked:['Revoked','bad'], refunded:['Refunded','bad'], cancelled:['Cancelled','']};
+const statusPill = s => { const [t, c] = STATUS[s] || [s, '']; return `<span class="tag ${c === 'free' ? 'live' : c}">${esc(t)}</span>`; };
+const rangeText = r => r.from ? `Episodes ${r.from} to ${r.to}` : 'All episodes';
+const LIB_TABS = [['listening', '\uD83C\uDFA7', 'll'], ['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
+const lthumb = c => `<span class="lth">${isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="?">` : esc(c || '?')}</span>`;
+const lrow = o => `<div class="lrow"><button class="lmain" ${o.attrs || `data-story="${esc(o.sid)}"`} ${o.avail === false ? 'data-avail="0"' : ''} aria-label="Open ${esc(o.title)}">${lthumb(o.cover)}<span class="lmt"><b>${esc(o.title)}</b>${(o.lines || []).filter(Boolean).map(l => `<small>${l}</small>`).join('')}${o.bar !== undefined ? `<span class="bar"><i style="width:${o.bar}%"></i></span>` : ''}</span></button><div class="lact">${o.actions || ''}</div></div>`;
+const leftText = ts => { const s = ts - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), hr = Math.floor(s % 86400 / 3600); return d ? d + 'd ' + hr + 'h' : hr + 'h ' + Math.floor(s % 3600 / 60) + 'm'; };
+const libEmpty = k => `<div class="empty">${tr(k)}</div>`;
+function renderLibrary(){
+  if (!LIB_TABS.some(t => t[0] === L.seg)) L.seg = 'listening';
+  $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ltitle')}</h2><span><button class="link" id="openDl">\u2B07 Downloads</button> <button class="link" id="libRefresh" aria-label="${esc(tr('lref'))}">${tr('lref')}</button></span></div>
+    <div class="seg" role="tablist">${LIB_TABS.map(([k, ic, lb]) => `<button class="chip${L.seg === k ? ' on' : ''}" data-seg="${k}" role="tab" aria-selected="${L.seg === k}">${ic} ${tr(lb)}</button>`).join('')}</div><div id="libBody"></div>`;
+  loadLibrary();
+}
+async function loadLibrary(){
+  const body = $('#libBody'); if (!body) return;
+  body.innerHTML = `<div class="rail">${cardSk(3)}</div>`;
+  const sig = fresh('library'), seg = L.seg;
+  try{
+    if (seg === 'listening'){
+      const [c, hd] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []}))]); if (L.seg !== seg) return;
+      body.innerHTML = (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
+          lines: [`Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}`], bar: i.episode.duration ? Math.min(100, Math.round(i.pos / i.episode.duration * 100)) : 0,
+          actions: `<button class="lbtn" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}">${tr('lres')}</button>${dlBtnHtml(i.episode.id)}<button class="lbtn rm" data-lcx="${esc(i.story.id)}">${tr('lrem')}</button>`}))).join('') : libEmpty('lel')) +
+        (hd.items.length ? `<h3 class="lsub">${tr('lhead')}</h3>` + hd.items.map(h => (HIST[h.episode_id] = h, `<div class="eprow"><button class="ep" data-hist="${h.episode_id}" data-story="${esc(h.story_id)}" data-pos="${h.pos}" ${h.available ? '' : 'disabled'}>
+          <span class="n">${epn(h)}</span><span class="t"><b>${esc(h.story_title)}</b><br><small>${esc(h.title)}</small></span><small>${h.completed ? 'Done' : clock(h.pos)}</small></button>${h.available ? dlBtnHtml(h.episode_id) : ''}</div>`)).join('') : '');
+    } else if (seg === 'owned' || seg === 'rentals'){
+      const d = await api('/api/library', {signal: sig}); if (L.seg !== seg) return;
+      let list = d.stories.filter(s => seg === 'owned' ? !s.expires : !!s.expires);
+      if (seg === 'rentals') list.sort((a, b) => a.expires - b.expires);
+      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, avail: s.available,
+        lines: [esc(s.ranges.map(rangeText).join(', ')), seg === 'owned' ? tr('lkeep') : esc(tr('luntil', {d: dateStr(s.expires)})) + ' | ' + esc(tr('lleft', {t: leftText(s.expires)})), s.available ? '' : `<span style="color:var(--warn)">This story is no longer in the store. Your purchase is kept.</span>`],
+        actions: `<button class="lbtn" data-story="${esc(s.id)}" ${s.available ? '' : 'data-avail="0"'}>${tr('lopen')}</button>`})).join('') : libEmpty(seg === 'owned' ? 'leo' : 'ler');
+    } else if (seg === 'wishlist'){
+      const [w, cat] = await Promise.all([api('/api/wishlist', {signal: sig}), B.all ? Promise.resolve({stories: B.all}) : api('/api/catalog?limit=500&sort=updated', {signal: sig})]); if (L.seg !== seg) return;
+      const by = new Map((cat.stories || []).map(s => [s.id, s])); S.wish = new Set(w.ids);
+      const list = w.ids.map(id => by.get(id)).filter(Boolean);
+      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([s.genre, s.status, s.episodes ? s.episodes + ' eps' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
+        actions: `<button class="lbtn" data-story="${esc(s.id)}">${tr('lopen')}</button><button class="lbtn rm" data-lwx="${esc(s.id)}">${tr('lrem')}</button>`})).join('') : libEmpty('lew');
+    } else {
+      const d = await api('/api/account?limit=60', {signal: sig}); if (L.seg !== seg) return;
+      body.innerHTML = d.orders.length ? d.orders.map(o => `<div class="mrow"><h4>${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
+        <div style="margin:6px 0">${statusPill(o.status)}</div><div class="by">Order #${o.id} | ${dateStr(o.created)}${o.expires ? ' | ' + (o.status === 'expired' ? 'ended ' : 'until ') + dateStr(o.expires) : ''}</div>
+        ${o.available ? '' : '<div class="by" style="color:var(--warn)">This story is no longer in the store.</div>'}
+        ${o.status === 'pending' ? '<div class="by">Waiting for approval after your screenshot. If you have not sent one, open the bot and send it.</div>' : ''}</div>`).join('') : libEmpty('leh');
+    }
+  }catch(e){
+    if (e.aborted) return;
+    body.innerHTML = retryBox(errText(e), 'retryLib');
+  }
+}
+async function libRemove(btn, url, payload, after){
+  const row = btn.closest('.lrow'); btn.disabled = true;
+  try{ await api(url, {method:'POST', retry:false, body: JSON.stringify(payload)}); after && after(); row && row.remove(); if (!$('#libBody .lrow')) loadLibrary(); }
+  catch(e){ btn.disabled = false; toast(errText(e)); }
+}
+
+/* ---------- player (one audio element, one authoritative state) ---------- */
+let audio = makeAudio();                     // the element that is playing now; the next episode is buffered in a second one and swapped in
+const P = {next:null, preloading:false, sid:null, story:null, ep:null, state:'idle', err:'', userPaused:false, repeat:false, rate:1, sleepAt:0, sleepEnd:false, seq:0, retries:0, lastSave:0, dragging:false};
+try{ const r = parseFloat(localStorage.getItem('ajfm_rate')); if (r >= 0.5 && r <= 5) P.rate = r; }catch(e){}
+let rateWarned = false;
+const rateLabel = r => r.toFixed(2).replace(/\.?0+$/, '') + 'x';
+function setRate(v){
+  P.rate = Math.min(5, Math.max(0.5, Math.round(v * 100) / 100));
+  audio.playbackRate = P.rate; audio.defaultPlaybackRate = P.rate;
+  try{ localStorage.setItem('ajfm_rate', String(P.rate)); }catch(e){}
+  if (P.rate > 4 && !rateWarned){ rateWarned = true; toast('Above 4x some phones play no sound. If it goes silent, lower the speed.', 4500); }
+  paintFull();
+}
+const playing = () => !audio.paused && !audio.ended;
+
+function showMini(){ $('#mini').classList.add('show'); document.body.classList.add('hasplayer'); paintMini(); }
+function paintMini(){
+  if (!P.ep) return;
+  const c = P.story && P.story.cover;
+  $('#mCover').innerHTML = isImg(c) ? `<img src="${esc(c)}" alt="" data-fb="📖">` : esc(c || '📖');
+  $('#mTitle').textContent = `${P.story ? P.story.title : ''}`;
+  $('#mSub').textContent = P.state === 'loading' ? 'Loading...' : P.state === 'buffering' ? 'Buffering...' : P.state === 'error' ? 'Problem. Tap to retry' : `Episode ${epn(P.ep)}: ${P.ep.title || ''}`;
+  $('#mPlay').innerHTML = playing() || P.state === 'loading' ? '&#10074;&#10074;' : '&#9654;';
+  const d = isFinite(audio.duration) && audio.duration ? audio.duration : (P.ep.duration || 0);
+  $('#mProg').style.width = d ? Math.min(100, audio.currentTime / d * 100) + '%' : '0';
+}
+function renderFull(){
+  const c = P.story && P.story.cover;
+  $('#fullplayer').innerHTML = `<div class="top"><button class="btn ghost small" id="fClose" aria-label="Close player">Close</button><button class="btn ghost small" id="fStory">Open story</button></div>
+    <div class="fp">${cover(c)}<h2 id="fTitle"></h2><div class="by" id="fStoryTitle"></div><div class="state" id="fState" aria-live="polite"></div>
+    <div id="fRetry"></div>
+    <input type="range" id="fSeek" min="0" max="1" step="1" value="0" aria-label="Seek"><div class="bufbar" aria-hidden="true"><i id="fBuf"></i></div><div class="times"><span id="fCur">0:00</span><span id="fDur">0:00</span></div>
+    <div class="row"><button id="fPrev" aria-label="Previous episode">&#9198;</button><button id="fBack" aria-label="Back 15 seconds">-15</button><button id="fPlay" aria-label="Play or pause">&#9654;</button>
+      <button id="fFwd" aria-label="Forward 15 seconds">+15</button><button id="fNext" aria-label="Next episode">&#9197;</button></div>
+    <div class="opt"><b>Speed <span id="fRate"></span></b><div class="rr"><button id="rMinus" aria-label="Slower by 0.05">-0.05</button><input type="range" id="rSlide" min="0.5" max="5" step="0.05" aria-label="Playback speed"><button id="rPlus" aria-label="Faster by 0.05">+0.05</button></div>
+      <div class="chiprow">${[1, 1.25, 1.5, 2, 3, 4, 5].map(r => `<button data-rate="${r}">${r}x</button>`).join('')}</div></div>
+    <div class="opt"><b>Sleep timer <span id="fSleep"></span></b><div class="chiprow">${[['Off', 0], ['15 min', 15], ['30 min', 30], ['45 min', 45], ['60 min', 60]].map(([t, m]) => `<button data-sleep="${m}">${t}</button>`).join('')}<button data-sleep="end">End of episode</button></div></div>
+    <div class="opt"><b>Offline</b><div class="by" style="margin-bottom:6px">Save this episode on your phone to listen without internet.</div><button id="fDl" class="dlx" data-dl="0" data-long="1">Download for offline</button><button class="dlx ${OFF.auto ? 'on' : ''}" id="fAuto" aria-pressed="${OFF.auto}">Auto-download next: ${OFF.auto ? 'on' : 'off'}</button><button class="dlx" id="fDlList">My downloads</button></div>
+    <div class="opt"><b>Repeat</b><div class="chiprow"><button id="fRepeat" aria-pressed="false">Repeat this episode: off</button></div></div>
+    <div class="opt"><b>Listen with the screen off</b><div class="by" style="margin-bottom:8px">Send episodes into your bot chat and play them with Telegram's own player. It keeps playing in the background and moves on to the next episode by itself. Saving and forwarding are switched off. The episodes remove themselves from the chat when their audio time plus a little extra is over. Each episode can be sent <span id="dMax">5</span> times.</div>
+      <div id="dStatus" aria-live="polite"></div><div class="ctl" style="padding:0"><select id="dCount" aria-label="How many episodes"><option value="1">1 episode</option><option value="3">3 episodes</option><option value="5" selected>5 episodes</option><option value="10">10 episodes</option></select><button class="btn" id="dGo">Send to my chat</button></div><div class="by" id="dLeft" style="margin-top:6px"></div></div></div>`;
+  paintFull(); loadDelivery();
+}
+function paintFull(){
+  if (!$('#fTitle')) return;
+  if (P.ep){ $('#fTitle').textContent = `Episode ${epn(P.ep)}: ${P.ep.title || ''}`; $('#fStoryTitle').textContent = P.story ? P.story.title : ''; }
+  const st = {loading:'Loading episode...', buffering:'Buffering...', playing:'Playing', paused:'Paused', error:P.err, idle:''}[P.state] || '';
+  const s = $('#fState'); s.textContent = st; s.className = 'state' + (P.state === 'error' ? ' bad' : '');
+  $('#fRetry').innerHTML = P.state === 'error' ? '<button class="btn small" id="fRetryBtn">Try again</button>' : '';
+  $('#fPlay').innerHTML = playing() || P.state === 'loading' ? '&#10074;&#10074;' : '&#9654;';
+  const d = isFinite(audio.duration) ? audio.duration : (P.ep ? P.ep.duration : 0) || 0;
+  $('#fSeek').max = Math.max(1, Math.floor(d)); if (!P.dragging) $('#fSeek').value = Math.floor(audio.currentTime || 0);
+  $('#fCur').textContent = clock(audio.currentTime); $('#fDur').textContent = clock(d);
+  const buf = audio.buffered && audio.buffered.length ? audio.buffered.end(audio.buffered.length - 1) : 0; $('#fBuf').style.width = d ? Math.min(100, buf / d * 100) + '%' : '0';
+  $('#fRate').textContent = rateLabel(P.rate); $('#rSlide').value = P.rate;
+  $$('#fullplayer [data-rate]').forEach(b => b.classList.toggle('on', Math.abs(parseFloat(b.dataset.rate) - P.rate) < 0.001));
+  const left = P.sleepAt ? Math.max(0, Math.ceil((P.sleepAt - Date.now()) / 60000)) : 0;
+  $('#fSleep').textContent = P.sleepEnd ? '(after this episode)' : P.sleepAt ? `(${left} min left)` : '';
+  $$('#fullplayer [data-sleep]').forEach(b => b.classList.toggle('on', P.sleepEnd ? b.dataset.sleep === 'end' : (!P.sleepAt && b.dataset.sleep === '0')));
+  if (P.ep && $('#fDl')){ $('#fDl').dataset.dl = P.ep.id; paintDl(P.ep.id); }
+  $('#fRepeat').textContent = `Repeat this episode: ${P.repeat ? 'on' : 'off'}`; $('#fRepeat').classList.toggle('on', P.repeat); $('#fRepeat').setAttribute('aria-pressed', P.repeat);
+}
+const D = {info: null, fetched: 0};
+async function loadDelivery(){ try{ D.info = await api('/api/delivery' + (P.ep ? '?episode_id=' + P.ep.id : '')); D.fetched = Date.now(); paintDelivery(); }catch(e){} }
+function paintDelivery(){
+  const box = $('#dStatus'), go = $('#dGo'); if (!box) return;
+  const info = D.info || {}, list = (info.deliveries || []).filter(d => d.expires > Date.now() / 1000), now = Date.now() / 1000;
+  const mx = $('#dMax'); if (mx && info.max_per_episode) mx.textContent = info.max_per_episode;
+  const lf = $('#dLeft'); if (lf) lf.textContent = info.left != null ? `Sends left for this episode: ${info.left} of ${info.max_per_episode}` : '';
+  box.innerHTML = list.map(d => `<div class="access"><b>${esc(d.title || 'Your story')}: ${d.first === d.last ? 'episode ' + d.first : 'episodes ' + d.first + ' to ' + d.last} ${d.first === d.last ? 'is' : 'are'} in your chat</b><br>Removed in ${clock(Math.max(0, d.expires - now))} (${esc(d.total_text)} of audio + ${esc(d.extra_text)} extra)</div>`).join('') +
+    (list.length ? '<button class="btn block" data-pbot="1" style="margin-bottom:8px">Open the bot chat</button>' : '');
+}
+setInterval(() => { if ($('#fullplayer').classList.contains('open') && D.info && (D.info.deliveries || []).length){ paintDelivery(); if (Date.now() - D.fetched > 20000 || D.info.deliveries.some(d => d.expires <= Date.now() / 1000)) loadDelivery(); } }, 1000);
+function paintAll(){ paintMini(); paintFull(); }
+function markPlaying(){ $$('#story .ep').forEach(b => b.classList.toggle('on', !!P.ep && b.dataset.ep === String(P.ep.id) && V.id === P.sid)); }
+
+async function playEpisode(ep, story, pos = 0, retries = 0){
+  const seq = ++P.seq; discardNext();                // a newer request always replaces an older one
+  P.sid = story.id; P.story = {id: story.id, title: story.title, cover: story.cover};
+  P.ep = {id: ep.id, no: ep.no, to: ep.to, title: ep.title, duration: ep.duration}; P.state = 'loading'; P.err = ''; P.userPaused = false; P.retries = retries;
+  showMini(); if ($('#fullplayer').classList.contains('open')) renderFull(); else paintAll(); markPlaying();
+  try{
+    let src = await offUrl(ep.id);                                         // a saved copy plays without any network
+    if (!src){ const d = await api(`/api/play/${ep.id}`, {method: 'POST', retry: false}); src = d.url; }
+    if (seq !== P.seq) return;
+    audio.src = src; audio.defaultPlaybackRate = P.rate; audio.playbackRate = P.rate;
+    audio.addEventListener('loadedmetadata', () => { if (seq === P.seq && pos > 1) audio.currentTime = pos; }, {once: true});
+    await audio.play();
+    if (seq !== P.seq) return;
+    P.state = 'playing'; setSession(); prefetchNext();
+  }catch(e){
+    if (seq !== P.seq) return;
+    if (e.name === 'NotAllowedError'){ P.state = 'paused'; }
+    else { P.state = 'error'; P.err = e.status === 403 ? 'This episode is locked. Choose a plan to unlock it.' : e.status === 404 ? 'This episode is not available.' : errText(e); }
+  }
+  paintAll();
+}
+async function recover(){
+  if (!P.ep || P.state === 'loading') return;
+  if (P.retries >= 2){ P.state = 'error'; P.err = 'Playback stopped. Check your connection and try again.'; paintAll(); return; }
+  await playEpisode(P.ep, P.story, audio.currentTime || 0, P.retries + 1);       // fetches a fresh link, in case the old one expired
+}
+async function goNeighbor(dir, auto){
+  if (!P.ep) return; const seq = P.seq; let d = null;
+  try{ d = await api(`/api/story/${encodeURIComponent(P.sid)}?${dir}=${P.ep.no}&limit=1`); }
+  catch(e){ if (e.aborted) return; if (!e.network){ toast(errText(e)); return; } }                  // no connection: fall back to the saved episodes
+  if (seq !== P.seq) return;
+  const n = d ? d.eps[0] : offNeighbor(dir);
+  if (!n){ if (auto){ P.state = 'paused'; paintAll(); } toast(d ? (dir === 'after' ? (auto ? 'That was the last episode' : 'No next episode') : 'No previous episode') : (dir === 'after' ? 'No next downloaded episode' : 'No previous downloaded episode')); return; }
+  if (n.locked){ P.state = 'paused'; paintAll(); toast('The next episode is locked. Choose a plan to continue.', 4000); return; }
+  await playEpisode(n, P.story, 0);
+}
+function saveProgress(force, completed = false, keepalive = false){
+  if (!P.ep || !P.sid) return;
+  const now = Date.now(); if (!force && now - P.lastSave < 15000) return; P.lastSave = now;
+  const d = isFinite(audio.duration) ? Math.floor(audio.duration) : 0;
+  store.set('ajpos' + P.ep.id, completed ? 0 : Math.floor(audio.currentTime || 0));        // remembered on the phone too, for listening offline
+  api('/api/progress', {method: 'POST', retry: false, keepalive, body: JSON.stringify({episode_id: P.ep.id, pos: Math.floor(audio.currentTime || 0), duration: d, completed})}).catch(() => {});
+}
+function clearSleep(){ P.sleepAt = 0; P.sleepEnd = false; }
+function setSleep(v){
+  if (v === 'end'){ P.sleepEnd = true; P.sleepAt = 0; toast('Playback will stop after this episode'); }
+  else { const m = parseInt(v); P.sleepEnd = false; P.sleepAt = m ? Date.now() + m * 60000 : 0; if (m) toast(`Sleep timer set for ${m} minutes`); }
+  paintFull();
+}
+function setSession(){
+  if (!('mediaSession' in navigator) || !P.ep) return;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({title: P.ep.title || ('Episode ' + epn(P.ep)), artist: P.story ? P.story.title : "AJ's FM Stories"});
+    const set = (a, f) => navigator.mediaSession.setActionHandler(a, f);
+    set('play', () => { P.userPaused = false; audio.play(); }); set('pause', () => { P.userPaused = true; audio.pause(); });
+    set('previoustrack', () => goNeighbor('before')); set('nexttrack', () => goNeighbor('after'));
+    set('seekbackward', () => { audio.currentTime = Math.max(0, audio.currentTime - 15); }); set('seekforward', () => { audio.currentTime += 15; });
+  }catch(e){}
+}
+function keepAlive(){ setTimeout(() => { if (P.ep && audio.paused && !P.userPaused && !audio.ended && P.state !== 'error') audio.play().catch(() => {}); }, 500); }
+function toggle(){ if (!P.ep) return; if (audio.paused){ P.userPaused = false; if (P.state === 'error') return recover(); audio.play().catch(() => {}); } else { P.userPaused = true; audio.pause(); } }
+
+function makeAudio(){ const a = new Audio(); a.preload = 'auto'; wireAudio(a); return a; }
+function wireAudio(a){
+  const on = (ev, fn) => a.addEventListener(ev, (...x) => { if (a === audio) fn(...x); });         // a buffering spare element never changes the player state
+  on('playing', () => { P.state = 'playing'; paintAll(); try{ navigator.mediaSession.playbackState = 'playing'; }catch(e){} });
+  on('waiting', () => { if (P.state === 'playing'){ P.state = 'buffering'; paintAll(); } });
+  on('canplay', () => { if (P.state === 'buffering'){ P.state = audio.paused ? 'paused' : 'playing'; paintAll(); } });
+  on('progress', paintFull);
+  on('pause', () => {
+    if (P.state === 'playing' || P.state === 'buffering') P.state = 'paused';
+    try{ navigator.mediaSession.playbackState = 'paused'; }catch(e){}
+    paintAll(); saveProgress(true);
+    if (!P.userPaused && !audio.ended && document.hidden) keepAlive();         // the phone paused it while the app was minimised
+  });
+  on('ended', async () => {
+    saveProgress(true, true);
+    if (P.sleepEnd){ clearSleep(); P.state = 'paused'; paintAll(); toast('Sleep timer: stopped after this episode'); return; }
+    if (P.repeat){ audio.currentTime = 0; audio.play().catch(() => {}); return; }
+    if (await playLocalNext()) return;                                        // saved on the phone: starts at once, no network needed
+    if (P.next && P.next.forNo === P.ep.no) return swapToNext();                // already buffered: starts at once, even in the background
+    await goNeighbor('after', true);                                          // otherwise the server decides whether the next episode may play
+  });
+  on('error', () => { if (P.ep && P.state !== 'loading') recover(); });
+  on('timeupdate', () => {
+    if (P.sleepAt && Date.now() >= P.sleepAt){ clearSleep(); P.userPaused = true; audio.pause(); toast('Sleep timer: playback stopped'); }
+    paintAll(); saveProgress(false); maybePreload();
+  });
+  on('loadedmetadata', paintAll);
+}
+function discardNext(){ if (P.next){ try{ P.next.audio.removeAttribute('src'); P.next.audio.load(); }catch(e){} P.next = null; } }
+function maybePreload(){
+  if (!P.ep || P.next || P.preloading) return;
+  if (OFF.auto && OFF.ok && P.nextEp && P.nextFor === P.ep.id && OFF.meta.has(P.nextEp.id)) return;      // the next episode is already being saved on the phone
+  const d = isFinite(audio.duration) ? audio.duration : 0;
+  if (!d || audio.currentTime < d * 0.5) return;                                // starts buffering the next episode from the half-way point
+  P.preloading = true; const seq = P.seq, sid = P.sid, no = P.ep.no;
+  (async () => {
+    try{
+      const r = await api(`/api/story/${encodeURIComponent(sid)}?after=${no}&limit=1`), n = r.eps[0];
+      if (seq !== P.seq || !n || n.locked) return;                              // never buffer or play what the member may not hear
+      const u = await api(`/api/play/${n.id}`, {method: 'POST', retry: false});
+      if (seq !== P.seq) return;
+      const na = makeAudio(); na.defaultPlaybackRate = P.rate; na.playbackRate = P.rate; na.src = u.url; na.load();
+      P.next = {ep: n, audio: na, forNo: no};
+    }catch(e){} finally { P.preloading = false; }
+  })();
+}
+async function swapToNext(){
+  const n = P.next; P.next = null; const old = audio, seq = ++P.seq;
+  P.ep = {id: n.ep.id, no: n.ep.no, to: n.ep.to, title: n.ep.title, duration: n.ep.duration}; P.state = 'buffering'; P.userPaused = false; P.retries = 0;
+  audio = n.audio; try{ old.removeAttribute('src'); old.load(); }catch(e){}
+  paintAll(); markPlaying(); setSession();
+  try{ await audio.play(); if (seq !== P.seq) return; P.state = 'playing'; prefetchNext(); }
+  catch(e){ if (seq !== P.seq) return; if (e.name === 'NotAllowedError') P.state = 'paused'; else { P.state = 'error'; P.err = 'Could not start the next episode.'; } }
+  paintAll();
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden){ saveProgress(true, false, true); keepAlive(); } else offResumeAll(); });
+window.addEventListener('pagehide', () => saveProgress(true, false, true));
+if (tg && tg.onEvent){ try{ tg.onEvent('deactivated', () => { saveProgress(true, false, true); keepAlive(); }); }catch(e){} }
+
+/* ---------- offline downloads: episodes are saved on the phone in 4 MB parts, so a stopped download carries on where it left off ---------- */
+const OFF = {ok: !!window.indexedDB, ready: null, meta: new Map(), jobs: new Map(), queue: [], active: 0, urls: new Map(), max: 2, auto: store.get('ajauto', '1') !== '0'};
+const CHUNK = 4 * 1024 * 1024;
+const fmtSize = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : Math.max(1, Math.round(b / 1048576)) + ' MB';
+function offOpen(){
+  if (OFF.ready) return OFF.ready;
+  OFF.ready = new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('no storage'));
+    const rq = indexedDB.open('ajfm-offline', 1);
+    rq.onupgradeneeded = () => { const d = rq.result; d.createObjectStore('meta', {keyPath: 'id'}); d.createObjectStore('parts'); };
+    rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); rq.onblocked = () => rej(new Error('blocked'));
+  });
+  OFF.ready.catch(() => { OFF.ok = false; });
+  return OFF.ready;
+}
+const idb = (name, mode, fn) => offOpen().then(db => new Promise((res, rej) => {
+  const tx = db.transaction(name, mode); let out;
+  try{ out = fn(tx.objectStore(name)); }catch(e){ rej(e); return; }
+  tx.oncomplete = () => res(out && 'result' in out ? out.result : undefined); tx.onerror = tx.onabort = () => rej(tx.error || new Error('storage error'));
+}));
+const partRange = id => IDBKeyRange.bound([id, 0], [id, Infinity]);
+const offSave = m => idb('meta', 'readwrite', os => os.put(m));
+const offPut = (id, i, blob) => idb('parts', 'readwrite', os => os.put(blob, [id, i]));
+const offPlayable = m => !!m && m.complete && (!m.until || m.until * 1000 > Date.now());
+function offState(id){
+  const m = OFF.meta.get(id), j = OFF.jobs.get(id);
+  if (m && m.complete) return offPlayable(m) ? 'done' : 'expired';
+  if (j) return j.state;
+  return m ? 'pause' : 'none';
+}
+function dlLabel(id, long){
+  const s = offState(id), m = OFF.meta.get(id), pct = m && m.parts ? Math.floor((m.next || 0) / m.parts * 100) : 0;
+  if (s === 'done') return long ? ['\u2713 Saved offline (tap to remove)', 'Saved on this phone. Tap to remove', 'done'] : ['\u2713', 'Saved on this phone. Tap to remove', 'done'];
+  if (s === 'run') return long ? [`Downloading ${pct}% (tap to stop)`, 'Downloading. Tap to stop', 'run'] : [pct + '%', 'Downloading. Tap to stop', 'run'];
+  if (s === 'queued') return long ? ['Waiting to download (tap to stop)', 'Waiting. Tap to stop', 'queued'] : ['...', 'Waiting. Tap to stop', 'queued'];
+  if (s === 'pause') return long ? [`Paused at ${pct}% (tap to continue)`, 'Paused. Tap to continue', 'pause'] : ['\u27F3', 'Paused. Tap to continue', 'pause'];
+  return long ? ['\u2B07 Download for offline', 'Download for offline listening', ''] : ['\u2B07', 'Download for offline listening', ''];
+}
+const dlBtnHtml = id => { const [t, l, c] = dlLabel(id); return `<button class="dl ${c}" data-dl="${id}" aria-label="${l}">${t}</button>`; };
+function paintDl(id){
+  $$(`[data-dl="${id}"]`).forEach(b => { const long = b.dataset.long === '1', [t, l, c] = dlLabel(id, long); b.textContent = t; b.setAttribute('aria-label', l); b.className = (long ? 'dlx ' : 'dl ') + c + (long && c ? ' on' : ''); });
+  const m = OFF.meta.get(id), el = $(`[data-dlp="${id}"]`);
+  if (el && m) el.textContent = m.complete ? fmtSize(m.size) + (offPlayable(m) ? '' : ' - expired') : Math.floor((m.next || 0) / m.parts * 100) + '%';
+}
+async function offLoad(){
+  try{
+    const all = await idb('meta', 'readonly', os => os.getAll());
+    for (const m of all || []) OFF.meta.set(m.id, m);
+    for (const m of [...OFF.meta.values()]){
+      if (!m.complete && m.auto) await offWipe(m.id);                                     // a half-finished automatic download is not worth keeping
+      else if (m.until && m.until * 1000 + 86400000 < Date.now()) await offWipe(m.id);    // the plan ended more than a day ago
+    }
+  }catch(e){ OFF.ok = false; }
+  offResumeAll();
+}
+function offResumeAll(){
+  if (!OFF.ok || !navigator.onLine) return;
+  for (const m of OFF.meta.values()){
+    if (m.complete) continue;
+    const j = OFF.jobs.get(m.id);
+    if (j && j.state !== 'pause') continue;
+    if (j){ j.state = 'queued'; if (!OFF.queue.includes(m.id)) OFF.queue.push(m.id); }
+    else if (!m.auto){ OFF.jobs.set(m.id, {state: 'queued', auto: false, ep: {id: m.id, no: m.no, to: m.to, title: m.title, duration: m.duration}, story: m.story}); OFF.queue.push(m.id); }
+    paintDl(m.id);
+  }
+  offPump();
+}
+async function offQueue(ep, story, auto){
+  if (!OFF.ok) return toast('Downloads are not available on this phone');
+  try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  const m = OFF.meta.get(ep.id), j = OFF.jobs.get(ep.id);
+  if (!auto && m && m.auto){ m.auto = false; offSave(m).catch(() => {}); if (j) j.auto = false; }      // the member asked for it: it is no longer cleaned up automatically
+  if (m && m.complete){ paintDl(ep.id); return; }
+  if (j){ if (j.state === 'pause'){ j.state = 'queued'; OFF.queue.unshift(ep.id); paintDl(ep.id); offPump(); } return; }
+  OFF.jobs.set(ep.id, {state: 'queued', auto, ep, story});
+  auto ? OFF.queue.push(ep.id) : OFF.queue.unshift(ep.id);
+  paintDl(ep.id); offPump();
+}
+function offPump(){
+  while (OFF.active < OFF.max && OFF.queue.length){
+    const id = OFF.queue.shift(), j = OFF.jobs.get(id); if (!j || j.state !== 'queued') continue;
+    OFF.active++; offRun(id, j).finally(() => { OFF.active--; offPump(); });
+  }
+}
+async function offRun(id, j){
+  j.state = 'run'; j.ctl = new AbortController(); paintDl(id);
+  let info = null, url = '', fails = 0, m = OFF.meta.get(id);
+  try{
+    for (;;){
+      if (!info){
+        info = await api(`/api/download/${id}`, {method: 'POST', retry: false, signal: j.ctl.signal}); url = info.url;
+        if (!m || m.size !== info.size){
+          if (m) await offWipe(id, true);                                                   // the file on the server changed: start again
+          m = {id, sid: j.story.id, story: {id: j.story.id, title: j.story.title, cover: j.story.cover || ''}, no: j.ep.no, to: j.ep.to || null, title: j.ep.title || '', duration: j.ep.duration || 0,
+               size: info.size, mime: info.mime || 'audio/mpeg', parts: Math.max(1, Math.ceil(info.size / CHUNK)), next: 0, complete: false, auto: !!j.auto, until: info.until || null, saved: Date.now()};
+          OFF.meta.set(id, m);
+        }
+        m.until = info.until || null; await offSave(m);
+      }
+      if (m.next >= m.parts) break;
+      const i = m.next, a = i * CHUNK, b = Math.min(m.size, a + CHUNK) - 1; let blob;
+      try{
+        const r = await fetch(url, {headers: {Range: `bytes=${a}-${b}`}, signal: j.ctl.signal});
+        if (r.status === 403){ info = null; if (++fails > 3) throw Object.assign(new Error('Access to this episode has ended.'), {status: 403}); continue; }
+        if (r.status !== 206 && !(r.status === 200 && m.parts === 1)) throw new Error('The server could not send the file (' + r.status + ')');
+        blob = await r.blob();
+        if (blob.size !== b - a + 1) throw new Error('The download was cut short');
+      }catch(e){
+        if (j.ctl.signal.aborted || e.status) throw e;
+        if (++fails > 5 || !navigator.onLine) throw e;
+        await sleep(Math.min(15000, 1500 * fails)); continue;
+      }
+      fails = 0; await offPut(id, i, blob); m.next = i + 1; await offSave(m); paintDl(id);
+    }
+    m.complete = true; await offSave(m); OFF.jobs.delete(id); paintDl(id);
+    if (!j.auto) toast(`Saved offline: episode ${epn(m)}`);
+  }catch(e){
+    if (j.removed) return;
+    if (e.status === 403 || e.status === 404){ toast(e.status === 403 ? 'This episode is locked. Choose a plan to download it.' : 'This episode is not available.', 4000); await offWipe(id); return; }
+    j.state = 'pause'; paintDl(id);
+    if (!j.auto && navigator.onLine && !(j.ctl && j.ctl.signal.aborted)) toast('Download paused. It will continue when the connection is back.', 4000);
+  }
+}
+async function offWipe(id, keepJob){
+  const j = OFF.jobs.get(id);
+  if (j && !keepJob){ j.removed = true; try{ j.ctl && j.ctl.abort(); }catch(e){} OFF.jobs.delete(id); }
+  OFF.queue = OFF.queue.filter(x => x !== id);
+  const u = OFF.urls.get(id); if (u){ try{ URL.revokeObjectURL(u); }catch(e){} OFF.urls.delete(id); }
+  OFF.meta.delete(id);
+  try{ await idb('parts', 'readwrite', os => os.delete(partRange(id))); await idb('meta', 'readwrite', os => os.delete(id)); }catch(e){}
+  paintDl(id);
+}
+async function offEvictAuto(keep){ for (const m of [...OFF.meta.values()]) if (m.auto && !keep.includes(m.id)) await offWipe(m.id); }
+async function offUrl(id){
+  const m = OFF.meta.get(id); if (!offPlayable(m)) return '';
+  if (OFF.urls.has(id)) return OFF.urls.get(id);
+  try{
+    const parts = await idb('parts', 'readonly', os => os.getAll(partRange(id)));
+    if (!parts || parts.length !== m.parts) return '';
+    const u = URL.createObjectURL(new Blob(parts, {type: m.mime || 'audio/mpeg'}));
+    OFF.urls.set(id, u);
+    const live = new Set([id, P.ep && P.ep.id, P.nextEp && P.nextEp.id]);
+    for (const [k, v] of [...OFF.urls]) if (!live.has(k)){ try{ URL.revokeObjectURL(v); }catch(e){} OFF.urls.delete(k); }
+    return u;
+  }catch(e){ return ''; }
+}
+function offNeighbor(dir){
+  if (!P.ep) return null; const cur = P.ep.no;
+  const l = [...OFF.meta.values()].filter(m => m.sid === P.sid && offPlayable(m) && (dir === 'after' ? m.no > cur : m.no < cur)).sort((a, b) => dir === 'after' ? a.no - b.no : b.no - a.no);
+  const m = l[0]; return m ? {id: m.id, no: m.no, to: m.to, title: m.title, duration: m.duration, locked: false} : null;
+}
+async function prefetchNext(){                       // keeps the next episode saved on the phone while this one plays, so it starts even when the app is minimised
+  if (!OFF.ok || !OFF.auto || !P.ep || !P.sid || !navigator.onLine) return;
+  if (navigator.connection && navigator.connection.saveData) return;
+  const ep = P.ep, story = P.story; let n = null;
+  try{ const r = await api(`/api/story/${encodeURIComponent(P.sid)}?after=${ep.no}&limit=1`); n = r.eps[0]; }catch(e){ n = offNeighbor('after'); }
+  if (!P.ep || P.ep.id !== ep.id || !n || n.locked) return;
+  P.nextEp = {id: n.id, no: n.no, to: n.to, title: n.title, duration: n.duration}; P.nextFor = ep.id;
+  await offEvictAuto([ep.id, n.id]);
+  const m = OFF.meta.get(n.id); if (!m || !m.complete) offQueue(n, story, true);
+}
+async function playLocalNext(){                       // next episode from the phone's own copy: same audio element, no network needed
+  if (!P.ep || !P.nextEp || P.nextFor !== P.ep.id) return false;
+  const n = P.nextEp; if (!offPlayable(OFF.meta.get(n.id))) return false;
+  const u = await offUrl(n.id); if (!u) return false;
+  const seq = ++P.seq; discardNext();
+  P.ep = {id: n.id, no: n.no, to: n.to, title: n.title, duration: n.duration}; P.state = 'buffering'; P.userPaused = false; P.retries = 0; P.lastSave = 0;
+  audio.src = u; audio.defaultPlaybackRate = P.rate; audio.playbackRate = P.rate;
+  paintAll(); markPlaying(); setSession();
+  try{ await audio.play(); if (seq !== P.seq) return true; P.state = 'playing'; }
+  catch(e){ if (seq !== P.seq) return true; if (e.name === 'NotAllowedError') P.state = 'paused'; else { P.state = 'error'; P.err = 'Could not start the next episode.'; } }
+  paintAll(); prefetchNext(); return true;
+}
+function dlTap(id, ep, story){
+  const s = offState(id);
+  if (s === 'done'){ if (confirm('Remove this download from your phone?')) offWipe(id).then(() => { renderDownloads(); }); return; }
+  if (s === 'run' || s === 'queued'){ if (confirm('Stop this download?')) offWipe(id).then(() => { renderDownloads(); }); return; }
+  if (!ep) return; if (!navigator.onLine) return toast('Connect to the internet to download');
+  offQueue(ep, story, false);
+}
+function openDownloads(){ openSheet('dlsheet'); renderDownloads(); if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(e => { const x = $('#dlQuota'); if (x && e.quota) x.textContent = `Phone storage for the app: ${fmtSize(e.usage || 0)} used of ${fmtSize(e.quota)} allowed.`; }).catch(() => {}); }
+function renderDownloads(){
+  const el = $('#dlsheet'); if (!el || !el.classList.contains('open') && !renderDownloads.force) return;
+  const all = [...OFF.meta.values()].sort((a, b) => String(a.sid).localeCompare(String(b.sid)) || a.no - b.no), by = new Map();
+  all.forEach(m => { if (!by.has(m.sid)) by.set(m.sid, []); by.get(m.sid).push(m); });
+  const saved = all.filter(m => m.complete), used = saved.reduce((t, m) => t + m.size, 0);
+  const row = m => `<div class="eprow"><button class="ep" data-dlplay="${m.id}" ${offPlayable(m) ? '' : 'disabled'}><span class="n">${epn(m)}</span><span class="t">${esc(m.title)}</span><small data-dlp="${m.id}">${m.complete ? fmtSize(m.size) + (offPlayable(m) ? '' : ' - expired') : Math.floor((m.next || 0) / m.parts * 100) + '%'}</small></button><button class="dl" data-dlrm="${m.id}" aria-label="Remove">\u2715</button></div>`;
+  el.innerHTML = `<div class="top"><button class="btn ghost small" id="dlClose">Back</button><strong>Downloads</strong></div>
+    ${navigator.onLine ? '' : '<div class="box" style="border-color:var(--gold)"><b>You are offline</b><div class="by">Your downloaded episodes still play.</div></div>'}
+    <div class="box"><b>Saved on this phone</b><div class="by">${saved.length} episodes, ${fmtSize(used)}</div><div class="by" id="dlQuota"></div>
+      <button class="dlx ${OFF.auto ? 'on' : ''}" id="dlAuto" aria-pressed="${OFF.auto}">Auto-download next episode: ${OFF.auto ? 'on' : 'off'}</button>
+      <div class="by" style="margin-top:6px">While an episode plays, the next one is saved on the phone, so it can start even when Telegram is in the background. It is removed after you move on. Episodes you download yourself stay until you remove them. Files can be large (a long episode can be hundreds of MB).</div>
+      ${all.length ? '<button class="dlx" id="dlClear">Remove all downloads</button>' : ''}</div>
+    ${all.length ? [...by].map(([sid, ms]) => `<h3 class="h3">${esc(ms[0].story.title)}</h3>` + ms.map(row).join('')).join('') : '<div class="empty">Nothing downloaded yet. Tap the \u2B07 button next to an episode to save it for offline listening.</div>'}`;
+}
+function offlineBoot(){ offOpen().then(offLoad).then(() => { if ([...OFF.meta.values()].some(offPlayable)) openDownloads(); }).catch(() => {}); }
+window.addEventListener('online', () => { offResumeAll(); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
+window.addEventListener('offline', () => { toast('You are offline. Open Library > Downloads to play saved episodes.', 4500); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
+
+/* ---------- story page ---------- */
+const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null, mode:'overview'};
+const storyTag = s => ({id: s.id, title: s.title, cover: s.cover});
+async function openStory(id){
+  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null, mode:'overview'});
+  renderStory(); openSheet('story'); $('#story').scrollTop = 0;
+  await loadStoryPage(1);
+}
+function storyLink(id){
+  const sp = 'story_' + id;
+  return MINIAPP_SHORT ? `https://t.me/${BOT_USERNAME}/${MINIAPP_SHORT}?startapp=${encodeURIComponent(sp)}` : `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(sp)}`;
+}
+async function copyStoryLink(){
+  const link = storyLink(V.id);
+  try{ await navigator.clipboard.writeText(link); toast('Link copied'); }
+  catch(e){ const t = document.createElement('textarea'); t.value = link; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); toast('Link copied'); }catch(e2){ prompt('Copy this link:', link); } t.remove(); }
+}
+function shareStory(){
+  const s = V.story; if (!s) return;
+  const url = `https://t.me/share/url?url=${encodeURIComponent(storyLink(V.id))}&text=${encodeURIComponent('\uD83C\uDFA7 ' + s.title + ' on AJ\'s FM Stories Premium')}`;
+  if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
+}
+function storyBack(){                                                              // topic page -> story overview -> close
+  if (V.mode === 'topic'){ V.mode = 'overview'; V.topic = null; V.q = ''; V.filter = 'all'; V.page = 1; renderStory(); $('#story').scrollTop = 0; loadStoryPage(1); }
+  else closeSheet('story');
+}
+function topicCards(){
+  const s = V.story, tps = shownTopics(), list = tps.map(t => ({id: t.id, name: t.name, n: t.episodes, note: t.note || ''}));
+  if (s.episodes_unassigned && tps.length) list.push({id: '_none', name: 'More episodes', n: s.episodes_unassigned, note: ''});
+  if (!tps.length) list.push({id: '', name: 'All episodes', n: V.totalAll, note: ''});     // a story without topics shows one card
+  return list;
+}
+const optsFor = id => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === id);
+function rangeOf(opts){
+  if (!opts.length) return 'Price soon';
+  const p = opts.map(o => +o.price);
+  return priceLabel({plans: opts.length, min_price: Math.min(...p), max_price: Math.max(...p), has_free: p.some(x => x === 0)});
+}
+const shownTopics = () => ((V.story && V.story.topics) || []).filter(t => t.episodes > 0 || (V.access && V.access.admin));
+const visOpts = () => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === V.topic);
+async function loadStoryPage(page){
+  const sig = fresh('story'), id = V.id;
+  V.page = page; V.epState = 'loading'; if (V.state === 'ok' && V.mode === 'topic') renderEps();
+  const topicMode = V.mode === 'topic', qs = new URLSearchParams({offset: topicMode ? (page - 1) * PAGE_SIZE : 0, limit: topicMode ? PAGE_SIZE : 1, filter: V.filter}); if (topicMode && V.q) qs.set('q', V.q); if (topicMode && V.topic) qs.set('topic', V.topic);
+  try{
+    const d = await api(`/api/story/${encodeURIComponent(id)}?${qs}`, {signal: sig, timeout: 60000});
+    if (V.id !== id) return;
+    Object.assign(V, {story: d.story, access: d.access, eps: d.eps, total: d.total, totalAll: d.total_all, resume: d.resume, state: 'ok', epState: 'ok'});
+  }catch(e){
+    if (e.aborted || V.id !== id) return;
+    if (e.data && e.data.unavailable) V.state = 'unavailable';
+    else if (V.state !== 'ok'){ V.state = 'error'; V.err = errText(e); }
+    V.epState = 'error'; V.epErr = errText(e);
+  }
+  if (V.page !== page) return;
+  if (V.mode === 'topic' && $('#epBox') && V.state === 'ok') renderEps(); else renderStory();
+}
+function ownedSummary(a){
+  if (a.admin) return '<div class="access">Admin preview: you can play every episode.</div>';
+  if (!a.owned) return '';
+  if (a.full) return `<div class="access"><b>Full access</b>${a.ranges.filter(r => r.from === null)[0].expires ? ' until ' + dateStr(a.ranges.filter(r => r.from === null)[0].expires) : ' (yours to keep)'}</div>`;
+  return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
+}
+const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
+const planSub = o => o.ongoing ? `Ongoing | covers only till episode ${o.to}` : `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
+const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
+const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
+function pickPlan(){
+  const opts = visOpts(), ok = o => +o.price > 0 && !planOwned(o);
+  if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
+}
+function planPillsHtml(){
+  if (!visOpts().length) return '<div class="by" style="padding:0 16px">No plans for this topic yet.</div>';
+  return visOpts().map(o => {
+    const sub = esc(planSub(o));
+    if (Number(o.price) === 0) return `<button class="pill2 free" data-free="${o.from || 1}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Listen free</span></button>`;
+    if (planOwned(o)) return `<div class="pill2 have"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Owned</span></div>`;
+    return `<button class="pill2${String(o.id) === String(V.sel) ? ' on' : ''}" data-plan="${esc(o.id)}" aria-pressed="${String(o.id) === String(V.sel)}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}</span></button>`;
+  }).join('');
+}
+function sbarHtml(){
+  const o = visOpts().find(x => String(x.id) === String(V.sel)); if (!o) return '';
+  const inCart = cartHas(V.id, o.id);
+  return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}${o.credit ? ' | upgrade credit -' + money(o.credit) : ''}</small><b>${money(payOf(o))}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
+    <div class="sb-btns">${V.totalAll ? '<button class="btn ghost" data-demo="1">Click for Demo</button>' : '<span></span>'}<button class="btn${inCart ? ' ok' : ''}" id="sbCart">${inCart ? '&#10003; In cart' : '&#128722; ADD TO CART'}</button></div>`;
+}
+function paintPlanBar(){ const pp = $('#planPills'), sb = $('#sbar'); if (pp) pp.innerHTML = planPillsHtml(); if (sb) sb.innerHTML = sbarHtml(); }
+function renderStory(){
+  const el = $('#story');
+  const bar = (right = '') => `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button>${right}</div>`;
+  if (V.state === 'loading'){ el.innerHTML = bar() + '<div class="sk hero" style="height:220px"></div><div class="sk line"></div><div class="sk line" style="width:60%"></div><div class="sk hero"></div>'; return; }
+  if (V.state === 'unavailable'){ el.innerHTML = bar() + '<div class="empty"><h3 class="sec">This story is no longer available</h3><p>It may have been removed or hidden. If you bought it, your purchase is kept and you can see it under Library &rarr; Purchases.</p></div>'; return; }
+  if (V.state === 'error'){ el.innerHTML = bar() + retryBox(V.err, 'retryStory'); return; }
+  if (V.mode === 'topic') return renderTopicPage();
+  const s = V.story, a = V.access;
+  const act = V.resume ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${epn(V.resume)}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
+  const wishOn = S.wish && S.wish.has(V.id);
+  const range = rangeOf(s.options || []);
+  const cards = topicCards().map((t, i) => {
+    const opts = optsFor(t.id);
+    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${t.n} episodes</small><span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote">${esc(t.note)}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
+  }).join('');
+  el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
+      <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
+      ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">by ${esc(s.author || "AJ's FM")}</div>
+      <div class="tags">${(s.genre || '').split(',').map(x => x.trim()).filter(Boolean).map(g => `<span class="tag">${esc(g)}</span>`).join('')}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
+      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
+    ${s.preview ? `<div class="desc clamp" id="desc">${esc(s.preview)}</div><div class="pad"><button class="link" id="more">Read more</button></div>` : ''}
+    <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
+      <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
+    ${ownedSummary(a)}${act}
+    <h3 class="h3">${shownTopics().length ? 'Topics' : 'Listen'}</h3><div id="topicCards">${cards}</div>
+    ${s.notes ? `<h3 class="h3">Notes</h3><div class="tnotes">${esc(s.notes)}</div>` : ''}`;
+}
+function renderTopicPage(){
+  const el = $('#story'), s = V.story, a = V.access, full = a.full || a.admin; pickPlan();
+  const t = topicCards().find(x => x.id === V.topic) || {name: 'Episodes', n: V.total, note: ''};
+  const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Start listening' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
+  el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
+    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(t.note)}</div>` : ''}</div>
+    ${ownedSummary(a)}${act}
+    ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div class="pills" id="planPills">${planPillsHtml()}</div>
+      <h3 class="h3">How it works</h3>
+      <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
+      <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Forwarding and saving are switched off. Listen in the app, or send episodes to your bot chat to listen with the screen off. They remove themselves later.</small></span></div>
+      <div class="irow"><span class="ic">&#128172;</span><span><b>Questions before you buy?</b><small>Tap Buy now to open our bot. It answers your doubts first, then shows how to pay.</small></span></div>`}
+    <h3 class="h3">Episodes</h3><div id="epBox"></div>${full ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
+  renderEps();
+}
+function epRow(e){
+  const adm = V.access && V.access.admin;
+  const tagHtml = e.locked ? '<span class="pill lock">Locked</span>' : adm ? '' : (e.kind === 'free' ? '<span class="pill free">Free</span>' : '<span class="pill owned">Owned</span>');
+  const btn = `<button class="ep${e.locked ? ' lock' : ''}${P.ep && P.ep.id === e.id && P.sid === V.id ? ' on' : ''}" data-ep="${e.id}" aria-label="Episode ${epn(e)}, ${esc(e.title)}${e.locked ? ', locked' : ''}">
+    <span class="n">${epn(e)}</span><span class="t">${esc(e.title)}</span>${e.published === false ? '<span class="pill lock">Hidden</span>' : ''}${tagHtml}<small>${clock(e.duration)}</small></button>`;
+  if (e.locked) return btn;
+  const [t, l, c] = dlLabel(e.id);
+  return `<div class="eprow">${btn}<button class="dl ${c}" data-dl="${e.id}" aria-label="${l}">${t}</button></div>`;
+}
+function renderEps(){
+  const box = $('#epBox'); if (!box) return;
+  const pages = Math.max(1, Math.ceil(V.total / PAGE_SIZE));
+  const ctl = `<div class="ctl"><input id="epq" type="search" inputmode="search" placeholder="Search episode number or title" value="${esc(V.q)}" aria-label="Search episodes">
+    <select id="epf" aria-label="Filter episodes"><option value="all">All episodes</option><option value="unlocked">Unlocked only</option><option value="locked">Locked only</option></select></div>`;
+  let body;
+  if (V.epState === 'loading') body = Array.from({length: 5}, () => '<div class="sk line" style="height:50px"></div>').join('');
+  else if (V.epState === 'error') body = retryBox(V.epErr || 'Could not load episodes.', 'retryEps');
+  else if (!V.eps.length) body = `<div class="empty">${V.q || V.filter !== 'all' ? 'No episodes match your search or filter.' : 'Episodes will appear here soon.'}</div>`;
+  else body = V.eps.map(epRow).join('');
+  const pager = V.total > PAGE_SIZE ? `<div class="pager"><button class="btn ghost small" data-pg="prev" ${V.page <= 1 ? 'disabled' : ''} aria-label="Previous page">Prev</button>
+    <span>Page ${V.page} of ${pages}<br>${V.total} episodes</span><button class="btn ghost small" data-pg="next" ${V.page >= pages ? 'disabled' : ''} aria-label="Next page">Next</button></div>
+    <div class="jump"><input id="epJump" type="number" min="1" max="${pages}" inputmode="numeric" placeholder="Go to page (1-${pages})" aria-label="Jump to page"><button class="btn ghost small" id="epGo">Go</button></div>` : '';
+  const keep = document.activeElement && document.activeElement.id === 'epq';
+  box.innerHTML = ctl + pager + body + (V.total > PAGE_SIZE ? pager.split('<div class="jump">')[0] : '');
+  $('#epf').value = V.filter;
+  if (keep){ const i = $('#epq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+  box.dataset.page = V.page;
+}
+async function playFirst(from){
+  try{
+    const d = await api(`/api/story/${encodeURIComponent(V.id)}?${from > 1 ? 'after=' + (from - 1) : 'offset=0'}&limit=1${V.mode === 'topic' && V.topic ? '&topic=' + encodeURIComponent(V.topic) : ''}`);
+    if (d.eps[0]) playEpisode(d.eps[0], storyTag(V.story)); else toast('Episodes are not ready yet');
+  }catch(e){ toast(errText(e)); }
+}
+
+/* ---------- admin ---------- */
+const A = {tab:'stories', sq:'', pub:'', oq:'', ostatus:''};
+const M = {sid:null, title:'', topic:'', tname:'', scope:'', page:1, q:'', eps:[], total:0, state:'idle', edit:null, fileName:''};
+const E = {id:null, cover:'', photo:''};
+const INFO = {};                                       // remembers cards so a tap can start playback without another request
+const CPA = {list: [], id: null};
+const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
+function renderAdmin(){
+  $('#admin').innerHTML = `<header class="admin-head">
+      <div class="admin-headrow"><div class="admin-brand"><div class="admin-mark" aria-hidden="true">♛</div><div><div class="admin-title">Control Centre</div><small class="admin-sub">AJ'S FM STORIES · ADMIN WORKSPACE</small></div></div>
+      <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
+      <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
+    </header>
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+  loadAdmin();
+}
+function openCouponEditor(id){
+  const c = CPA.list.find(x => x.id === id) || {discount_type: 'percentage', is_active: true, listed: true}; CPA.id = c.id || null;
+  const dt = ts => ts ? new Date(ts * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+  $('#cpedit').innerHTML = `<div class="top"><button class="btn ghost small" id="cpClose">Back</button><strong>${c.id ? 'Edit coupon' : 'New coupon'}</strong></div>
+    <div class="two"><label class="field"><span>Code *</span><input id="cp_code" value="${esc(c.code || '')}" maxlength="20" autocapitalize="characters" placeholder="DIWALI20"></label><label class="field"><span>Short title</span><input id="cp_title" value="${esc(c.title || '')}" maxlength="60"></label></div>
+    <div class="two"><label class="field"><span>Discount type</span><select id="cp_type"><option value="percentage"${c.discount_type === 'percentage' ? ' selected' : ''}>Percentage (%)</option><option value="fixed"${c.discount_type === 'fixed' ? ' selected' : ''}>Fixed amount</option></select></label><label class="field"><span>Discount value *</span><input id="cp_value" type="number" min="0" step="any" inputmode="decimal" value="${c.discount_value ?? ''}"></label></div>
+    <div class="two"><label class="field"><span>Minimum order (0 = none)</span><input id="cp_min" type="number" min="0" inputmode="decimal" value="${c.min_order_value || ''}"></label><label class="field"><span>Total uses (0 = unlimited)</span><input id="cp_use" type="number" min="0" inputmode="numeric" value="${c.usage_limit || ''}"></label></div>
+    <div class="two"><label class="field"><span>Uses per member (0 = unlimited)</span><input id="cp_per" type="number" min="0" inputmode="numeric" value="${c.id ? (c.per_user_limit || '') : 1}"></label><span></span></div>
+    <div class="two"><label class="field"><span>Valid from</span><input id="cp_start" type="datetime-local" value="${dt(c.starts_at)}"></label><label class="field"><span>Valid till</span><input id="cp_end" type="datetime-local" value="${dt(c.expires_at)}"></label></div>
+    <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cp_active"${c.is_active ? ' checked' : ''}> <span>Active (members can use it; untick to hide it completely)</span></label>
+    <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cp_listed"${c.listed ? ' checked' : ''}> <span>Show in members' Coupons &amp; Offers (untick for a private code you share yourself)</span></label>
+    <div class="actions"><button class="btn" id="cpSave">Save coupon</button><button class="btn ghost" id="cpClose2">Cancel</button></div>`;
+  openSheet('cpedit');
+}
+async function saveCoupon(){
+  await once('cpsave', async () => {
+    const g = k => $('#cp_' + k), dt = v => v ? Math.floor(new Date(v).getTime() / 1000) : null;
+    const body = {id: CPA.id, code: g('code').value.trim(), title: g('title').value.trim(), discount_type: g('type').value, discount_value: g('value').value, min_order_value: g('min').value || 0,
+      usage_limit: g('use').value || 0, per_user_limit: g('per').value || 0, starts_at: dt(g('start').value), expires_at: dt(g('end').value), is_active: g('active').checked, listed: g('listed').checked};
+    try{ await api('/api/admin/coupon', {method: 'POST', retry: false, body: JSON.stringify(body)}); toast('Coupon saved'); closeSheet('cpedit'); loadAdmin(); loadOffers(); }
+    catch(e){ toast(adminErr(e), 5000); }
+  });
+}
+const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JSON.stringify(body)});
+async function loadAdmin(){
+  const body = $('#abody'); if (!body) return;
+  const tab = A.tab, sig = fresh('admin');
+  body.innerHTML = '<div class="sk hero"></div>';
+  try{
+    if (tab === 'stories'){
+      const qs = new URLSearchParams({q: A.sq}); if (A.pub) qs.set('published', A.pub);
+      const d = await api('/api/admin/stories?' + qs, {signal: sig}); if (A.tab !== tab) return;
+      body.innerHTML = `<div class="ctl"><input id="asq" type="search" placeholder="Search stories" value="${esc(A.sq)}" aria-label="Search stories"><select id="apub" aria-label="Visibility"><option value="">All</option><option value="1">Published</option><option value="0">Hidden</option></select></div>
+        <div class="actions" style="margin-bottom:12px"><button class="btn" id="newStory">Add a story</button></div>` +
+        (d.stories.map(s => `<div class="mrow"><h4>${esc(s.title)}</h4><div style="margin:4px 0">${s.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${s.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${s.episodes} eps</span></div>
+          <div class="by">${s.options.map(o => esc(o.label) + ' ' + money(o.price)).join(' | ') || 'No plans yet (add them under Topics)'}</div><div class="by">ID: <b>${esc(s.id)}</b></div>
+          <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-atop="${esc(s.id)}" data-title="${esc(s.title)}">Topics</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
+          <button class="btn ghost small" data-apub="${esc(s.id)}" data-to="${s.published ? 0 : 1}">${s.published ? 'Unpublish' : 'Publish'}</button><button class="btn danger small" data-adel="${esc(s.id)}" data-title="${esc(s.title)}">Delete</button></div></div>`).join('') || '<div class="empty">No stories found.</div>');
+      $('#apub').value = A.pub;
+    } else if (tab === 'orders'){
+      const qs = new URLSearchParams({limit: 40}); if (A.ostatus) qs.set('status', A.ostatus); if (A.oq) qs.set('q', A.oq);
+      const d = await api('/api/admin/orders?' + qs, {signal: sig}); if (A.tab !== tab) return;
+      body.innerHTML = `<div class="ctl"><input id="aoq" type="search" placeholder="Order ID, user ID, @username or UTR" value="${esc(A.oq)}" aria-label="Search orders"><select id="aost" aria-label="Status"><option value="">All statuses</option>${Object.keys(STATUS).filter(k => k !== 'expired').map(k => `<option value="${k}">${STATUS[k][0]}</option>`).join('')}</select></div>
+        <div class="by" style="margin:0 16px 8px">${d.total} orders</div>` + (d.orders.map(o => `<div class="mrow"><h4>#${o.id} ${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
+          <div style="margin:6px 0">${statusPill(o.status)}${o.has_proof ? ' <span class="tag">Screenshot</span>' : ''}${o.utr_reused ? ' <span class="tag bad">UTR used on another order</span>' : ''}</div>
+          <div class="by">${esc(o.name || '')} ${o.username ? '@' + esc(o.username) : ''} | ID ${o.user_id}</div><div class="by">UTR: ${esc(o.utr || 'not given')} | ${dateStr(o.created)}${o.expires ? ' | until ' + dateStr(o.expires) : ''}</div>
+          <div class="actions" style="padding:8px 0 0">${o.status === 'pending' ? `<button class="btn ok small" data-oact="approve" data-oid="${o.id}">Approve</button><button class="btn danger small" data-oact="reject" data-oid="${o.id}">Reject</button><button class="btn ghost small" data-oact="cancel" data-oid="${o.id}">Cancel</button>` : ''}
+          ${o.status === 'approved' ? `<button class="btn danger small" data-oact="revoke" data-oid="${o.id}">Revoke</button><button class="btn danger small" data-oact="refund" data-oid="${o.id}">Mark refunded</button>` : ''}</div></div>`).join('') || '<div class="empty">No orders found.</div>');
+      $('#aost').value = A.ostatus;
+    } else if (tab === 'coupons'){
+      const [d, bn] = await Promise.all([api('/api/admin/coupons', {signal: sig}), api('/api/admin/banners', {signal: sig})]); if (A.tab !== tab) return;
+      CPA.list = d.coupons;
+      body.innerHTML = `<div class="actions" style="margin-bottom:12px"><button class="btn" id="cpNew">＋ New coupon</button><button class="btn ghost" id="bnNew">＋ New banner</button></div>` +
+        (d.coupons.map(c => `<div class="mrow"><h4>${esc(c.code)} <span class="tag ${c.state === 'active' ? 'live' : ''}">${esc(c.state)}</span>${c.listed ? '' : ' <span class="tag">private</span>'}</h4>
+          <div class="by">${esc(c.text)}${c.title ? ' | ' + esc(c.title) : ''}</div>
+          <div class="by">Used ${c.used}${c.usage_limit ? ' of ' + c.usage_limit : ''} | per member ${c.per_user_limit || 'no limit'} | min order ${money(c.min_order_value)}${c.discount_cost ? ' | discount given ' + money(c.discount_cost) : ''}${c.expires_at ? ' | valid till ' + new Date(c.expires_at * 1000).toLocaleDateString() : ''}</div>
+          <div class="actions" style="padding:8px 0 0"><button class="btn small" data-cpedit="${c.id}">Edit</button><button class="btn ghost small" data-cptog="${c.id}">${c.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-cpdel="${c.id}">Delete</button></div></div>`).join('') || '<div class="empty">No coupons yet. Tap New coupon.</div>') +
+        `<h3 class="h3" style="font-size:20px">Offer banners</h3>` +
+        (bn.banners.map(x => `<div class="mrow"><h4>${esc(x.title)} <span class="tag ${x.live ? 'live' : ''}">${x.live ? 'live' : 'hidden'}</span></h4>${x.body ? `<div class="by">${esc(x.body)}</div>` : ''}
+          <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-bntog="${x.id}">${x.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-bndel="${x.id}">Delete</button></div></div>`).join('') || '<div class="empty">No banners.</div>');
+    } else if (tab === 'rooms'){
+      const d = await api('/api/admin/rooms', {signal: sig}); if (A.tab !== tab) return;
+      body.innerHTML = `<div class="box"><b>Episodes sent to members' bot chats</b>
+        <p class="note" style="margin:8px 0 0">Each delivery stays for the episodes' total time plus ${d.settings.extra_minutes} minutes or ${d.settings.extra_pct}% of it (whichever is more), at most ${d.settings.max_window_hours} hours. Then the bot deletes it. One episode can be sent ${d.settings.max_per_episode} times per member.</p></div>` +
+        (d.deliveries.map(r => `<div class="mrow"><b>Delivery #${r.id}</b> <span class="tag ${r.status === 'active' ? 'live' : ''}">${esc(r.status)}</span><div class="by">User ${r.user_id} | ${esc(r.title || r.story_id)} | ${r.episodes} episodes | ${esc(r.window)}</div>
+          <div class="by">${r.expires && r.status === 'active' ? 'Removed at ' + new Date(r.expires * 1000).toLocaleTimeString() : esc(r.reason || '')}</div>
+          ${r.status === 'active' ? `<div class="actions" style="padding:8px 0 0"><button class="btn danger small" data-rend="${r.id}">Remove now</button></div>` : ''}</div>`).join('') || '<div class="empty">Nothing has been sent yet.</div>');
+    } else if (tab === 'stats'){
+      const d = await api('/api/admin/stats', {signal: sig}); if (A.tab !== tab) return;
+      const k = (t, v) => `<div class="kpi"><small>${t}</small><b>${v}</b></div>`;
+      body.innerHTML = `<div class="kpis">${k('Stories', d.stories)}${k('Episodes', d.episodes)}${k('Users', d.users)}${k('Paid orders', d.paid_orders)}${k('Pending orders', d.pending_orders)}${k('Confirmed revenue', money(d.confirmed_revenue))}${k('Pending amount', money(d.pending_amount))}${k('Refunded', money(d.refunded_amount))}</div>
+        <div class="box"><b>Most listened stories</b>${d.top_stories.map(t => `<div class="by">${esc(t.title)}: ${t.listeners} listeners</div>`).join('') || '<div class="by">No listening data yet.</div>'}</div>
+        <div class="box"><b>Popular episodes</b>${d.popular_episodes.map(t => `<div class="by">${esc(t.title)} ep ${t.ep_no}: ${t.listeners} listeners</div>`).join('') || '<div class="by">No listening data yet.</div>'}</div>
+        <div class="box"><b>Recent orders</b>${d.recent_orders.map(o => `<div class="by">#${o.id} ${esc(o.title)} | ${money(o.price)} | ${esc(STATUS[o.status] ? STATUS[o.status][0] : o.status)}</div>`).join('') || '<div class="by">No orders yet.</div>'}</div>
+        <div class="box"><b>What these numbers mean</b>${Object.entries(d.definitions).map(([a, b]) => `<div class="by"><b>${esc(a.replace(/_/g, ' '))}:</b> ${esc(b)}</div>`).join('')}</div>`;
+    } else if (tab === 'reset'){
+      const card = (k, ic, title, items, note) => `<div class="mrow" style="border-color:var(--bad)"><h4>${ic} ${title}</h4><ul class="note" style="margin:6px 0 8px 0;padding-left:18px">${items.map(i => `<li>${i}</li>`).join('')}</ul>${note ? `<div class="by" style="margin-bottom:8px">${note}</div>` : ''}<div class="actions" style="padding:0"><button class="btn danger" data-areset="${k}">${title}</button></div></div>`;
+      body.innerHTML = `<div class="box" style="border-color:var(--bad)"><b>&#9888;&#65039; Danger zone</b><p class="note" style="margin:6px 0 0">These actions cannot be undone. You must confirm 5 times. Before anything is erased, the bot sends a safety copy of the database to your admin chat. Your Telegram file-access login is never touched.</p></div>` +
+        card('app', '&#128241;', 'Clear all app data', ['Stories, topics, plans, covers and episodes', 'All purchases, rentals and orders', 'Listening history, progress, wishlist and notices', 'Saved imports and episode links', 'Episodes sitting in members\' chats are removed, and send counters reset'], 'Keeps: users, requests, FAQs, bans, banners, bot settings.') +
+        card('bot', '&#129302;', 'Clear all bot data', ['Users list, story requests and support replies', 'Pending payment drafts', 'Your own FAQs, 30-day blocks, welcome banners', 'Festive wish and the buyer log channel setting', 'The audit log'], 'Keeps: stories, episodes, purchases and rentals.') +
+        card('all', '&#128165;', 'Clear all data (both)', ['Everything listed above, app and bot together'], 'The app and the bot start completely empty.');
+    } else {
+      const d = await api('/api/admin/audit?limit=60', {signal: sig}); if (A.tab !== tab) return;
+      body.innerHTML = d.items.map(a => `<div class="mrow"><b>${esc(a.action)}</b> <span class="by">on ${esc(a.target)}</span><div class="by">${new Date(a.ts * 1000).toLocaleString()} | admin ${a.admin_id}</div>${a.detail ? `<div class="by">${esc(a.detail)}</div>` : ''}</div>`).join('') || '<div class="empty">Nothing recorded yet.</div>';
+    }
+  }catch(e){ if (!e.aborted && $('#abody')) $('#abody').innerHTML = retryBox(adminErr(e), 'retryAdmin'); }
+}
+async function orderAction(oid, action){
+  const needs = action !== 'approve';
+  let reason = '';
+  if (needs){ reason = (prompt(`Reason for "${action}" (required, saved in the audit log):`) || '').trim(); if (!reason) return toast('A reason is required'); }
+  else if (!confirm(`Approve order #${oid}? The buyer gets access immediately.`)) return;
+  await once('order' + oid, async () => {
+    try{ const r = await api(`/api/admin/order/${oid}/action`, {method: 'POST', retry: false, body: JSON.stringify({action, reason})}); toast(`Order #${oid} is now ${r.status}`); }
+    catch(e){ toast(adminErr(e)); }
+    loadAdmin();
+  });
+}
+async function adminPublish(id, to){ await once('pub' + id, async () => { try{ await api('/api/admin/publish', {method:'POST', retry:false, body: JSON.stringify({id, published: !!to})}); toast(to ? 'Story published' : 'Story hidden from the store'); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadHome(); }); }
+async function adminDelete(id, title){
+  if (!confirm(`Remove "${title}" from the store?\n\nBuyers keep their purchase records. Episodes stay in the database.`)) return;
+  await once('del' + id, async () => { try{ await api('/api/admin/delete', {method:'POST', retry:false, body: JSON.stringify({id})}); toast('Story removed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+}
+
+/* ---- admin data reset: 5 confirmations, also counted by the server ---- */
+const RESET_NAME = {app: 'CLEAR ALL APP DATA', bot: 'CLEAR ALL BOT DATA', all: 'CLEAR ALL DATA (APP + BOT)'};
+const RESET_WHAT = {app: 'all stories, episodes, covers, purchases, rentals, listening activity and wishlists', bot: 'all users, requests, support data, FAQs, bans, banners and the audit log', all: 'EVERYTHING: the whole app and the whole bot'};
+async function resetFlow(scope){
+  await once('reset', async () => {
+    const name = RESET_NAME[scope], what = RESET_WHAT[scope];
+    const asks = [
+      `Step 1 of 5\n\n${name}?\n\nThis erases ${what}.`,
+      `Step 2 of 5\n\nThis cannot be undone. Members will lose their purchases and rentals if you continue.\n\nContinue?`,
+      `Step 3 of 5\n\nAre you really sure you want to ${name.toLowerCase()}?`,
+      `Step 4 of 5\n\nLast chance to stop. A safety copy of the database will be sent to your admin chat first.\n\nErase now?`
+    ];
+    const step = (n, extra = {}) => api('/api/admin/reset', {method: 'POST', retry: false, timeout: 120000, body: JSON.stringify({scope, step: n, ...extra})});
+    try{
+      for (let i = 0; i < 4; i++){
+        if (!confirm(asks[i])) return toast('Reset cancelled, nothing was erased');
+        await step(i + 1);
+      }
+      const word = (prompt(`Step 5 of 5\n\nType DELETE (capital letters) to ${name.toLowerCase()}:`) || '').trim();
+      if (word !== 'DELETE') return toast('Reset cancelled, nothing was erased');
+      toast('Erasing...', 60000);
+      const r = await step(5, {text: word});
+      const total = Object.values(r.deleted || {}).reduce((a, b) => a + b, 0);
+      try{ audio.pause(); }catch(e){}
+      P.ep = null; P.sid = null; P.state = 'idle'; $('#mini').classList.remove('show'); document.body.classList.remove('hasplayer');
+      S.home = null; S.homeState = 'idle'; S.wish = new Set(); Object.assign(S.feed, {items: [], offset: 0, state: 'idle', done: false, seeded: false, err: ''});
+      Object.assign(B, {all: null, allState: 'idle', items: [], state: 'idle'});
+      toast(`Done. ${total} records erased.`, 6000);
+      loadAdmin(); loadHome();
+    }catch(e){ toast(adminErr(e), 7000); }
+  });
+}
+
+/* ---- story editor (metadata only) ---- */
+function optRow(o = {}, removable = true){
+  return `<div class="optrow" data-id="${esc(o.id || '')}"><input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}" aria-label="Plan name">
+    <div class="o4"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-days" type="number" min="0" inputmode="numeric" placeholder="Days" value="${o.days ?? ''}" aria-label="Days of access, 0 for lifetime">
+    <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="From ep" value="${o.from ?? ''}" aria-label="From episode"><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep" value="${o.to ?? ''}" aria-label="To episode"></div>
+    ${removable ? '<button type="button" class="btn danger small o-del">Remove plan</button>' : ''}</div>`;
+}
+async function openEditor(id){
+  Object.assign(E, {id: id || null, cover: '', photo: ''});
+  let s = {status: 'Ongoing', published: true};
+  openSheet('editor'); $('#editor').innerHTML = '<div class="sk hero"></div>';
+  if (id){
+    try{ s = (await api('/api/admin/story/' + encodeURIComponent(id))).story; }
+    catch(e){ $('#editor').innerHTML = `<div class="top"><button class="btn ghost small" id="edClose">Back</button></div>` + retryBox(adminErr(e), 'edClose'); return; }
+  }
+  E.cover = s.cover || '';
+  $('#editor').innerHTML = `<div class="top"><button class="btn ghost small" id="edClose">Back</button><strong>${id ? 'Edit story' : 'Add a story'}</strong></div>
+    <label class="field"><span>Auto-fill from your channel's poster post (optional)</span><input id="e_poster" type="url" placeholder="https://t.me/c/1234567890/5"></label>
+    <div class="actions" style="margin-bottom:14px"><button class="btn ghost small" id="autofill" type="button">Auto-fill details</button></div>
+    <label class="field"><span>Title *</span><input id="e_title" value="${esc(s.title || '')}" maxlength="120"></label>
+    <label class="field"><span>Platform or author</span><input id="e_author" value="${esc(s.author || '')}" placeholder="Pocket FM"></label>
+    <div class="two"><label class="field"><span>Genre</span><input id="e_genre" value="${esc(s.genre || '')}" placeholder="Fantasy, Thriller"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
+    <div class="two"><label class="field"><span>Status</span><input id="e_status" list="e_status_l" maxlength="30" placeholder="Ongoing"><datalist id="e_status_l"><option value="Ongoing"><option value="Completed"><option value="Upcoming"></datalist></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
+    <label class="field"><span>Episodes label (optional, e.g. 1101 To 1150)</span><input id="e_epstext" value="${esc(s.episodes_text || '')}"></label>
+    <label class="field check"><input type="checkbox" id="e_pub" ${s.published === false ? '' : 'checked'}><span style="margin:0">Published (visible in the store)</span></label>
+    <label class="field check"><input type="checkbox" id="e_feat" ${s.featured ? 'checked' : ''}><span style="margin:0">Feature on the home page</span></label>
+    <label class="field"><span>Cover emoji or image link</span><input id="e_cover" value="${esc(/^data:/.test(E.cover) ? '' : E.cover)}" placeholder="📖"></label>
+    <div class="field"><span>Or upload a cover photo (keeps its own shape)</span><input id="e_photo" type="file" accept="image/*"><div id="e_prev" style="margin-top:8px"></div></div>
+    <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
+    <label class="field"><span>Upgrade credit cut % for this story (0 to 10, blank = default)</span><input id="e_ucut" type="number" min="0" max="10" step="0.5" inputmode="decimal" value="${s.upgrade_cut ?? ''}"></label>
+    <label class="field"><span>Notes (shown below the topic cards)</span><textarea id="e_notes" maxlength="2000">${esc(s.notes || '')}</textarea></label>
+    <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Price 0 means free for everyone. Days 0 means keep forever. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
+    <div style="padding:0 16px" id="e_opts">${(s.options || []).filter(o => !o.topic).map(o => optRow(o)).join('')}</div><div class="actions"><button class="btn ghost small" id="eAddOpt" type="button">Add plan</button></div>
+    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="sg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="sg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="sg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="sg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
+      <button class="btn ghost small" id="eGen" type="button">Add packs</button></div>
+    <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
+    <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
+  $('#e_status').value = s.status || 'Ongoing'; paintPhoto();
+}
+function paintPhoto(){
+  const src = E.photo || (isImg(E.cover) ? E.cover : '');
+  $('#e_prev').innerHTML = src ? `<div class="cv has-img" style="width:90px;display:inline-block"><img src="${esc(src)}" alt="Cover preview" data-fb="📖"></div> <button class="btn danger small" id="photoRemove" type="button">Remove cover image</button>` : '';
+}
+function readPlans(sel = '#e_opts'){
+  return $$(sel + ' .optrow').map(r => ({id: r.dataset.id || '', label: r.querySelector('.o-label').value.trim(), price: r.querySelector('.o-price').value === '' ? 0 : Number(r.querySelector('.o-price').value),
+    days: parseInt(r.querySelector('.o-days').value) || 0, from: parseInt(r.querySelector('.o-from').value) || null, to: parseInt(r.querySelector('.o-to').value) || null})).filter(o => o.label);
+}
+function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
+  const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
+  if (!size) return toast('Enter the pack size');
+  let start = parseInt(g('start').value);
+  if (!start) start = Math.max(0, ...$$(sel + ' .o-to').map(i => parseInt(i.value) || 0)) + 1;      // carries on after the last pack
+  const end = total ? start + total - 1 : start + size - 1;                                        // total blank (ongoing story): one pack at a time
+  if (Math.ceil((end - start + 1) / size) > 100) return toast('That makes more than 100 packs. Use a bigger pack size.');
+  for (let a = start; a <= end; a += size) $(sel).insertAdjacentHTML('beforeend', optRow({label: `Episodes ${a}-${Math.min(a + size - 1, end)}`, price, days: 0, from: a, to: Math.min(a + size - 1, end)}));
+  if (!total){ g('start').value = ''; toast(`Pack ${start}-${end} added. Total is blank, so tap Add packs again for the next pack.`, 5000); }
+}
+async function saveEditor(){
+  await once('save', async () => {
+    const title = $('#e_title').value.trim();
+    if (!title) return toast('Add a title first');
+    const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: $('#e_genre').value.trim(), language: $('#e_lang').value.trim(),
+      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value),
+      cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts')};
+    const badPlan = story.options.find(o => (o.from || o.to) && !(o.from && o.to && o.from <= o.to)); if (badPlan) return toast(`Plan "${badPlan.label}": fill From and To (From must not be bigger than To), or leave both empty`, 5000);
+    const btn = $('#saveStory'); btn.disabled = true; btn.textContent = 'Saving...';
+    const body = {story, allow_free: false, confirm_affects: false};
+    try{
+      let r;
+      for (;;){
+        try{ r = await api('/api/admin/story', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify(body)}); break; }
+        catch(e){
+          const code = e.data && e.data.error;
+          if (e.status === 409 && code === 'free_plan'){ if (!confirm(e.message + '\n\nPress OK only if this plan is meant to be free.')) return; body.allow_free = true; continue; }
+          if (e.status === 409 && code === 'affects_users'){ if (!confirm(e.message + '\n\nSave the changes?')) return; body.confirm_affects = true; continue; }
+          throw e;
+        }
+      }
+      if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
+      toast(r.note || 'Story saved'); const isNew = !E.id; closeSheet('editor');
+      if (isNew && confirm('Story saved. Add its topics and episodes now?')) openTopics(story.id, story.title);
+      loadAdmin(); loadHome(); B.state = 'idle';
+    }catch(e){ toast(adminErr(e), 5000); }
+    finally{ const b = $('#saveStory'); if (b){ b.disabled = false; b.textContent = 'Save story'; } }
+  });
+}
+function downscale(file, max = 1600){
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const r = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * r); c.height = Math.round(img.height * r); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('That file is not a readable image')); };
+    img.src = url;
+  });
+}
+
+/* ---- topics (categories) of a story ---- */
+const T = {sid: null, title: '', story: null}, TE = {id: null};
+async function openTopics(sid, title){
+  Object.assign(T, {sid, title, story: null});
+  $('#topics').innerHTML = `<div class="top"><button class="btn ghost small" id="tpClose">Back</button><strong>Topics</strong></div><h3 class="h3" style="margin-top:0">${esc(title)}</h3><div id="tpBody"><div class="sk line" style="height:60px"></div></div>`;
+  openSheet('topics'); loadTopics();
+}
+async function loadTopics(){
+  const sid = T.sid;
+  try{ const d = await api(`/api/story/${encodeURIComponent(sid)}?limit=1`); if (T.sid !== sid) return; T.story = d.story; paintTopics(); }
+  catch(e){ if ($('#tpBody')) $('#tpBody').innerHTML = retryBox(adminErr(e), 'retryTopics'); }
+}
+function paintTopics(){
+  const s = T.story, tps = s.topics || [], plans = id => (s.options || []).filter(o => o.topic === id).length;
+  $('#tpBody').innerHTML = `<p class="note">A topic is a part of the story, for example Season 1. Each topic has its own episodes and its own plans. Select a topic to import its episodes.</p>
+    <div class="actions" style="margin-bottom:12px"><button class="btn" id="tpAdd">＋ Add topic</button></div>` +
+    (tps.map(t => `<div class="mrow"><h4>${esc(t.name)}</h4><div style="margin:4px 0"><span class="tag">${t.episodes} eps</span> <span class="tag">${plans(t.id)} plans</span></div>
+      <div class="actions" style="padding:8px 0 0"><button class="btn small" data-tsel="${esc(t.id)}">Select</button><button class="btn ghost small" data-tplan="${esc(t.id)}">＋ Add plan</button><button class="btn ghost small" data-tedit="${esc(t.id)}">Edit</button><button class="btn danger small" data-tdel="${esc(t.id)}">Delete</button></div></div>`).join('') || '<div class="empty">No topics yet. Tap Add topic.</div>') +
+    (s.episodes_unassigned ? `<div class="mrow"><h4>Episodes without a topic</h4><div class="by">${s.episodes_unassigned} episodes</div><div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-tsel="">Open</button></div></div>` : '');
+}
+async function topicCall(body){
+  for (;;){
+    try{ return await api('/api/admin/topic', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({story_id: T.sid, ...body})}); }
+    catch(e){
+      if (e.status === 409 && e.data && e.data.error === 'free_plan'){ if (!confirm(e.message + '\n\nPress OK only if this is meant to be free.')) return null; body.allow_free = true; continue; }
+      throw e;
+    }
+  }
+}
+function openTopicEditor(tid){
+  const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
+  TE.id = tid;
+  $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Edit topic</strong></div>
+    <label class="field"><span>Topic name *</span><input id="te_name" value="${esc(t.name)}" maxlength="60"></label>
+    <label class="field"><span>Note shown on the topic card (optional)</span><textarea id="te_note" maxlength="300" style="min-height:70px">${esc(t.note || '')}</textarea></label>
+    <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Every plan needs From and To episode numbers. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
+    <div style="padding:0 16px" id="te_opts">${(s.options || []).filter(o => o.topic === tid && !o.auto).map(o => optRow(o)).join('')}</div><div class="actions"><button class="btn ghost small" id="teAddOpt" type="button">Add plan</button></div>
+    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="tg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="tg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="tg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="tg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
+      <button class="btn ghost small" id="teGen" type="button">Add packs</button><label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="tg_auto"> <span>Make the next packs automatically as new episodes arrive (leave Total blank)</span></label><p class="note" style="margin:8px 0 0">Ongoing story and the total is not known? Leave Total blank. One pack is made; tap Add packs again for the next pack when more episodes arrive.</p></div>
+    <div class="actions"><button class="btn" id="teSave">Save topic</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
+  openSheet('topiced');
+  if (t.pack){ $('#tg_start').value = t.pack.start; $('#tg_size').value = t.pack.size; $('#tg_price').value = t.pack.price; $('#tg_auto').checked = true; }
+}
+function openPlanAdd(tid){
+  const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
+  TE.id = tid;
+  const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid).map(o => +o.to || 0));      // the new plan carries on after the last one
+  $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Add plan</strong></div>
+    <h3 class="h3" style="margin-top:0">${esc(t.name)}</h3>
+    <p class="note">This plan is added to this topic only. Every plan needs From and To episode numbers. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
+    <div style="padding:0 16px" id="pa_opts">${optRow({days: 0, from: last ? last + 1 : null}, false)}</div>
+    <div class="actions"><button class="btn" id="paSave">Save plan</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
+  openSheet('topiced');
+  const f = $('#pa_opts .o-label'); if (f) setTimeout(() => f.focus(), 120);
+}
+async function savePlanAdd(){
+  await once('pasave', async () => {
+    const tid = TE.id, np = readPlans('#pa_opts')[0];
+    if (!np) return toast('Give the plan a name');
+    if (!np.from || !np.to || np.from > np.to) return toast('Fill From and To (From must not be greater than To)');
+    try{
+      const d = await api(`/api/story/${encodeURIComponent(T.sid)}?limit=1`);                              // newest plans, so nothing saved elsewhere is overwritten
+      const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto).map(o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to}));
+      const r = await topicCall({action: 'edit', id: tid, options: [...mine, {...np, id: ''}]}); if (!r) return;
+      if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
+      toast('Plan added'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
+    }catch(e){ toast(adminErr(e), 5000); }
+  });
+}
+async function saveTopic(){
+  await once('tesave', async () => {
+    const name = $('#te_name').value.trim(); if (!name) return toast('Give the topic a name');
+    const auto = $('#tg_auto').checked, pack = auto ? {start: parseInt($('#tg_start').value), size: parseInt($('#tg_size').value), price: Number($('#tg_price').value) || 0, days: 0} : null;
+    if (auto && !(pack.start && pack.size)) return toast('For automatic packs fill First ep and Pack size');
+    const options = readPlans('#te_opts'), bad = options.find(o => !o.from || !o.to || o.from > o.to);
+    if (bad) return toast(`Plan "${bad.label}": fill From and To (From must not be greater than To)`);
+    try{
+      const r = await topicCall({action: 'edit', id: TE.id, name, note: $('#te_note').value.trim(), options, pack}); if (!r) return;
+      if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
+      toast('Topic saved'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
+    }catch(e){ toast(adminErr(e), 5000); }
+  });
+}
+
+/* ---- episode screen (import, saved import, list with edit / free / hide / delete) ---- */
+function openEpisodes(sid, title, topic = '', tname = '', scope = ''){
+  Object.assign(M, {sid, title, topic, tname, scope, page: 1, q: '', eps: [], total: 0, state: 'loading', edit: null, fileName: ''});
+  $('#epman').innerHTML = `<div class="top"><button class="btn ghost small" id="emClose">Back</button><strong>Episodes</strong></div><h3 class="h3" style="margin-top:0">${esc(title)}${tname ? ' / ' + esc(tname) : ''}</h3>
+    <div class="box" id="m_info" aria-live="polite"><b>Episodes in the app</b><div class="by">Loading...</div></div>
+    <div class="box"><b>Import episodes${tname && topic ? ' into ' + esc(tname) : ''}</b>
+      <p class="note" style="margin:0 0 8px">One episode per line (CSV, TXT or JSON, any one):<br><b>file name | link | ep no | title</b><br>File name = the original file name. Link = the post link. Ep no and Title are shown in the app. Use | or a comma between the parts. Episodes go only into the selected topic.</p>
+      <p class="note" style="margin:0 0 8px">Public channel: import works directly. Private channel: it works when the bot has access (share access). Without access, make the bot an admin of the channel.</p>
+      <button class="btn block" id="m_bot" style="margin-bottom:8px">Import in the bot</button>
+      <textarea id="m_data" placeholder="file name | link | ep no | title&#10;Ep.1.mp3 | https://t.me/c/1234567890/10 | 1 | The Beginning" aria-label="Import rows"></textarea><input type="file" id="m_file" accept=".csv,.json,.txt" style="margin-top:8px">
+      <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" id="m_check">Check only</button><button class="btn small" id="m_apply">Import</button></div><div id="m_result" class="by" style="margin-top:8px" aria-live="polite"></div></div>
+    <div class="box" id="m_saved"><b>Saved import</b><div class="by">Loading...</div><div class="actions" style="padding:8px 0 0"><button class="btn small" data-ejob="reread">Read all posts again</button></div></div>
+    <div class="box"><b>Episode list</b><div class="ctl" style="padding:0"><input id="m_q" type="search" placeholder="Search number or title" aria-label="Search episodes"><div class="by" id="m_total"></div></div>
+      <div id="m_bulk" style="margin-top:10px"><b style="font-size:14px">Bulk actions</b>
+        <div class="by" style="margin:4px 0">This page (<span id="b_n">0</span> episodes shown)</div>
+        <div class="actions" style="padding:0" data-bulkmode="page"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
+        <div class="by" style="margin:10px 0 4px">A range of episode numbers</div>
+        <div class="two"><label class="field"><span>From</span><input id="b_from" type="number" min="1" inputmode="numeric" placeholder="1"></label><label class="field"><span>To</span><input id="b_to" type="number" min="1" inputmode="numeric" placeholder="100"></label></div>
+        <div class="actions" style="padding:0" data-bulkmode="range"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
+      </div></div><div id="m_list"></div>`;
+  openSheet('epman'); loadManage(); loadSaved();
+}
+async function openEpisodesOrTopics(sid, title){
+  try{
+    const s = (await api('/api/admin/story/' + encodeURIComponent(sid))).story;
+    if ((s.topics || []).length) return openTopics(sid, title);
+    openEpisodes(sid, title);
+  }catch(e){ toast(adminErr(e)); }
+}
+async function loadSaved(){
+  const sid = M.sid, topic = M.topic;
+  try{
+    const d = await api(`/api/admin/imports?story_id=${encodeURIComponent(sid)}&topic=${encodeURIComponent(topic)}`);
+    const el = $('#m_saved .by'); if (!el || M.sid !== sid) return;
+    el.textContent = d.saved ? `${d.rows} posts are saved from ${d.name || 'your import'}. Read all posts again checks every one of them once more.`
+      : d.legacy_ranges && !topic ? 'No import file is saved. This story still has its old channel range, and Read all posts again uses it.' : 'Nothing saved yet. The CSV, TXT or JSON you import is kept here.';
+  }catch(e){}
+}
+async function loadManage(){
+  const sig = fresh('manage'), sid = M.sid, list = $('#m_list'); if (!list) return;
+  list.innerHTML = '<div class="sk line" style="height:60px"></div>';
+  const qs = new URLSearchParams({offset: (M.page - 1) * 30, limit: 30}); if (M.q) qs.set('q', M.q); if (M.scope) qs.set('topic', M.scope);
+  try{
+    const d = await api(`/api/story/${encodeURIComponent(sid)}?${qs}`, {signal: sig}); if (M.sid !== sid) return;
+    M.eps = d.eps; M.total = d.total;
+    $('#m_total').textContent = `${d.total} episodes`;
+    if ($('#b_n')) $('#b_n').textContent = d.eps.length;
+    const g = d.range || {};
+    $('#m_info').innerHTML = `<b>Episodes in the app</b><div class="by">${g.count ? `${g.count} episodes, numbers ${g.first} to ${g.last}` : 'No episodes yet. Import a file below.'}</div>` +
+      (g.gaps ? `<div class="by" style="color:var(--warn)">Missing numbers: ${esc(g.gaps)}.</div>` : g.count ? '<div class="by" style="color:var(--ok)">No missing numbers.</div>' : '');
+    renderManageList();
+  }catch(e){ if (!e.aborted && $('#m_list')) $('#m_list').innerHTML = retryBox(adminErr(e), 'retryManage'); }
+}
+function renderManageList(){
+  const list = $('#m_list'); if (!list) return; const pages = Math.max(1, Math.ceil(M.total / 30));
+  const row = e => `<div class="mrow"><b>${epn(e)}.</b> ${esc(e.title)}<div style="margin:4px 0"><span class="pill ${e.free ? 'free' : 'owned'}">${e.free ? 'Free' : 'Premium'}</span> <span class="pill ${e.published ? 'free' : 'lock'}">${e.published ? 'Published' : 'Hidden'}</span></div>
+      ${e.fname ? `<div class="by">${esc(e.fname)}</div>` : ''}
+      <div class="actions" style="padding:0"><button class="btn ghost small" data-eedit="${e.id}">Edit</button><button class="btn ghost small" data-efree="${e.id}" data-to="${e.free ? 0 : 1}">${e.free ? 'Make premium' : 'Make free'}</button>
+      <button class="btn ghost small" data-epub="${e.id}" data-to="${e.published ? 0 : 1}">${e.published ? 'Hide' : 'Publish'}</button><button class="btn danger small" data-edel="${e.id}">Delete</button></div></div>`;
+  const form = e => `<div class="mrow"><b>Edit episode ${epn(e)}</b>
+      <label class="field"><span>File name</span><input id="x_fname" value="${esc(e.fname || '')}" maxlength="200"></label>
+      <label class="field"><span>Episode link</span><input id="x_link" type="url" value="${esc(e.link || '')}" placeholder="https://t.me/c/1234567890/10"></label>
+      <div class="two"><label class="field"><span>Episode no</span><input id="x_no" type="number" min="1" inputmode="numeric" value="${e.no}"></label><label class="field"><span>Ep title</span><input id="x_title" value="${esc(e.title || '')}" maxlength="200"></label></div>
+      <div class="actions" style="padding:0"><button class="btn small" data-esave="${e.id}">Save</button><button class="btn ghost small" id="x_cancel">Cancel</button></div></div>`;
+  list.innerHTML = (M.eps.map(e => M.edit === e.id ? form(e) : row(e)).join('') || '<div class="empty">No episodes yet. Import a file above.</div>') +
+    (M.total > 30 ? `<div class="pager"><button class="btn ghost small" data-mpg="-1" ${M.page <= 1 ? 'disabled' : ''}>Prev</button><span>Page ${M.page} of ${pages}</span><button class="btn ghost small" data-mpg="1" ${M.page >= pages ? 'disabled' : ''}>Next</button></div>` : '');
+}
+async function saveEpisodeEdit(id){
+  const title = $('#x_title').value.trim(); if (!title) return toast('The episode needs a title');
+  await once('ep' + id, async () => {
+    try{ await api('/api/admin/episode', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: +id, fname: $('#x_fname').value.trim(), link: $('#x_link').value.trim(), no: $('#x_no').value, title})}); toast('Saved'); M.edit = null; }
+    catch(e){ toast(adminErr(e), 5000); return; }
+    loadManage();
+  });
+}
+async function deleteEpisode(id){
+  const ep = M.eps.find(x => String(x.id) === String(id));
+  if (!confirm(`Delete episode ${ep ? ep.no + ': ' + ep.title : ''}?\n\nIt is removed from the app and from the saved import. Listening history for it is removed too.`)) return;
+  await once('epd' + id, async () => { try{ await api('/api/admin/episode/delete', {method: 'POST', retry: false, body: JSON.stringify({id: +id})}); toast('Episode deleted'); }catch(e){ toast(adminErr(e)); } loadManage(); loadSaved(); });
+}
+const BULK_TXT = {free: 'Make free', premium: 'Make premium', hide: 'Hide', publish: 'Publish', delete: 'DELETE'};
+async function bulkAction(act, mode){
+  const body = {story_id: M.sid, topic: M.scope || '', action: act};
+  if (mode === 'page'){
+    if (!M.eps.length) return toast('No episodes on this page');
+    body.ids = M.eps.map(e => e.id);
+  } else {
+    const lo = parseInt($('#b_from').value, 10), hi = parseInt($('#b_to').value, 10);
+    if (!(lo >= 1) || !(hi >= lo)) return toast('Fill From and To (From must not be greater than To)');
+    body.range = {from: lo, to: hi};
+  }
+  await once('bulk', async () => {
+    try{
+      const q = await api('/api/admin/episodes/bulk', {method: 'POST', retry: false, body: JSON.stringify({...body, dry_run: true})});
+      if (!q.count) return toast('No episodes found there');
+      const where = mode === 'page' ? 'on this page' : `in the range ${body.range.from} to ${body.range.to}`;
+      const warn = act === 'delete' ? '\n\nThey are removed from the app and from the saved import. Listening history for them is removed too. This cannot be undone.' : '';
+      if (!confirm(`${BULK_TXT[act]}: ${q.count} episodes ${where}?${warn}`)) return;
+      const r = await api('/api/admin/episodes/bulk', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify(body)});
+      toast(`Done: ${r.count} episodes`);
+    }catch(e){ toast(adminErr(e), 5000); }
+    if (M.page > 1 && act === 'delete') M.page = 1;
+    loadManage(); loadSaved();
+  });
+}
+async function editEpisode(id, patch){
+  await once('ep' + id, async () => { try{ await api('/api/admin/episode', {method: 'POST', retry: false, body: JSON.stringify({id: +id, ...patch})}); toast('Saved'); }catch(e){ toast(adminErr(e)); } loadManage(); });
+}
+async function runImport(dry){
+  await once('import', async () => {
+    const out = $('#m_result'), text = $('#m_data').value.trim();
+    if (!text){ out.textContent = 'Paste the lines or choose a file first.'; return; }
+    out.textContent = dry ? 'Checking...' : 'Importing...';
+    try{
+      const r = await api('/api/admin/episodes/import_files', {method: 'POST', retry: false, timeout: 120000, body: JSON.stringify({story_id: M.sid, topic: M.topic, text, name: M.fileName, dry_run: dry})});
+      const acc = (r.access || []).map(a => `<div style="color:var(--${a.ok ? 'ok' : 'warn'})">${esc(a.chat)}: ${esc(a.note)}</div>`).join('');
+      out.innerHTML = `<b>${dry ? 'Check finished' : 'Import started'}:</b> ${r.valid} rows are fine, ${r.error_count} have problems.` + (r.note ? `<div>${esc(r.note)}</div>` : '') + acc +
+        (r.errors || []).slice(0, 8).map(x => `<div>Row ${x.row}${x.ep_no ? ' (ep ' + x.ep_no + ')' : ''}: ${esc(x.error)}</div>`).join('') + (r.error_count > 8 ? `<div>...and ${r.error_count - 8} more</div>` : '');
+      if (!dry){ loadSaved(); setTimeout(() => { if (M.sid && $('#m_list')) loadManage(); }, 8000); }
+    }catch(e){ out.textContent = 'Stopped: ' + adminErr(e); }
+  });
+}
+
+/* ---------- navigation ---------- */
+function setTab(t){
+  S.tab = t; $$('.bnav button').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
+  [...stack].forEach(closeSheet); $('#view').scrollTop = 0; window.scrollTo(0, 0);
+  if (t === 'home'){ if (S.home) renderHome(); else loadHome(); if (S.home && S.homeState !== 'loading') loadHome(); }
+  else if (t === 'browse') renderBrowse(); else if (t === 'library') renderLibrary(); else if (t === 'cart') renderCart(); else renderMe();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target, c = s => t.closest(s);
+  let m;
+  if (homeClick(c)) return;
+  if ((m = c('.bnav button'))){ if (m.dataset.tab === 'browse' && S.tab === 'browse') Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover'}); return setTab(m.dataset.tab); }
+  if (c('#retryHome')){ S.homeState = 'idle'; return loadHome(); }
+  if (c('#retryBrowse')) return loadBrowse(B.items.length ? false : true);
+  if (c('#retryLib')) return loadLibrary();
+  if (c('#retryStory')) return openStory(V.id);
+  if (c('#retryEps')) return loadStoryPage(V.page);
+  if (c('#retryAdmin')) return loadAdmin();
+  if (c('#retryManage')) return loadManage();
+  if ((m = c('[data-cartadd]'))){ const on = cartToggle(m.dataset.cartadd); m.classList.toggle('on', on); m.setAttribute('aria-pressed', on); m.textContent = on ? '\u2713' : '\uD83D\uDED2'; return; }
+  if ((m = c('[data-cartrm]'))){ const [sid, oid] = m.dataset.cartrm.split('|'); CART = CART.filter(i => !(i.sid === sid && String(i.oid) === oid)); cartSave(); toast(tr('cremd')); return paintCart(); }
+  if ((m = c('[data-cartpay]'))){ const [sid, oid] = m.dataset.cartpay.split('|'); return once('buy', async () => { goBot(buyPayload(sid, oid)); await sleep(1200); }); }
+  if (c('#cartGo')){ if (!CART.length) return; return once('buy', async () => { try{ const r = await api('/api/cart/checkout', {method: 'POST', retry: false, body: JSON.stringify({code: CP.code || '', items: CART.map(i => ({story_id: i.sid, option_id: i.oid}))})}); if (r.skipped) toast(tr('cskip', {n: r.skipped}), 4500); goBot('cart_' + r.token); await sleep(1200); }catch(e){ toast(errText(e), 4500); } }); }
+  if (c('#cpApply')) return cpApply(($('#cp_in') || {}).value, CART.map(i => ({sid: i.sid, oid: i.oid}))).then(paintCart);
+  if (c('#sbApply')) return cpApply(($('#sbCode') || {}).value, visOpts().filter(o => +o.price > 0).map(o => ({sid: V.id, oid: o.id}))).then(paintPlanBar);
+  if (c('#cpRemove')){ cpRemove(); paintPlanBar(); paintCart(); return; }
+  if (c('#offBtn') || c('[data-offers]')) return openOffers();
+  if (c('#offBack')) return closeSheet('offerpage');
+  if ((m = c('[data-cpcopy]'))) return copyText(m.dataset.cpcopy, tr('cpcopied'));
+  if ((m = c('[data-cpuse]'))){ const code = m.dataset.cpuse; return once('cpuse', async () => { await cpApply(code, CART.map(i => ({sid: i.sid, oid: i.oid}))); setTab('cart'); }); }
+  if (c('#cartBrowse')) return setTab('home');
+  if ((m = c('[data-pgo]'))){ const k = m.dataset.pgo; if (k === 'cart') return setTab('cart'); L.seg = k; return setTab('library'); }
+  if (c('[data-pbot]')){ goBot(''); return; }
+  if (c('#preqBtn')) return openRequest('new');
+  if (c('#presetBtn')) return askConfirm(tr('presetq'), resetAppData);
+  if (c('#libRefresh')) return loadLibrary();
+  if ((m = c('[data-lcx]'))) return libRemove(m, '/api/history/remove', {story_id: m.dataset.lcx}, () => { if (S.home && S.home.continue) S.home.continue = S.home.continue.filter(i => i.story.id !== m.dataset.lcx); toast(tr('removed')); });
+  if ((m = c('[data-lwx]'))) return libRemove(m, '/api/wishlist', {story_id: m.dataset.lwx, on: false}, () => { if (S.wish) S.wish.delete(m.dataset.lwx); toast(tr('wishoff')); });
+  if ((m = c('[data-viewall]'))) return viewAll(m.dataset.viewall);
+  if ((m = c('[data-cont]'))){ const i = CONT[m.dataset.cont]; if (i) playEpisode({id: i.episode.id, no: i.episode.no, to: i.episode.to, title: i.episode.title, duration: i.episode.duration}, i.story, i.pos); return; }
+  if ((m = c('[data-hist]'))){ const h = HIST[m.dataset.hist]; if (h) playEpisode({id: h.episode_id, no: h.no, to: h.to, title: h.title, duration: h.duration}, {id: h.story_id, title: h.story_title, cover: h.cover}, h.completed ? 0 : h.pos); return; }
+  if ((m = c('[data-seg]'))){ L.seg = m.dataset.seg; $$('[data-seg]').forEach(b => { b.classList.toggle('on', b === m); b.setAttribute('aria-selected', b === m); }); return loadLibrary(); }
+  if ((m = c('[data-bgenre]'))){ B.genre = m.dataset.bgenre; browseChips(); return loadBrowse(true); }
+  if ((m = c('.chip[data-genre]'))){ Object.assign(B, {q:'', genre: m.dataset.genre, status:'', language:'', sort:'newest', view:'list', state:'idle'}); return setTab('browse'); }
+  if (c('#bclear') || c('#bclear2')){ Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest'}); renderBrowse(); return loadBrowse(true); }
+  if ((m = c('[data-drow]'))){ toggleRow(m.dataset.drow); return; }
+  if ((m = c('[data-dsee]'))){ seeAllRow(m.dataset.dsee); return; }
+  if (c('#dback')){ Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover'}); renderBrowse(); return; }
+  if (c('#retryDisc')){ B.allState = 'idle'; return loadDiscover(); }
+  if (c('#bmore')) return loadBrowse(false);
+  if ((m = c('[data-story]'))){
+    if (m.dataset.avail === '0') return toast('This story is no longer in the store. Your purchase is kept.');
+    return openStory(m.dataset.story);
+  }
+  /* story page */
+  if (c('#storyBack')) return storyBack();
+  if (c('#storyShare')) return shareStory();
+  if (c('#storyCopy')) return copyStoryLink();
+  if (c('#storySearch')){ const i = $('#epq'); if (i){ i.scrollIntoView({behavior: 'smooth', block: 'center'}); setTimeout(() => i.focus(), 350); } return; }
+  if ((m = c('[data-topic]'))){
+    V.topic = m.dataset.topic; V.mode = 'topic'; V.page = 1; V.q = ''; V.filter = 'all'; V.eps = []; V.total = 0; V.epState = 'loading'; pickPlan(); renderStory(); $('#story').scrollTop = 0; return loadStoryPage(1);
+  }
+  if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; return paintPlanBar(); }
+  if (c('#sbCart')){ if (V.sel) cartToggle(V.sel); return paintPlanBar(); }
+  if (c('#sbBuy')){ const oid = V.sel; if (oid) return once('buy', async () => { goBot(`buy_${V.id}_${oid}`); await sleep(1200); }); return; }
+  if (c('[data-demo]')) return once('start', () => playFirst(1));
+  if (c('#storyWish')){ const b = c('#storyWish'), id = V.id, on = !S.wish.has(id); on ? S.wish.add(id) : S.wish.delete(id); b.innerHTML = on ? '&#9829;' : '&#9825;'; b.setAttribute('aria-pressed', on);
+    try{ await api('/api/wishlist', {method:'POST', retry:false, body: JSON.stringify({story_id: id, on})}); toast(tr(on ? 'wishon' : 'wishoff')); }
+    catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
+  if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
+  if (c('#startListen')) return once('start', () => playFirst(1));
+  if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
+  if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
+  if ((m = c('[data-buy]'))) return once('buy', async () => { goBot(`buy_${V.id}_${m.dataset.buy}`); await sleep(1200); });
+  if ((m = c('#story [data-ep]'))){
+    const ep = V.eps.find(v => String(v.id) === m.dataset.ep); if (!ep) return;
+    if (ep.locked){ toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
+    return playEpisode(ep, storyTag(V.story));
+  }
+  if ((m = c('[data-pg]'))){ const pages = Math.ceil(V.total / PAGE_SIZE), p = Math.min(pages, Math.max(1, V.page + (m.dataset.pg === 'next' ? 1 : -1))); return loadStoryPage(p); }
+  if (c('#epGo')){ const p = parseInt($('#epJump').value), pages = Math.ceil(V.total / PAGE_SIZE); if (!p || p < 1 || p > pages) return toast(`Type a page from 1 to ${pages}`); return loadStoryPage(p); }
+  /* request a story */
+  if (c('#rqBack')) return closeSheet('reqpage');
+  if ((m = c('[data-rqtab]'))){ R.tab = m.dataset.rqtab; return renderRequest(); }
+  if (c('#retryRq')) return loadRequests();
+  if ((m = c('[data-rqval]'))){
+    const key = m.closest('[data-rqgrp]').dataset.rqgrp; R.d[key] = m.dataset.rqval;
+    if (key === 'platform'){ $('#rq_plat').value = R.d.platform; }
+    $$('[data-rqgrp="' + key + '"] .rq-chip').forEach(b => { const on = b === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    return;
+  }
+  if (c('#rqPhotoRm')){ R.photo = ''; const f = $('#rq_photo'); if (f) f.value = ''; return paintRqPhoto(); }
+  if (c('#rqSubmit')) return submitRequest();
+  /* player */
+  if (c('#mPlay')) return toggle();
+  if (c('#mOpen')){ if (P.state === 'error') return recover(); renderFull(); return openSheet('fullplayer'); }
+  if (c('#fClose')) return closeSheet('fullplayer');
+  if (c('#openDl') || c('#fDlList')) return openDownloads();
+  if (c('#dlClose')) return closeSheet('dlsheet');
+  if (c('#fDl')){ if (P.ep) dlTap(P.ep.id, P.ep, P.story); return; }
+  if (c('#fAuto') || c('#dlAuto')){ OFF.auto = !OFF.auto; store.set('ajauto', OFF.auto ? '1' : '0'); const f = $('#fAuto'); if (f){ f.textContent = `Auto-download next: ${OFF.auto ? 'on' : 'off'}`; f.classList.toggle('on', OFF.auto); f.setAttribute('aria-pressed', OFF.auto); } renderDownloads(); if (OFF.auto) prefetchNext(); return; }
+  if (c('#dlClear')){ if (confirm('Remove every downloaded episode from this phone?')) (async () => { for (const id of [...OFF.meta.keys()]) await offWipe(id); renderDownloads(); })(); return; }
+  if ((m = c('[data-dlrm]'))){ const id = +m.dataset.dlrm; if (confirm('Remove this download from your phone?')) offWipe(id).then(renderDownloads); return; }
+  if ((m = c('[data-dlplay]'))){ const x = OFF.meta.get(+m.dataset.dlplay); if (!x) return; if (!offPlayable(x)) return toast('This download has expired. Connect to the internet to renew.'); closeSheet('dlsheet'); return playEpisode({id: x.id, no: x.no, to: x.to, title: x.title, duration: x.duration}, x.story, parseInt(store.get('ajpos' + x.id, '0')) || 0); }
+  if ((m = c('[data-dl]')) && m.dataset.dl !== '0'){
+    const id = +m.dataset.dl; let ep = V.eps && V.eps.find(v => v.id === id), st = ep && V.story ? storyTag(V.story) : null;
+    if (!ep && CONT[id]){ const i = CONT[id]; ep = {id, no: i.episode.no, to: i.episode.to, title: i.episode.title, duration: i.episode.duration}; st = i.story; }
+    else if (!ep && HIST[id]){ const h = HIST[id]; ep = {id, no: h.no, to: h.to, title: h.title, duration: h.duration}; st = {id: h.story_id, title: h.story_title, cover: h.cover}; }
+    return dlTap(id, ep, st);
+  }
+  if (c('#fStory')){ closeSheet('fullplayer'); return openStory(P.sid); }
+  if (c('#fPlay')) return toggle();
+  if (c('#fRetryBtn')) return recover();
+  if (c('#fBack') && P.ep){ audio.currentTime = Math.max(0, audio.currentTime - 15); return; }
+  if (c('#fFwd') && P.ep){ audio.currentTime += 15; return; }
+  if (c('#fPrev')) return goNeighbor('before');
+  if (c('#fNext')) return goNeighbor('after');
+  if ((m = c('#fullplayer [data-rate]'))) return setRate(parseFloat(m.dataset.rate));
+  if ((m = c('[data-sleep]'))) return setSleep(m.dataset.sleep);
+  if ((m = c('#rMinus, #rPlus')) && e.detail === 0) return setRate(P.rate + (m.id === 'rPlus' ? 0.05 : -0.05));   // keyboard use
+  if (c('#fRepeat')){ P.repeat = !P.repeat; return paintFull(); }
+  if (c('#dGo')){
+    if (!P.ep) return toast('Play an episode first');
+    return once('room', async () => {
+      const btn = $('#dGo'); if (btn) btn.disabled = true;
+      try{
+        const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: P.ep.id, count: +$('#dCount').value})});
+        P.userPaused = true; audio.pause(); await loadDelivery();
+        toast(r.delivery && r.delivery.trimmed ? `Sent, but fewer episodes: one reached its ${D.info.max_per_episode}-send limit.` : r.already ? 'These episodes are already in your chat.' : `Sent to your bot chat. They are removed in ${r.delivery.window_text}.`, 5500);
+        goBot('');
+      }catch(err){
+        toast(errText(err), 6000);
+        if (err.data && err.data.error === 'no_chat') goBot('');            // the member has to press Start in the bot first
+        else if (err.data && err.data.delivery) loadDelivery();
+      }finally{ const b2 = $('#dGo'); if (b2) b2.disabled = false; }
+    });
+  }
+  if (c('#mNext')) return goNeighbor('after');
+  /* admin */
+  if (c('#adminBtn')){ renderAdmin(); return openSheet('admin'); }
+  if (c('#closeAdmin')) return closeSheet('admin');
+  if (c('#refreshAdmin')) return loadAdmin();
+  if ((m = c('[data-atab]'))){ A.tab = m.dataset.atab; $$('[data-atab]').forEach(b => b.classList.toggle('on', b === m)); return loadAdmin(); }
+  if ((m = c('[data-areset]'))) return resetFlow(m.dataset.areset);
+  if (c('#newStory')) return openEditor(null);
+  if ((m = c('[data-aedit]'))) return openEditor(m.dataset.aedit);
+  if ((m = c('[data-aeps]'))) return openEpisodesOrTopics(m.dataset.aeps, m.dataset.title);
+  if ((m = c('[data-atop]'))) return openTopics(m.dataset.atop, m.dataset.title);
+  if (c('#retryTopics')) return loadTopics();
+  if (c('#tpClose')) return closeSheet('topics');
+  if (c('#teClose') || c('#teClose2')) return closeSheet('topiced');
+  if (c('#tpAdd')){ const name = (prompt('Topic name (for example Season 1):') || '').trim(); if (!name) return; return once('tpadd', async () => { try{ await topicCall({action: 'add', name}); toast('Topic added'); }catch(e){ toast(adminErr(e)); } loadTopics(); }); }
+  if ((m = c('[data-tsel]'))){
+    const id = m.dataset.tsel, t = ((T.story && T.story.topics) || []).find(x => x.id === id);
+    return id ? openEpisodes(T.sid, T.title, id, t ? t.name : '', id) : openEpisodes(T.sid, T.title, '', 'Episodes without a topic', '_none');
+  }
+  if ((m = c('[data-tedit]'))) return openTopicEditor(m.dataset.tedit);
+  if ((m = c('[data-tplan]'))) return openPlanAdd(m.dataset.tplan);
+  if (c('#cpNew')) return openCouponEditor(0);
+  if ((m = c('[data-cpedit]'))) return openCouponEditor(+m.dataset.cpedit);
+  if (c('#cpSave')) return saveCoupon();
+  if (c('#cpClose') || c('#cpClose2')) return closeSheet('cpedit');
+  if ((m = c('[data-cptog]'))){ const id = +m.dataset.cptog; return once('cptog' + id, async () => { try{ await cpPost('/api/admin/coupon/action', {id, action: 'toggle'}); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadOffers(); }); }
+  if ((m = c('[data-cpdel]'))){ const id = +m.dataset.cpdel; if (!confirm('Delete this coupon?')) return; return once('cpdel' + id, async () => { try{ await cpPost('/api/admin/coupon/action', {id, action: 'delete'}); toast('Coupon deleted'); }catch(e){ toast(adminErr(e), 5000); } loadAdmin(); loadOffers(); }); }
+  if (c('#bnNew')){ const title = (prompt('Banner title:') || '').trim(); if (!title) return; const body = (prompt('Banner text (optional):') || '').trim(); return once('bnnew', async () => { try{ await cpPost('/api/admin/banner', {title, body}); toast('Banner added'); }catch(e){ toast(adminErr(e), 5000); } loadAdmin(); loadOffers(); }); }
+  if ((m = c('[data-bntog]'))){ const id = +m.dataset.bntog; return once('bntog' + id, async () => { try{ await cpPost('/api/admin/banner/action', {id, action: 'toggle'}); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadOffers(); }); }
+  if ((m = c('[data-bndel]'))){ const id = +m.dataset.bndel; if (!confirm('Delete this banner?')) return; return once('bndel' + id, async () => { try{ await cpPost('/api/admin/banner/action', {id, action: 'delete'}); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadOffers(); }); }
+  if (c('#paSave')) return savePlanAdd();
+  if ((m = c('[data-tdel]'))){
+    const t = ((T.story && T.story.topics) || []).find(x => x.id === m.dataset.tdel);
+    if (!confirm(`Delete the topic "${t ? t.name : ''}"?\n\nIts plans are removed. Its episodes stay in the app without a topic. Existing purchases keep working.`)) return;
+    return once('tpdel', async () => { try{ await topicCall({action: 'delete', id: m.dataset.tdel}); toast('Topic deleted'); }catch(e){ toast(adminErr(e)); } loadTopics(); loadAdmin(); loadHome(); });
+  }
+  if (c('#teAddOpt')){ $('#te_opts').insertAdjacentHTML('beforeend', optRow()); return; }
+  if (c('#teGen')) return addPacks('#te_opts', 'tg_');
+  if (c('#eAddOpt')){ $('#e_opts').insertAdjacentHTML('beforeend', optRow()); return; }
+  if (c('#eGen')) return addPacks('#e_opts', 'sg_');
+  if (c('#teSave')) return saveTopic();
+  if ((m = c('[data-apub]'))) return adminPublish(m.dataset.apub, +m.dataset.to);
+  if ((m = c('[data-adel]'))) return adminDelete(m.dataset.adel, m.dataset.title);
+  if ((m = c('[data-oact]'))) return orderAction(+m.dataset.oid, m.dataset.oact);
+  if ((m = c('[data-rend]'))){
+    if (!confirm('Remove these episodes from the member\'s chat now?')) return;
+    return once('rend' + m.dataset.rend, async () => { try{ await api(`/api/admin/rooms/${m.dataset.rend}/end`, {method: 'POST', retry: false, body: '{}'}); toast('Removed from the chat'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+  }
+  if (c('#edClose') || c('#edClose2')) return closeSheet('editor');
+  if (c('#emClose')) return closeSheet('epman');
+  if (c('.o-del')) return c('.optrow').remove();
+  if (c('#photoRemove')){ E.photo = ''; E.cover = ''; $('#e_cover').value = ''; $('#e_photo').value = ''; return paintPhoto(); }
+  if (c('#saveStory')) return saveEditor();
+  if (c('#autofill')){
+    const link = $('#e_poster').value.trim(); if (!link) return toast('Paste the poster post link first');
+    return once('autofill', async () => {
+      const b = $('#autofill'); b.disabled = true; b.textContent = 'Reading...';
+      try{
+        const r = await api('/api/admin/parse', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({link})}), f = r.fields || {};
+        const set = (id, v) => { if (v) $(id).value = v; };
+        set('#e_title', f.title); set('#e_author', f.author); set('#e_genre', f.genre); set('#e_lang', f.language); set('#e_voice', f.voice); set('#e_epstext', f.episodes_text); set('#e_preview', f.description);
+        if (f.status) $('#e_status').value = f.status;
+        if (r.cover){ E.photo = r.cover; paintPhoto(); }
+        toast(r.cover ? 'Details and cover filled in' : 'Details filled in. Add the cover yourself.');
+      }catch(err){ toast(adminErr(err), 5000); }
+      b.disabled = false; b.textContent = 'Auto-fill details';
+    });
+  }
+  if ((m = c('[data-ejob]'))){
+    const kind = m.dataset.ejob;
+    if (kind === 'renumber' && !confirm('Give every episode the number written in its file name?\n\nPlans that sell episode ranges use these numbers, so check them afterwards. Listening history is kept.')) return;
+    return once('ejob', async () => {
+      try{ const r = await api(`/api/admin/episodes/${kind}`, {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: M.sid, all: kind === 'reread', topic: M.topic})}); toast(r.note || 'Started', 6000); }
+      catch(err){ toast(adminErr(err), 6000); }
+    });
+  }
+  if (c('#m_check')) return runImport(true);
+  if (c('#m_apply')){ if (!confirm('Import these episodes' + (M.tname && M.topic ? ' into ' + M.tname : '') + '?')) return; return runImport(false); }
+  if (c('#m_bot')) return goBot(`import_${M.sid}_${M.topic || '0'}`);
+  if ((m = c('[data-bulk]'))) return bulkAction(m.dataset.bulk, m.parentElement.dataset.bulkmode);
+  if ((m = c('[data-eedit]'))){ M.edit = +m.dataset.eedit; return renderManageList(); }
+  if (c('#x_cancel')){ M.edit = null; return renderManageList(); }
+  if ((m = c('[data-esave]'))) return saveEpisodeEdit(m.dataset.esave);
+  if ((m = c('[data-edel]'))) return deleteEpisode(m.dataset.edel);
+  if ((m = c('[data-efree]'))) return editEpisode(m.dataset.efree, {free: !!+m.dataset.to});
+  if ((m = c('[data-epub]'))) return editEpisode(m.dataset.epub, {published: !!+m.dataset.to});
+  if ((m = c('[data-mpg]'))){ M.page = Math.max(1, M.page + +m.dataset.mpg); return loadManage(); }
+});
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id === 'bq'){ B.q = e.target.value.trim(); if (browseMode() !== B.painted) paintBrowse(); return browseSearch(); }
+  if (id === 'rq_name'){ R.d.name = e.target.value; return rqCatalogCheck(); }
+  if (id === 'rq_plat'){ R.d.platform = e.target.value; $$('[data-rqgrp="platform"] .rq-chip').forEach(b => { const on = b.dataset.rqval === R.d.platform; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); return; }
+  if (id === 'rq_link'){ R.d.link = e.target.value; const h = $('#rqLinkHint'); if (h){ const v = e.target.value.trim(); h.textContent = v && !validWebLink(v) ? tr('rqbadlink') : ''; h.className = 'rq-hint' + (v && !validWebLink(v) ? ' bad' : ''); } return; }
+  if (id === 'epq'){ V.q = e.target.value.trim(); return epSearch(); }
+  if (id === 'asq'){ A.sq = e.target.value.trim(); return adminSearch(); }
+  if (id === 'aoq'){ A.oq = e.target.value.trim(); return adminSearch(); }
+  if (id === 'm_q'){ M.q = e.target.value.trim(); M.page = 1; return manageSearch(); }
+  if (id === 'fSeek'){ P.dragging = true; $('#fCur').textContent = clock(e.target.value); }
+  if (id === 'rSlide') setRate(parseFloat(e.target.value));
+});
+const epSearch = deb(() => loadStoryPage(1), 350), adminSearch = deb(() => loadAdmin(), 350), manageSearch = deb(() => loadManage(), 350);
+document.addEventListener('change', async e => {
+  const id = e.target.id;
+  if (id === 'bsort'){ B.sort = e.target.value; return loadBrowse(true); }
+  if (id === 'bstatus'){ B.status = e.target.value; browseChips(); return loadBrowse(true); }
+  if (id === 'blangsel'){ B.language = e.target.value; browseChips(); return loadBrowse(true); }
+  if (id === 'epf'){ V.filter = e.target.value; return loadStoryPage(1); }
+  if (id === 'apub'){ A.pub = e.target.value; return loadAdmin(); }
+  if (id === 'aost'){ A.ostatus = e.target.value; return loadAdmin(); }
+  if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
+  if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 1200); paintRqPhoto(); }catch(err){ toast(err.message); } }
+  if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
+  if (id === 'm_file' && e.target.files[0]){ M.fileName = e.target.files[0].name; $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); });
+document.addEventListener('pointerdown', e => {                   // hold the speed buttons to keep stepping by 0.05x
+  const b = e.target.closest('#rMinus, #rPlus'); if (!b) return;
+  const d = b.id === 'rPlus' ? 0.05 : -0.05; setRate(P.rate + d);
+  clearInterval(window._rt); window._rt = setInterval(() => setRate(P.rate + d), 150);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearInterval(window._rt), true));
+if (tg) tg.BackButton.onClick(goBack);
+
+/* ---------- start ---------- */
+/* ---------- splash screen ---------- */
+function splashInit(){
+  const el = $('#splash'); if (!el) return;
+  const t0 = Date.now();
+  let idx = 0, cards = [], homeDone = false, closed = false;
+  $('#spTitle').textContent = tr('sptitle'); $('#spSub').textContent = tr('spsub');
+  const ints = [];
+  const close = () => { if (closed) return; closed = true; ints.forEach(clearInterval); window.splashDone = null; el.classList.add('out'); setTimeout(() => el.remove(), 500); };
+  window.splashDone = () => { homeDone = true; };
+  const layout = () => { const n = cards.length; cards.forEach((c, i) => { let d = ((i - idx) % n + n) % n; if (d > n / 2) d -= n; c.className = 'sp-card' + (Math.abs(d) <= 2 ? ' p' + d : ''); }); };
+  ints.push(setInterval(() => {
+    const e = Date.now() - t0;
+    if (!homeDone && S.tab !== 'home' && e > 1200) homeDone = true;
+    if (e > 9000) homeDone = true;                                       // never trap the user on the splash
+    if (homeDone && e >= 1800) close();
+  }, 100));
+  ints.push(setInterval(() => { if (cards.length > 1){ idx = (idx + 1) % cards.length; layout(); } }, 2200));
+  api('/api/catalog?limit=40&sort=popular', {timeout: 8000, retry: false}).then(d => {
+    if (closed) return;
+    const pool = (d.stories || []).filter(s => s.episodes > 0 && s.title);
+    for (let i = pool.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    const pick = pool.slice(0, 7); if (!pick.length) return;
+    const deck = $('#spDeck');
+    deck.innerHTML = pick.map(s => `<div class="sp-card">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" data-fb="&#128214;">` : `<div class="sp-emo">${esc(s.cover || '\u{1F4D6}')}</div>`}</div>`).join('');
+    cards = $$('#spDeck .sp-card'); idx = 0; layout();
+  }).catch(() => {});
+}
+
+(function boot(){
+  splashInit(); updateCartBadge();
+  if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
+  try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
+  offOpen().then(offLoad).catch(() => {});
+  api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(e => { if (e.network || !navigator.onLine) offlineBoot(); });
+  applyTheme(); applyLang(); renderHeader();
+  api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
+  api('/api/notices').then(d => { S.notices = d.items; renderHeader(); }).catch(() => {});
+  setTab(S.tab);
+  const _sid = new URLSearchParams(location.search).get('story');
+  const _sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
+  if (_sp.startsWith('story_')) setTimeout(() => openStory(_sp.slice(6)), 300);       // shared link: opens the story directly
+  else if (_sid) setTimeout(() => openStory(_sid), 300);      // deep link from the bot: ?story=<story id>
+})();
+
+</script>
+</body>
+</html>
