@@ -680,7 +680,7 @@ const dealCard = s => `<button class="card" data-story="${esc(s.id)}" aria-label
 const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(s.genre || '')}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
 const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data-contx="${esc(i.story.id)}" aria-label="Remove ${esc(i.story.title)} from continue listening">&times;</button></div>`;
 const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}" aria-label="Continue ${esc(i.story.title)}, episode ${i.episode.no}">${cover(i.story.cover)}
-  <div style="min-width:0;flex:1"><b>${esc(i.story.title)}</b><small>Episode ${i.episode.no}${i.pos ? ' | ' + clock(i.pos) : ' | start'}</small>
+  <div style="min-width:0;flex:1"><b>${esc(i.story.title)}</b><small>Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}</small>
   <div class="bar"><i style="width:${i.episode.duration ? Math.min(100, i.pos / i.episode.duration * 100) : 0}%"></i></div></div></button>`);
 const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
 
@@ -1098,10 +1098,10 @@ async function loadLibrary(){
     if (seg === 'listening'){
       const [c, hd] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []}))]); if (L.seg !== seg) return;
       body.innerHTML = (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
-          lines: [`Episode ${i.episode.no}${i.pos ? ' | ' + clock(i.pos) : ' | start'}`], bar: i.episode.duration ? Math.min(100, Math.round(i.pos / i.episode.duration * 100)) : 0,
+          lines: [`Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}`], bar: i.episode.duration ? Math.min(100, Math.round(i.pos / i.episode.duration * 100)) : 0,
           actions: `<button class="lbtn" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}">${tr('lres')}</button><button class="lbtn rm" data-lcx="${esc(i.story.id)}">${tr('lrem')}</button>`}))).join('') : libEmpty('lel')) +
         (hd.items.length ? `<h3 class="lsub">${tr('lhead')}</h3>` + hd.items.map(h => (HIST[h.episode_id] = h, `<button class="ep" data-hist="${h.episode_id}" data-story="${esc(h.story_id)}" data-pos="${h.pos}" ${h.available ? '' : 'disabled'}>
-          <span class="n">${h.no}</span><span class="t"><b>${esc(h.story_title)}</b><br><small>${esc(h.title)}</small></span><small>${h.completed ? 'Done' : clock(h.pos)}</small></button>`)).join('') : '');
+          <span class="n">${epn(h)}</span><span class="t"><b>${esc(h.story_title)}</b><br><small>${esc(h.title)}</small></span><small>${h.completed ? 'Done' : clock(h.pos)}</small></button>`)).join('') : '');
     } else if (seg === 'owned' || seg === 'rentals'){
       const d = await api('/api/library', {signal: sig}); if (L.seg !== seg) return;
       let list = d.stories.filter(s => seg === 'owned' ? !s.expires : !!s.expires);
@@ -1210,7 +1210,7 @@ function markPlaying(){ $$('#story .ep').forEach(b => b.classList.toggle('on', !
 async function playEpisode(ep, story, pos = 0, retries = 0){
   const seq = ++P.seq; discardNext();                // a newer request always replaces an older one
   P.sid = story.id; P.story = {id: story.id, title: story.title, cover: story.cover};
-  P.ep = {id: ep.id, no: ep.no, title: ep.title, duration: ep.duration}; P.state = 'loading'; P.err = ''; P.userPaused = false; P.retries = retries;
+  P.ep = {id: ep.id, no: ep.no, to: ep.to, title: ep.title, duration: ep.duration}; P.state = 'loading'; P.err = ''; P.userPaused = false; P.retries = retries;
   showMini(); if ($('#fullplayer').classList.contains('open')) renderFull(); else paintAll(); markPlaying();
   try{
     const d = await api(`/api/play/${ep.id}`, {method: 'POST', retry: false});
@@ -1258,7 +1258,7 @@ function setSleep(v){
 function setSession(){
   if (!('mediaSession' in navigator) || !P.ep) return;
   try{
-    navigator.mediaSession.metadata = new MediaMetadata({title: P.ep.title || ('Episode ' + P.ep.no), artist: P.story ? P.story.title : "AJ's FM Stories"});
+    navigator.mediaSession.metadata = new MediaMetadata({title: P.ep.title || ('Episode ' + epn(P.ep)), artist: P.story ? P.story.title : "AJ's FM Stories"});
     const set = (a, f) => navigator.mediaSession.setActionHandler(a, f);
     set('play', () => { P.userPaused = false; audio.play(); }); set('pause', () => { P.userPaused = true; audio.pause(); });
     set('previoustrack', () => goNeighbor('before')); set('nexttrack', () => goNeighbor('after'));
@@ -1313,7 +1313,7 @@ function maybePreload(){
 }
 async function swapToNext(){
   const n = P.next; P.next = null; const old = audio, seq = ++P.seq;
-  P.ep = {id: n.ep.id, no: n.ep.no, title: n.ep.title, duration: n.ep.duration}; P.state = 'buffering'; P.userPaused = false; P.retries = 0;
+  P.ep = {id: n.ep.id, no: n.ep.no, to: n.ep.to, title: n.ep.title, duration: n.ep.duration}; P.state = 'buffering'; P.userPaused = false; P.retries = 0;
   audio = n.audio; try{ old.removeAttribute('src'); old.load(); }catch(e){}
   paintAll(); markPlaying(); setSession();
   try{ await audio.play(); if (seq !== P.seq) return; P.state = 'playing'; }
@@ -1419,7 +1419,7 @@ function renderStory(){
   if (V.state === 'error'){ el.innerHTML = bar() + retryBox(V.err, 'retryStory'); return; }
   if (V.mode === 'topic') return renderTopicPage();
   const s = V.story, a = V.access;
-  const act = V.resume ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${V.resume.no}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
+  const act = V.resume ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${epn(V.resume)}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
   const wishOn = S.wish && S.wish.has(V.id);
   const range = rangeOf(s.options || []);
   const cards = topicCards().map((t, i) => {
@@ -1828,7 +1828,14 @@ function openEpisodes(sid, title, topic = '', tname = '', scope = ''){
       <textarea id="m_data" placeholder="file name | link | ep no | title&#10;Ep.1.mp3 | https://t.me/c/1234567890/10 | 1 | The Beginning" aria-label="Import rows"></textarea><input type="file" id="m_file" accept=".csv,.json,.txt" style="margin-top:8px">
       <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" id="m_check">Check only</button><button class="btn small" id="m_apply">Import</button></div><div id="m_result" class="by" style="margin-top:8px" aria-live="polite"></div></div>
     <div class="box" id="m_saved"><b>Saved import</b><div class="by">Loading...</div><div class="actions" style="padding:8px 0 0"><button class="btn small" data-ejob="reread">Read all posts again</button></div></div>
-    <div class="box"><b>Episode list</b><div class="ctl" style="padding:0"><input id="m_q" type="search" placeholder="Search number or title" aria-label="Search episodes"><div class="by" id="m_total"></div></div></div><div id="m_list"></div>`;
+    <div class="box"><b>Episode list</b><div class="ctl" style="padding:0"><input id="m_q" type="search" placeholder="Search number or title" aria-label="Search episodes"><div class="by" id="m_total"></div></div>
+      <div id="m_bulk" style="margin-top:10px"><b style="font-size:14px">Bulk actions</b>
+        <div class="by" style="margin:4px 0">This page (<span id="b_n">0</span> episodes shown)</div>
+        <div class="actions" style="padding:0" data-bulkmode="page"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
+        <div class="by" style="margin:10px 0 4px">A range of episode numbers</div>
+        <div class="two"><label class="field"><span>From</span><input id="b_from" type="number" min="1" inputmode="numeric" placeholder="1"></label><label class="field"><span>To</span><input id="b_to" type="number" min="1" inputmode="numeric" placeholder="100"></label></div>
+        <div class="actions" style="padding:0" data-bulkmode="range"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
+      </div></div><div id="m_list"></div>`;
   openSheet('epman'); loadManage(); loadSaved();
 }
 async function openEpisodesOrTopics(sid, title){
@@ -1855,6 +1862,7 @@ async function loadManage(){
     const d = await api(`/api/story/${encodeURIComponent(sid)}?${qs}`, {signal: sig}); if (M.sid !== sid) return;
     M.eps = d.eps; M.total = d.total;
     $('#m_total').textContent = `${d.total} episodes`;
+    if ($('#b_n')) $('#b_n').textContent = d.eps.length;
     const g = d.range || {};
     $('#m_info').innerHTML = `<b>Episodes in the app</b><div class="by">${g.count ? `${g.count} episodes, numbers ${g.first} to ${g.last}` : 'No episodes yet. Import a file below.'}</div>` +
       (g.gaps ? `<div class="by" style="color:var(--warn)">Missing numbers: ${esc(g.gaps)}.</div>` : g.count ? '<div class="by" style="color:var(--ok)">No missing numbers.</div>' : '');
@@ -1887,6 +1895,31 @@ async function deleteEpisode(id){
   const ep = M.eps.find(x => String(x.id) === String(id));
   if (!confirm(`Delete episode ${ep ? ep.no + ': ' + ep.title : ''}?\n\nIt is removed from the app and from the saved import. Listening history for it is removed too.`)) return;
   await once('epd' + id, async () => { try{ await api('/api/admin/episode/delete', {method: 'POST', retry: false, body: JSON.stringify({id: +id})}); toast('Episode deleted'); }catch(e){ toast(adminErr(e)); } loadManage(); loadSaved(); });
+}
+const BULK_TXT = {free: 'Make free', premium: 'Make premium', hide: 'Hide', publish: 'Publish', delete: 'DELETE'};
+async function bulkAction(act, mode){
+  const body = {story_id: M.sid, topic: M.scope || '', action: act};
+  if (mode === 'page'){
+    if (!M.eps.length) return toast('No episodes on this page');
+    body.ids = M.eps.map(e => e.id);
+  } else {
+    const lo = parseInt($('#b_from').value, 10), hi = parseInt($('#b_to').value, 10);
+    if (!(lo >= 1) || !(hi >= lo)) return toast('Fill From and To (From must not be greater than To)');
+    body.range = {from: lo, to: hi};
+  }
+  await once('bulk', async () => {
+    try{
+      const q = await api('/api/admin/episodes/bulk', {method: 'POST', retry: false, body: JSON.stringify({...body, dry_run: true})});
+      if (!q.count) return toast('No episodes found there');
+      const where = mode === 'page' ? 'on this page' : `in the range ${body.range.from} to ${body.range.to}`;
+      const warn = act === 'delete' ? '\n\nThey are removed from the app and from the saved import. Listening history for them is removed too. This cannot be undone.' : '';
+      if (!confirm(`${BULK_TXT[act]}: ${q.count} episodes ${where}?${warn}`)) return;
+      const r = await api('/api/admin/episodes/bulk', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify(body)});
+      toast(`Done: ${r.count} episodes`);
+    }catch(e){ toast(adminErr(e), 5000); }
+    if (M.page > 1 && act === 'delete') M.page = 1;
+    loadManage(); loadSaved();
+  });
 }
 async function editEpisode(id, patch){
   await once('ep' + id, async () => { try{ await api('/api/admin/episode', {method: 'POST', retry: false, body: JSON.stringify({id: +id, ...patch})}); toast('Saved'); }catch(e){ toast(adminErr(e)); } loadManage(); });
@@ -1947,8 +1980,8 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-lcx]'))) return libRemove(m, '/api/history/remove', {story_id: m.dataset.lcx}, () => { if (S.home && S.home.continue) S.home.continue = S.home.continue.filter(i => i.story.id !== m.dataset.lcx); toast(tr('removed')); });
   if ((m = c('[data-lwx]'))) return libRemove(m, '/api/wishlist', {story_id: m.dataset.lwx, on: false}, () => { if (S.wish) S.wish.delete(m.dataset.lwx); toast(tr('wishoff')); });
   if ((m = c('[data-viewall]'))) return viewAll(m.dataset.viewall);
-  if ((m = c('[data-cont]'))){ const i = CONT[m.dataset.cont]; if (i) playEpisode({id: i.episode.id, no: i.episode.no, title: i.episode.title, duration: i.episode.duration}, i.story, i.pos); return; }
-  if ((m = c('[data-hist]'))){ const h = HIST[m.dataset.hist]; if (h) playEpisode({id: h.episode_id, no: h.no, title: h.title, duration: h.duration}, {id: h.story_id, title: h.story_title, cover: h.cover}, h.completed ? 0 : h.pos); return; }
+  if ((m = c('[data-cont]'))){ const i = CONT[m.dataset.cont]; if (i) playEpisode({id: i.episode.id, no: i.episode.no, to: i.episode.to, title: i.episode.title, duration: i.episode.duration}, i.story, i.pos); return; }
+  if ((m = c('[data-hist]'))){ const h = HIST[m.dataset.hist]; if (h) playEpisode({id: h.episode_id, no: h.no, to: h.to, title: h.title, duration: h.duration}, {id: h.story_id, title: h.story_title, cover: h.cover}, h.completed ? 0 : h.pos); return; }
   if ((m = c('[data-seg]'))){ L.seg = m.dataset.seg; $$('[data-seg]').forEach(b => { b.classList.toggle('on', b === m); b.setAttribute('aria-selected', b === m); }); return loadLibrary(); }
   if ((m = c('[data-bgenre]'))){ B.genre = m.dataset.bgenre; browseChips(); return loadBrowse(true); }
   if ((m = c('.chip[data-genre]'))){ Object.assign(B, {q:'', genre: m.dataset.genre, status:'', language:'', sort:'newest', view:'list', state:'idle'}); return setTab('browse'); }
@@ -1979,7 +2012,7 @@ document.addEventListener('click', async e => {
     catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
   if (c('#startListen')) return once('start', () => playFirst(1));
-  if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, title: V.resume.title}, storyTag(V.story), V.resume.pos);
+  if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
   if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
   if ((m = c('[data-buy]'))) return once('buy', async () => { goBot(`buy_${V.id}_${m.dataset.buy}`); await sleep(1200); });
   if ((m = c('#story [data-ep]'))){
@@ -2109,6 +2142,7 @@ document.addEventListener('click', async e => {
   if (c('#m_check')) return runImport(true);
   if (c('#m_apply')){ if (!confirm('Import these episodes' + (M.tname && M.topic ? ' into ' + M.tname : '') + '?')) return; return runImport(false); }
   if (c('#m_bot')) return goBot(`import_${M.sid}_${M.topic || '0'}`);
+  if ((m = c('[data-bulk]'))) return bulkAction(m.dataset.bulk, m.parentElement.dataset.bulkmode);
   if ((m = c('[data-eedit]'))){ M.edit = +m.dataset.eedit; return renderManageList(); }
   if (c('#x_cancel')){ M.edit = null; return renderManageList(); }
   if ((m = c('[data-esave]'))) return saveEpisodeEdit(m.dataset.esave);
