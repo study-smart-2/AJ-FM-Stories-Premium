@@ -222,28 +222,24 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .thopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-size:13px;font-weight:700;min-height:64px}
 .thopt .sw{display:flex;width:44px;height:16px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}.thopt .sw i{flex:1}
 .thopt.on{border:2px solid var(--gold);color:var(--gold-2);background:rgba(var(--gold-rgb),.1)}
-/* splash screen */
-#splash{position:fixed;inset:0;z-index:200;background:var(--ink);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 34px) 24px calc(env(safe-area-inset-bottom,0px) + 34px);transition:opacity .45s ease}
+/* splash screen: fanned cover deck */
+#splash{position:fixed;inset:0;z-index:200;background:var(--ink);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:calc(env(safe-area-inset-top,0px) + 20px) 24px calc(env(safe-area-inset-bottom,0px) + 20px);overflow:hidden;transition:opacity .45s ease}
 #splash.out{opacity:0;pointer-events:none}
-.sp-brand{text-align:center}.sp-brand small{display:block;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-2);font-weight:700;font-size:11px}
-.sp-brand h1{font-family:var(--serif);font-size:30px;line-height:1.1;margin:6px 0 0;color:var(--text)}
-.sp-stage{position:relative;width:min(100%,280px);aspect-ratio:4/5;max-height:46vh;border-radius:18px;overflow:hidden;border:1px solid var(--gold);background:linear-gradient(160deg,var(--cv-a),var(--cv-b));box-shadow:0 12px 36px rgba(0,0,0,.28)}
-.sp-logo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px}
-.sp-stage.has .sp-logo{display:none}
-.sl{position:absolute;inset:0;opacity:0;transform:translateX(36px);transition:opacity .5s ease,transform .5s ease;pointer-events:none}
-.sl.on{opacity:1;transform:none}.sl.out{opacity:0;transform:translateX(-36px)}
-.sl img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.sl .sp-emo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px}
-.sl .slt{position:absolute;left:0;right:0;bottom:0;padding:48px 14px 26px;background:linear-gradient(transparent,rgba(8,12,22,.92));color:#f3ecda;display:flex;flex-direction:column;gap:6px}
-.sl .slt b{font-family:var(--serif);font-size:22px;line-height:1.08}.sl .slt small{color:#cfd6e6;font-size:12px}
-.sp-pills{display:flex;gap:6px;flex-wrap:wrap}.sp-pill{padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1d48a;border:1px solid rgba(241,212,138,.5);background:rgba(214,171,79,.18)}
-.sp-dots{position:absolute;bottom:9px;right:12px;display:flex;gap:5px;z-index:2}.sp-dots i{height:6px;width:6px;border-radius:3px;background:rgba(255,255,255,.4);transition:width .3s,background .3s}.sp-dots i.on{width:16px;background:var(--gold-2)}
-.sp-foot{width:100%;max-width:280px;display:flex;flex-direction:column;gap:10px}
-.sp-tip{text-align:center;color:var(--muted);font-size:12.5px;min-height:18px;transition:opacity .25s}
-.sp-track{height:8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
-.sp-track i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold-2));transition:width .12s linear}
-.sp-meta{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.08em;color:var(--muted);font-weight:700}
-@media (prefers-reduced-motion:reduce){.sl,#splash{transition:none}}
+.sp-deck{position:relative;width:100%;max-width:420px;height:min(46vh,370px)}
+.sp-card{position:absolute;left:50%;top:50%;width:min(36vw,172px);aspect-ratio:2/3;border-radius:22px;overflow:hidden;border:1px solid rgba(var(--gold-rgb),.45);background:linear-gradient(160deg,var(--cv-a),var(--cv-b));box-shadow:0 14px 34px rgba(0,0,0,.45);opacity:0;transform:translate(-50%,-50%) scale(.6);transition:transform .6s cubic-bezier(.3,.8,.3,1),opacity .5s ease,filter .5s ease;will-change:transform}
+.sp-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sp-card .sp-emo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px}
+.sp-card.p0{opacity:1;z-index:5;transform:translate(-50%,-50%) scale(1.04)}
+.sp-card.p1{opacity:1;z-index:4;filter:brightness(.72);transform:translate(-50%,-50%) translateX(66%) rotate(8deg) scale(.88)}
+.sp-card.p-1{opacity:1;z-index:4;filter:brightness(.72);transform:translate(-50%,-50%) translateX(-66%) rotate(-8deg) scale(.88)}
+.sp-card.p2{opacity:1;z-index:3;filter:brightness(.5);transform:translate(-50%,-50%) translateX(118%) rotate(14deg) scale(.76)}
+.sp-card.p-2{opacity:1;z-index:3;filter:brightness(.5);transform:translate(-50%,-50%) translateX(-118%) rotate(-14deg) scale(.76)}
+.sp-txt{text-align:center;max-width:360px}
+.sp-txt h1{margin:0;font-family:var(--sans);font-weight:800;font-size:clamp(25px,7.4vw,32px);line-height:1.08;letter-spacing:-.02em;text-transform:uppercase;color:var(--gold-2)}
+.sp-txt p{margin:14px 0 0;color:var(--muted);font-size:15.5px;line-height:1.7}
+.sp-spin{width:40px;height:40px;color:var(--muted);background:repeating-conic-gradient(currentColor 0 11deg,transparent 11deg 30deg);-webkit-mask:radial-gradient(circle,transparent 11px,#000 12px,#000 19px,transparent 20px);mask:radial-gradient(circle,transparent 11px,#000 12px,#000 19px,transparent 20px);border-radius:50%}
+@media (prefers-reduced-motion:no-preference){.sp-spin{animation:spspin 1s steps(12) infinite}@keyframes spspin{to{transform:rotate(360deg)}}}
+@media (prefers-reduced-motion:reduce){.sp-card,#splash{transition:none}}
 /* discover */
 .dsec{margin:0;padding:16px 16px 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
 .dcard{margin:0 16px 10px;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden;transition:border-color .25s}
@@ -305,14 +301,53 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .pm-i .ic{font-size:20px;width:28px;text-align:center}.pm-i .tx{flex:1}.pm-i .ar{color:var(--muted)}
 .preqbox{margin:0 16px 12px;padding:12px;border-radius:16px;border:1px solid var(--gold);background:var(--panel);display:grid;gap:10px}
 .pdanger{margin:4px 16px 24px;width:calc(100% - 32px);padding:12px;border-radius:12px;border:1px solid var(--bad);background:rgba(226,123,123,.1);color:var(--bad);font-weight:700}
+
+/* Admin workspace refresh */
+#admin{background:var(--ink)}
+#admin .admin-head{position:sticky;top:0;z-index:5;padding:16px;background:linear-gradient(135deg,var(--panel),var(--ink) 82%);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+#admin .admin-brand{display:flex;align-items:center;gap:12px;min-width:0}
+#admin .admin-mark{width:46px;height:46px;flex:none;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,var(--gold-2),var(--gold));color:#1a1405;font-size:22px;box-shadow:0 5px 18px rgba(var(--gold-rgb),.2)}
+#admin .admin-title{font-family:var(--serif);font-size:27px;line-height:1.05;color:var(--gold-2)}
+#admin .admin-sub{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+#admin .admin-headrow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#admin .admin-headrow .btn{flex:none}
+#admin .admin-tools{display:flex;gap:8px;margin-top:14px}
+#admin .admin-tools .btn{flex:1}
+#admin .seg{position:sticky;top:91px;z-index:4;background:var(--ink);padding:10px 16px 12px;border-bottom:1px solid var(--line);gap:8px}
+#admin .seg .chip{min-height:40px;padding:8px 14px;background:var(--panel);font-weight:700}
+#admin .seg .chip.on{background:rgba(var(--gold-rgb),.14);box-shadow:inset 0 0 0 1px var(--gold)}
+#admin #abody{padding-top:12px}
+#admin .ctl{gap:10px;margin-bottom:12px}
+#admin .ctl input,#admin .ctl select{box-shadow:0 2px 8px rgba(0,0,0,.05)}
+#admin .mrow,#admin .box{box-shadow:0 4px 18px rgba(0,0,0,.08);transition:border-color .18s,transform .18s}
+#admin .mrow:focus-within,#admin .box:focus-within{border-color:var(--gold)}
+#admin .mrow h4{font-size:21px;line-height:1.15;margin-bottom:5px}
+#admin .mrow .actions{gap:8px}
+#admin .mrow .actions .btn{flex:1}
+#admin .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#admin .kpi{position:relative;overflow:hidden;padding:15px;border-radius:15px}
+#admin .kpi:after{content:"";position:absolute;right:-18px;top:-18px;width:62px;height:62px;border-radius:50%;background:rgba(var(--gold-rgb),.08)}
+#admin .kpi small{font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+#admin .kpi b{display:block;font-size:clamp(19px,5vw,25px);line-height:1.3;color:var(--gold-2);overflow-wrap:anywhere}
+#admin .tag{display:inline-flex;align-items:center;gap:4px}
+#admin .empty{margin:8px 16px;border:1px dashed var(--line);border-radius:16px;background:var(--panel)}
+#admin .admin-section-label{margin:8px 16px 10px;color:var(--muted);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
+@media(min-width:760px){
+ #admin .admin-head,#admin .seg,#admin #abody{padding-left:max(20px,calc((100% - 900px)/2));padding-right:max(20px,calc((100% - 900px)/2))}
+ #admin .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+ #admin .mrow{margin-left:0;margin-right:0}
+ #admin .ctl{padding-left:0;padding-right:0}
+}
+@media(prefers-reduced-motion:reduce){#admin .mrow,#admin .box{transition:none}}
+
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
 <body>
 <div id="splash" role="status" aria-live="polite">
-  <div class="sp-brand"><small>AJ'S FM</small><h1>Stories Premium &#128081;</h1></div>
-  <div class="sp-stage" id="spStage"><div class="sp-logo">&#128081;</div><div class="sp-dots" id="spDots"></div></div>
-  <div class="sp-foot"><div class="sp-tip" id="spTip">Connecting to secure vault...</div><div class="sp-track"><i id="spBar"></i></div><div class="sp-meta"><span id="spLbl">LOADING</span><span id="spPct">0%</span></div></div>
+  <div class="sp-deck" id="spDeck"><div class="sp-card p0"><div class="sp-emo">&#128081;</div></div></div>
+  <div class="sp-txt"><h1 id="spTitle">Welcome to AJ's FM Stories Premium</h1><p id="spSub">Your premium audio story store inside Telegram, delivered instantly to your chat.</p></div>
+  <div class="sp-spin" aria-hidden="true"></div>
 </div>
 
 <header class="appbar">
@@ -438,7 +473,13 @@ function goBot(payload){
 }
 
 /* ---------- shared pieces ---------- */
-const priceLabel = s => s.deal ? 'From ' + money(s.eff_price) + ' (-' + s.deal.pct + '%)' : s.min_price === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(s.min_price));
+const priceMax = s => { if (s.max_price != null) return +s.max_price; if (s.options && s.options.length) return Math.max(...s.options.map(o => +o.price)); return null; };
+const priceLabel = s => {
+  if (s.deal) return 'From ' + money(s.eff_price) + ' (-' + s.deal.pct + '%)';
+  const hi = priceMax(s), lo = +s.min_price;
+  if (hi != null && hi > lo) return money(lo) + ' - ' + money(hi);          // low and high price of the story's plans
+  return lo === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(lo));
+};
 const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
   <b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
@@ -459,19 +500,19 @@ const TR = {
     recents:'Recent searches', tops:'Top searches', clear:'Clear', notif:'Notifications', nonotif:'No notifications yet.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
     cartnote:'Cart and checkout arrive in the next update. For now, open a story and tap Rent or Buy.', melib:'My library', lang:'Language', theme:'Theme', soon:'Soon',
-    wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'The bot takes one story per checkout. Pay for the first, then come back here for the next.', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
+    wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', sptitle:"Welcome to AJ's FM Stories Premium", spsub:'Your premium audio story store inside Telegram, delivered instantly to your chat.', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'The bot takes one story per checkout. Pay for the first, then come back here for the next.', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
   hi: {gm:'सुप्रभात', ga:'नमस्कार', ge:'शुभ संध्या', cont:'जहाँ छोड़ा था वहीं से सुनें', trending:'ट्रेंडिंग कहानियाँ', flash:'फ्लैश ऑफ़र', deals:'सुपर डील्स', under:'{p} से कम',
     recent:'हाल ही में जोड़ी गईं', ongoing:'चल रही कहानियाँ', completed:'पूरी हो चुकी कहानियाँ', upcoming:'आने वाली कहानियाँ', viewall:'सभी देखें', listen:'अभी सुनें', searchph:'नाम, लेखक, जॉनर या भाषा खोजें',
     recents:'हाल की खोजें', tops:'टॉप सर्च', clear:'हटाएँ', notif:'सूचनाएँ', nonotif:'अभी कोई सूचना नहीं।', home:'होम', discover:'खोजें', library:'लाइब्रेरी', cart:'कार्ट', me:'मैं',
     ends:'खत्म होने में', ended:'खत्म', caught:'आप सब देख चुके हैं। हर हफ्ते नई कहानियाँ आती हैं।', removed:'हिस्ट्री से हटा दिया', cartempty:'आपका कार्ट खाली है',
     cartnote:'कार्ट और चेकआउट अगले अपडेट में आएगा। अभी कहानी खोलकर Rent या Buy दबाएँ।', melib:'मेरी लाइब्रेरी', lang:'भाषा', theme:'थीम', soon:'जल्द',
-    wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'बॉट एक बार में एक कहानी लेता है। पहली का भुगतान करें, फिर अगली के लिए यहाँ लौटें।', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
+    wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', sptitle:"AJ's FM Stories Premium में आपका स्वागत है", spsub:'टेलीग्राम के अंदर आपका प्रीमियम ऑडियो स्टोरी स्टोर, सीधे आपकी चैट में।', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'बॉट एक बार में एक कहानी लेता है। पहली का भुगतान करें, फिर अगली के लिए यहाँ लौटें।', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
   hing: {gm:'Good morning', ga:'Namaste', ge:'Shubh sandhya', cont:'Jahan chhoda wahin se suno', trending:'Trending kahaniyan', flash:'Flash offers', deals:'Super deals', under:'{p} se kam',
     recent:'Naye add hue', ongoing:'Chal rahi kahaniyan', completed:'Poori ho chuki kahaniyan', upcoming:'Aane wali kahaniyan', viewall:'Sab dekho', listen:'Abhi suno', searchph:'Naam, author, genre ya language search karo',
     recents:'Recent searches', tops:'Top searches', clear:'Hatao', notif:'Notifications', nonotif:'Abhi koi notification nahi.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Khatam hone mein', ended:'Khatam', caught:'Aap sab dekh chuke ho. Har hafte nayi kahaniyan aati hain.', removed:'History se hata diya', cartempty:'Aapka cart khali hai',
     cartnote:'Cart aur checkout agle update mein aayega. Abhi story kholkar Rent ya Buy dabao.', melib:'Meri library', lang:'Language', theme:'Theme', soon:'Jald',
-    wishon:'Wishlist mein add hua', wishoff:'Wishlist se hataya', close:'Band karo', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Kahaniyan load ho rahi hain...', more:'Aur explore karo', sptip1:'Secure vault se connect ho rahe hain...', sptip2:'Aapki library sync ho rahi hai...', sptip3:'Kahaniyan load ho rahi hain...', sptip4:'Aapki theme lag rahi hai...', splbl:'LOAD HO RAHA HAI', dtitle:'Discover aur Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} kahaniyan', dsee:'Saari {n} kahaniyan dekho', dtrend:'Abhi trending', dupd:'Haal mein update', dbud:'Sabse kam price pehle', dnone:'Yahan abhi koi kahani nahi.', dback:'Discover', ltitle:'Meri Library', lw:'Wishlist', ll:'Listening', lo:'Meri Stories', lr:'Rentals', lh:'History', lopen:'Kholo', lres:'Resume', lrem:'Hatao', lref:'Refresh', lhead:'Sunne ki history', lew:'Wishlist khali hai. Kahani par heart dabake yahan save karo.', lel:'Abhi continue karne ko kuch nahi. Koi kahani shuru karo.', leo:'Abhi koi kahani nahi. Payment approve hone par kahani yahan dikhegi.', ler:'Abhi koi active rental nahi.', leh:'Abhi koi purchase request nahi.', lkeep:'Hamesha aapki', luntil:'{d} tak access', lleft:'{t} baaki', ctitle:'Shopping Cart', cempty:'Cart mein koi kahani nahi', cemptynote:'Catalog dekho aur pasandida kahaniyan add karo.', cbrowse:'Home page par dekho', crem:'Hatao', csub:'Subtotal', ctotal:'Total bill', cgo:'Secure checkout par jao', cpay:'Pay karo', cnote:'Bot ek baar mein ek kahani leta hai. Pehli ka payment karo, phir agli ke liye yahan wapas aao.', cadd:'Cart mein add karo', cin:'Cart mein hai', cadded:'Cart mein add hua', cremd:'Cart se hataya', citems:'{n} items', cown:'Pehle se aapki hai, cart se hata di', ptitle:'Mera Account', pguide:'App kaise kaam karta hai aur Guide', preq:'Kahani request karo', psup:'Help aur Support', pfb:'Feedback aur Suggestions', pdisp:'Display Settings', preset:'App data reset karo', presetq:'Isse is device ka cart, theme, language aur search history saaf hogi. Aapki purchases aur library par asar nahi padega.', presetdone:'App data reset ho gaya', preqph:'Kahani ka naam ya keywords', preqgo:'Search', preqfound:'Store mein pehle se hai:', preqnone:'Abhi store mein nahi hai. Bot se request bhejo.', preqbot:'Bot mein request karo', pid:'Telegram ID', pbot:'Bot mein khulega'}
+    wishon:'Wishlist mein add hua', wishoff:'Wishlist se hataya', close:'Band karo', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Kahaniyan load ho rahi hain...', more:'Aur explore karo', sptip1:'Secure vault se connect ho rahe hain...', sptip2:'Aapki library sync ho rahi hai...', sptip3:'Kahaniyan load ho rahi hain...', sptip4:'Aapki theme lag rahi hai...', splbl:'LOAD HO RAHA HAI', sptitle:"AJ's FM Stories Premium mein swagat hai", spsub:'Telegram ke andar aapka premium audio story store, seedha aapki chat mein.', dtitle:'Discover aur Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} kahaniyan', dsee:'Saari {n} kahaniyan dekho', dtrend:'Abhi trending', dupd:'Haal mein update', dbud:'Sabse kam price pehle', dnone:'Yahan abhi koi kahani nahi.', dback:'Discover', ltitle:'Meri Library', lw:'Wishlist', ll:'Listening', lo:'Meri Stories', lr:'Rentals', lh:'History', lopen:'Kholo', lres:'Resume', lrem:'Hatao', lref:'Refresh', lhead:'Sunne ki history', lew:'Wishlist khali hai. Kahani par heart dabake yahan save karo.', lel:'Abhi continue karne ko kuch nahi. Koi kahani shuru karo.', leo:'Abhi koi kahani nahi. Payment approve hone par kahani yahan dikhegi.', ler:'Abhi koi active rental nahi.', leh:'Abhi koi purchase request nahi.', lkeep:'Hamesha aapki', luntil:'{d} tak access', lleft:'{t} baaki', ctitle:'Shopping Cart', cempty:'Cart mein koi kahani nahi', cemptynote:'Catalog dekho aur pasandida kahaniyan add karo.', cbrowse:'Home page par dekho', crem:'Hatao', csub:'Subtotal', ctotal:'Total bill', cgo:'Secure checkout par jao', cpay:'Pay karo', cnote:'Bot ek baar mein ek kahani leta hai. Pehli ka payment karo, phir agli ke liye yahan wapas aao.', cadd:'Cart mein add karo', cin:'Cart mein hai', cadded:'Cart mein add hua', cremd:'Cart se hataya', citems:'{n} items', cown:'Pehle se aapki hai, cart se hata di', ptitle:'Mera Account', pguide:'App kaise kaam karta hai aur Guide', preq:'Kahani request karo', psup:'Help aur Support', pfb:'Feedback aur Suggestions', pdisp:'Display Settings', preset:'App data reset karo', presetq:'Isse is device ka cart, theme, language aur search history saaf hogi. Aapki purchases aur library par asar nahi padega.', presetdone:'App data reset ho gaya', preqph:'Kahani ka naam ya keywords', preqgo:'Search', preqfound:'Store mein pehle se hai:', preqnone:'Abhi store mein nahi hai. Bot se request bhejo.', preqbot:'Bot mein request karo', pid:'Telegram ID', pbot:'Bot mein khulega'}
 };
 const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi'}, LANG_NAME = {en:'English', hi:'हिन्दी', hing:'Hinglish'};
 let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
@@ -1104,7 +1145,7 @@ function renderStory(){
   }).join('');
   const act = V.resume ? `<button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${V.resume.no}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button>`
     : V.totalAll ? `<button class="btn block" id="startListen">${a.owned || a.admin ? 'Start listening' : 'Start listening (free demo)'}</button>` : '<div class="msg">Episodes will be added soon.</div>';
-  el.innerHTML = bar(`<span class="by">${esc(priceLabel({min_price: Math.min(...s.options.map(o => +o.price)), has_free: s.options.some(o => +o.price === 0)}))}</span>`) + `
+  el.innerHTML = bar(`<span class="by">${esc(priceLabel({min_price: Math.min(...s.options.map(o => +o.price)), max_price: Math.max(...s.options.map(o => +o.price)), has_free: s.options.some(o => +o.price === 0)}))}</span>`) + `
     <div class="hero">${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">by ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${s.genre ? `<span class="tag">${esc(s.genre)}</span>` : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
@@ -1156,8 +1197,12 @@ const E = {id:null, cover:'', photo:''};
 const INFO = {};                                       // remembers cards so a tap can start playback without another request
 const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
 function renderAdmin(){
-  $('#admin').innerHTML = `<div class="top"><strong>Admin panel</strong><button class="btn ghost small" id="closeAdmin">Close</button></div>
-    <div class="seg" role="tablist">${[['stories', 'Stories'], ['orders', 'Orders'], ['rooms', 'Rooms'], ['stats', 'Stats'], ['audit', 'Audit log']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab">${t}</button>`).join('')}</div><div id="abody"></div>`;
+  $('#admin').innerHTML = `<header class="admin-head">
+      <div class="admin-headrow"><div class="admin-brand"><div class="admin-mark" aria-hidden="true">♛</div><div><div class="admin-title">Control Centre</div><small class="admin-sub">AJ'S FM STORIES · ADMIN WORKSPACE</small></div></div>
+      <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
+      <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
+    </header>
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Rooms'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
 async function loadAdmin(){
@@ -1486,6 +1531,7 @@ document.addEventListener('click', async e => {
   /* admin */
   if (c('#adminBtn')){ renderAdmin(); return openSheet('admin'); }
   if (c('#closeAdmin')) return closeSheet('admin');
+  if (c('#refreshAdmin')) return loadAdmin();
   if ((m = c('[data-atab]'))){ A.tab = m.dataset.atab; $$('[data-atab]').forEach(b => b.classList.toggle('on', b === m)); return loadAdmin(); }
   if (c('#newStory')) return openEditor(null);
   if ((m = c('[data-aedit]'))) return openEditor(m.dataset.aedit);
@@ -1584,36 +1630,28 @@ if (tg) tg.BackButton.onClick(goBack);
 /* ---------- splash screen ---------- */
 function splashInit(){
   const el = $('#splash'); if (!el) return;
-  const t0 = Date.now(), tips = ['sptip1', 'sptip2', 'sptip3', 'sptip4'];
-  let pct = 0, idx = 0, tip = 0, slides = [], homeDone = false, closed = false;
-  const setPct = v => { pct = Math.max(pct, Math.min(100, v)); $('#spBar').style.width = pct + '%'; $('#spPct').textContent = Math.round(pct) + '%'; };
-  const showTip = () => { const t = $('#spTip'); t.style.opacity = 0; setTimeout(() => { t.textContent = tr(tips[tip++ % tips.length]); t.style.opacity = 1; }, 180); };
-  $('#spLbl').textContent = tr('splbl'); $('#spTip').textContent = tr(tips[tip++]);
+  const t0 = Date.now();
+  let idx = 0, cards = [], homeDone = false, closed = false;
+  $('#spTitle').textContent = tr('sptitle'); $('#spSub').textContent = tr('spsub');
   const ints = [];
   const close = () => { if (closed) return; closed = true; ints.forEach(clearInterval); window.splashDone = null; el.classList.add('out'); setTimeout(() => el.remove(), 500); };
   window.splashDone = () => { homeDone = true; };
+  const layout = () => { const n = cards.length; cards.forEach((c, i) => { let d = ((i - idx) % n + n) % n; if (d > n / 2) d -= n; c.className = 'sp-card' + (Math.abs(d) <= 2 ? ' p' + d : ''); }); };
   ints.push(setInterval(() => {
-    const el2 = Date.now() - t0;
-    if (!homeDone && S.tab !== 'home' && el2 > 1200) homeDone = true;
-    if (el2 > 9000) homeDone = true;                                     // never trap the user on the splash
-    setPct(homeDone ? pct + 7 : pct + (88 - pct) * 0.05);
-    if (pct >= 100 && el2 >= 1600) close();
-  }, 80));
-  ints.push(setInterval(showTip, 1400));
-  ints.push(setInterval(() => {
-    if (slides.length < 2) return;
-    const dots = $$('#spDots i'); slides[idx].classList.replace('on', 'out'); const prev = slides[idx]; setTimeout(() => prev.classList.remove('out'), 520);
-    idx = (idx + 1) % slides.length; slides[idx].classList.add('on'); dots.forEach((d, i) => d.classList.toggle('on', i === idx));
-  }, 2400));
+    const e = Date.now() - t0;
+    if (!homeDone && S.tab !== 'home' && e > 1200) homeDone = true;
+    if (e > 9000) homeDone = true;                                       // never trap the user on the splash
+    if (homeDone && e >= 1800) close();
+  }, 100));
+  ints.push(setInterval(() => { if (cards.length > 1){ idx = (idx + 1) % cards.length; layout(); } }, 2200));
   api('/api/catalog?limit=40&sort=popular', {timeout: 8000, retry: false}).then(d => {
     if (closed) return;
     const pool = (d.stories || []).filter(s => s.episodes > 0 && s.title);
     for (let i = pool.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-    const pick = pool.slice(0, 6); if (!pick.length) return;
-    const stage = $('#spStage');
-    stage.insertAdjacentHTML('afterbegin', pick.map((s, i) => `<div class="sl${i ? '' : ' on'}">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" data-fb="?">` : `<div class="sp-emo">${esc(s.cover || '?')}</div>`}<div class="slt"><div class="sp-pills">${[s.genre, s.status].filter(Boolean).map(x => `<span class="sp-pill">${esc(x)}</span>`).join('')}</div><b>${esc(s.title)}</b><small>${esc([s.author, s.episodes + ' eps'].filter(Boolean).join(' | '))}</small></div></div>`).join(''));
-    stage.classList.add('has'); slides = $$('#spStage .sl');
-    $('#spDots').innerHTML = pick.map((_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('');
+    const pick = pool.slice(0, 7); if (!pick.length) return;
+    const deck = $('#spDeck');
+    deck.innerHTML = pick.map(s => `<div class="sp-card">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" data-fb="&#128214;">` : `<div class="sp-emo">${esc(s.cover || '\u{1F4D6}')}</div>`}</div>`).join('');
+    cards = $$('#spDeck .sp-card'); idx = 0; layout();
   }).catch(() => {});
 }
 
