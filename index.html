@@ -1598,11 +1598,11 @@ async function resetFlow(scope){
 }
 
 /* ---- story editor (metadata only) ---- */
-function optRow(o = {}){
+function optRow(o = {}, removable = true){
   return `<div class="optrow" data-id="${esc(o.id || '')}"><input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}" aria-label="Plan name">
     <div class="o4"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-days" type="number" min="0" inputmode="numeric" placeholder="Days" value="${o.days ?? ''}" aria-label="Days of access, 0 for lifetime">
     <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="From ep" value="${o.from ?? ''}" aria-label="From episode"><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep" value="${o.to ?? ''}" aria-label="To episode"></div>
-    <button type="button" class="btn danger small o-del">Remove plan</button></div>`;
+    ${removable ? '<button type="button" class="btn danger small o-del">Remove plan</button>' : ''}</div>`;
 }
 async function openEditor(id){
   Object.assign(E, {id: id || null, cover: '', photo: ''});
@@ -1707,7 +1707,7 @@ function paintTopics(){
   $('#tpBody').innerHTML = `<p class="note">A topic is a part of the story, for example Season 1. Each topic has its own episodes and its own plans. Select a topic to import its episodes.</p>
     <div class="actions" style="margin-bottom:12px"><button class="btn" id="tpAdd">＋ Add topic</button></div>` +
     (tps.map(t => `<div class="mrow"><h4>${esc(t.name)}</h4><div style="margin:4px 0"><span class="tag">${t.episodes} eps</span> <span class="tag">${plans(t.id)} plans</span></div>
-      <div class="actions" style="padding:8px 0 0"><button class="btn small" data-tsel="${esc(t.id)}">Select</button><button class="btn ghost small" data-tedit="${esc(t.id)}">Edit</button><button class="btn danger small" data-tdel="${esc(t.id)}">Delete</button></div></div>`).join('') || '<div class="empty">No topics yet. Tap Add topic.</div>') +
+      <div class="actions" style="padding:8px 0 0"><button class="btn small" data-tsel="${esc(t.id)}">Select</button><button class="btn ghost small" data-tplan="${esc(t.id)}">＋ Add plan</button><button class="btn ghost small" data-tedit="${esc(t.id)}">Edit</button><button class="btn danger small" data-tdel="${esc(t.id)}">Delete</button></div></div>`).join('') || '<div class="empty">No topics yet. Tap Add topic.</div>') +
     (s.episodes_unassigned ? `<div class="mrow"><h4>Episodes without a topic</h4><div class="by">${s.episodes_unassigned} episodes</div><div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-tsel="">Open</button></div></div>` : '');
 }
 async function topicCall(body){
@@ -1731,6 +1731,32 @@ function openTopicEditor(tid){
       <button class="btn ghost small" id="teGen" type="button">Add packs</button><p class="note" style="margin:8px 0 0">Ongoing story and the total is not known? Leave Total blank. One pack is made; tap Add packs again for the next pack when more episodes arrive.</p></div>
     <div class="actions"><button class="btn" id="teSave">Save topic</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
   openSheet('topiced');
+}
+function openPlanAdd(tid){
+  const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
+  TE.id = tid;
+  const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid).map(o => +o.to || 0));      // the new plan carries on after the last one
+  $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Add plan</strong></div>
+    <h3 class="h3" style="margin-top:0">${esc(t.name)}</h3>
+    <p class="note">This plan is added to this topic only. Every plan needs From and To episode numbers. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
+    <div style="padding:0 16px" id="pa_opts">${optRow({days: 0, from: last ? last + 1 : null}, false)}</div>
+    <div class="actions"><button class="btn" id="paSave">Save plan</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
+  openSheet('topiced');
+  const f = $('#pa_opts .o-label'); if (f) setTimeout(() => f.focus(), 120);
+}
+async function savePlanAdd(){
+  await once('pasave', async () => {
+    const tid = TE.id, np = readPlans('#pa_opts')[0];
+    if (!np) return toast('Give the plan a name');
+    if (!np.from || !np.to || np.from > np.to) return toast('Fill From and To (From must not be greater than To)');
+    try{
+      const d = await api(`/api/story/${encodeURIComponent(T.sid)}?limit=1`);                              // newest plans, so nothing saved elsewhere is overwritten
+      const mine = (d.story.options || []).filter(o => o.topic === tid).map(o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to}));
+      const r = await topicCall({action: 'edit', id: tid, options: [...mine, {...np, id: ''}]}); if (!r) return;
+      if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
+      toast('Plan added'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
+    }catch(e){ toast(adminErr(e), 5000); }
+  });
 }
 async function saveTopic(){
   await once('tesave', async () => {
@@ -1981,6 +2007,8 @@ document.addEventListener('click', async e => {
     return id ? openEpisodes(T.sid, T.title, id, t ? t.name : '', id) : openEpisodes(T.sid, T.title, '', 'Episodes without a topic', '_none');
   }
   if ((m = c('[data-tedit]'))) return openTopicEditor(m.dataset.tedit);
+  if ((m = c('[data-tplan]'))) return openPlanAdd(m.dataset.tplan);
+  if (c('#paSave')) return savePlanAdd();
   if ((m = c('[data-tdel]'))){
     const t = ((T.story && T.story.topics) || []).find(x => x.id === m.dataset.tdel);
     if (!confirm(`Delete the topic "${t ? t.name : ''}"?\n\nIts plans are removed. Its episodes stay in the app without a topic. Existing purchases keep working.`)) return;
