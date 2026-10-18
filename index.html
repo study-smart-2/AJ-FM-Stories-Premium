@@ -340,6 +340,63 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 }
 @media(prefers-reduced-motion:reduce){#admin .mrow,#admin .box{transition:none}}
 
+
+/* request a story + tracker */
+.rq-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 16px 14px;padding:4px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.rq-tab{min-height:42px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:13.5px}
+.rq-tab.on{background:rgba(var(--gold-rgb),.16);color:var(--gold-2);box-shadow:inset 0 0 0 1px var(--gold)}
+.rq-chips{display:flex;gap:8px;flex-wrap:wrap}
+.rq-chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:13.5px;min-height:38px}
+.rq-chip.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.14);color:var(--gold-2);font-weight:700}
+.rq-hint{margin:6px 0 0;font-size:12.5px;color:var(--muted)}
+.rq-hint.bad{color:var(--bad)}
+.rq-legend{display:grid;gap:8px;margin:0 16px 14px}
+.rq-lg{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
+.rq-lg .no{flex:none;width:30px;height:30px;border-radius:50%;background:rgba(var(--gold-rgb),.16);color:var(--gold-2);font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.rq-lg b{display:block;font-size:14px}.rq-lg small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}
+.rq-card{margin:0 16px 12px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+.rq-card h4{font-family:var(--serif);font-size:20px;line-height:1.15;overflow-wrap:anywhere}
+.rq-card .by{margin:3px 0 10px}
+.rq-pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rq-st{text-align:center;font-size:11px;color:var(--muted);line-height:1.25}
+.rq-st i{display:block;height:6px;border-radius:3px;background:var(--line);margin-bottom:6px}
+.rq-st.on i{background:var(--gold)}.rq-st.cur{color:var(--gold-2);font-weight:700}
+.rq-card.rej .rq-pipe{opacity:.4}
+.rq-note{margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);font-size:12.5px;color:var(--soft)}
+.rq-prev{display:flex;gap:10px;align-items:center;margin-top:8px}
+.rq-prev .cv{width:72px;flex:none}
+.mini .mbar{top:0;bottom:auto;left:14px;right:14px}
+
+/* story page v2: banner hero, plan pills, sticky action bar */
+.sh{position:relative;padding:64px 16px 18px;text-align:center;overflow:hidden}
+.sh-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(30px) brightness(.5) saturate(1.25);transform:scale(1.1)}
+.sh:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,0) 35%,var(--ink) 98%)}
+.sh>*{position:relative;z-index:1}
+.sh>.sh-bg{position:absolute;z-index:0}
+.sh .cv{width:min(46vw,190px);margin:0 auto 14px;box-shadow:0 16px 38px rgba(0,0,0,.5)}
+.sh .cv.has-img{display:block}
+.sh-top{position:absolute!important;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;z-index:3!important}
+.sh-top>div{display:flex;gap:8px}
+.fab{width:42px;height:42px;min-height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(8,12,22,.55);color:#f3ecda;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:18px;padding:0;display:flex;align-items:center;justify-content:center}
+.fab[aria-pressed=true]{color:#ff6f8e;border-color:#ff6f8e}
+.sh .title{text-shadow:0 2px 14px rgba(0,0,0,.45)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px}
+.pill2{flex:1 1 calc(50% - 8px);min-width:140px;text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--panel);min-height:58px;display:flex;flex-direction:column;gap:2px}
+.pill2 b{font-size:14px;overflow-wrap:anywhere}.pill2 small{color:var(--muted);font-size:11.5px}.pill2 .pp{color:var(--gold-2);font-weight:800;font-size:15px}
+.pill2.on{border:2px solid var(--gold);background:rgba(var(--gold-rgb),.12);padding:9px 11px}
+.pill2.free{border-color:var(--ok)}.pill2.free .pp{color:var(--ok)}
+.pill2.have{opacity:.7}.pill2.have .pp{color:var(--muted)}
+.irow{display:flex;gap:12px;align-items:flex-start;margin:0 16px 8px;padding:12px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.irow .ic{flex:none;width:34px;height:34px;border-radius:10px;background:rgba(var(--gold-rgb),.14);display:flex;align-items:center;justify-content:center;font-size:17px}
+.irow b{display:block;font-size:13.5px}.irow small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}
+.sbar{position:sticky;bottom:0;z-index:5;margin-top:14px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--nav-bg);border-top:1px solid var(--gold);box-shadow:0 -8px 24px rgba(0,0,0,.25);display:grid;gap:8px}
+.sbar:empty{display:none}
+body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
+.sb-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#sbBuy{white-space:nowrap;flex:none}
+.sb-plan{min-width:0}.sb-plan small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sb-plan b{font-size:20px;color:var(--gold-2)}
+.sb-btns{display:grid;grid-template-columns:1fr 1.3fr;gap:8px}
+.sb-btns .btn{min-height:46px;padding:10px 8px;font-size:14px}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -373,6 +430,7 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 
 <section class="sheet" id="search" aria-label="Search"></section>
 <section class="sheet" id="notif" aria-label="Notifications"></section>
+<section class="sheet" id="reqpage" aria-label="Request a Story"></section>
 <section class="sheet" id="story" aria-label="Story"></section>
 <section class="sheet" id="admin" aria-label="Admin panel"></section>
 <section class="sheet" id="editor" aria-label="Story editor"></section>
@@ -383,6 +441,7 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
   <div class="mcv" id="mCover"></div>
   <button class="mt" id="mOpen" aria-label="Open the full player"><b id="mTitle"></b><small id="mSub"></small></button>
   <button class="mb" id="mPlay" aria-label="Play or pause">&#9654;</button>
+  <button class="mb" id="mNext" aria-label="Next episode">&#9197;</button>
   <div class="mbar"><i id="mProg"></i></div>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -390,7 +449,7 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
+const BOT_USERNAME = "Saverestrictioncontentbyaj_bot";      // your bot, without @
 const CURRENCY     = "₹";
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and listen right here in the app.";
@@ -495,7 +554,7 @@ Object.assign(S, {wish:new Set(), tier:0, notices:[], io:null, feed:{items:[], o
 /* ---------- language, theme, header ---------- */
 const store = {get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }};
 const TR = {
-  en: {gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
+  en: {rqtitle:'Request a Story', rqnew:'New Request', rqmine:'Already Requested Stories', rqname:'Story name', rqnameph:'Title of the story you want', rqplat:'Platform', rqplatph:'Pocket FM, Kuku FM, YouTube...', rqlang:'Language', rqstat:'Story status', rqlink:'Story link (web page only)', rqlinkph:'https://...', rqcover:'Story cover image (optional)', rqpick:'Choose image', rqsubmit:'Submit Your Request', rqsending:'Sending...', rqstore:'Already in the store:', rqdone:'Request sent. Track it under Already Requested Stories.', rqempty:'No requests yet', rqemptynote:'Stories you request show up here with their progress.', rqrej:'Rejected', rqrejnote:'The owner could not take this story up.', rqs1:'Pending', rqs2:'Searching', rqs3:'Posting', rqs4:'Completed', rqd1:'We search for it, check availability, and update you if we can take it up.', rqd2:'The team is checking where the story is available.', rqd3:'Approved stories are published episode by episode.', rqd4:'Everything is live on the platform. The request is marked completed.', rqbadlink:'Only a web page link is allowed. It must start with http:// or https://', rqneed:'Fill in the story name, platform, language and status.', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
     recent:'Recently added', ongoing:'Ongoing stories', completed:'Completed stories', upcoming:'Upcoming stories', viewall:'View all', listen:'Listen now', searchph:'Search title, author, genre or language',
     recents:'Recent searches', tops:'Top searches', clear:'Clear', notif:'Notifications', nonotif:'No notifications yet.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
@@ -721,30 +780,90 @@ function renderMe(){
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
     <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
     <div class="pmenu">${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="1"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="1"')}${item('\u2B50', tr('pfb'), 'data-pbot="1"')}</div>
-    <div id="preqSlot"></div>
     <h3 class="lsub">${tr('pdisp')}</h3>
     <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
     <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
   api('/api/library').then(d => { const e = $('#pcOwn'); if (e) e.textContent = d.stories.length; }).catch(() => {});
   if (!S.wish) api('/api/wishlist').then(d => { S.wish = new Set(d.ids); const e = $('#pcWish'); if (e) e.textContent = S.wish.size; }).catch(() => {});
 }
-function paintReq(){
-  const slot = $('#preqSlot'); if (!slot) return;
-  slot.innerHTML = slot.innerHTML ? '' : `<div class="preqbox"><input class="search" id="preqQ" type="search" placeholder="${esc(tr('preqph'))}" aria-label="${esc(tr('preq'))}"><button class="btn block" id="preqGo" style="margin-top:0">${tr('preqgo')}</button><div id="preqRes"></div></div>`;
-  const q = $('#preqQ'); if (q) q.focus();
-}
-async function reqSearch(){
-  const q = ($('#preqQ').value || '').trim(), out = $('#preqRes'); if (!q) return;
-  out.innerHTML = '<div class="sk" style="height:56px"></div>';
-  try{
-    const d = await api('/api/catalog?limit=3&q=' + encodeURIComponent(q), {retry: false});
-    out.innerHTML = d.stories.length ? `<div class="by" style="margin-bottom:8px">${tr('preqfound')}</div><div style="display:grid;gap:8px">${d.stories.map(dMini).join('')}</div>`
-      : `<div class="by" style="margin-bottom:8px">${tr('preqnone')}</div><button class="btn block" data-pbot="1" style="margin-top:0">${tr('preqbot')}</button>`;
-  }catch(e){ out.innerHTML = `<div class="msg bad">${esc(errText(e))}</div>`; }
-}
 function resetAppData(){
   ['ajcart', 'ajt', 'ajl', 'ajrs', 'ajn'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
   CART = []; THEME = 'dark'; LANG = 'en'; applyTheme(); applyLang(); renderHeader(); updateCartBadge(); renderMe(); toast(tr('presetdone'));
+}
+
+/* ---------- request a story ---------- */
+const R = {tab:'new', d:{name:'', platform:'', language:'', status:'', link:''}, photo:'', items:null, state:'idle', err:'', sending:false};
+const RQ_LANGS = ['Hindi', 'English', 'Hinglish', 'Other'], RQ_STATUS = ['Ongoing', 'Completed', 'Not sure'], RQ_PLATS = ['Pocket FM', 'Kuku FM', 'Audible', 'YouTube', 'Other'];
+const RQ_STAGES = ['pending', 'searching', 'posting', 'done'];
+function validWebLink(u){
+  u = (u || '').trim(); if (!u || u.length > 500 || /\s/.test(u)) return '';
+  try{ const x = new URL(u); if (!/^https?:$/.test(x.protocol) || x.username || x.password) return ''; const h = x.hostname.toLowerCase(); if (!h.includes('.') || h.endsWith('.') || !/^[a-z0-9.-]+$/.test(h)) return ''; return u; }catch(e){ return ''; }
+}
+function openRequest(tab){ if (tab) R.tab = tab; renderRequest(); openSheet('reqpage'); $('#reqpage').scrollTop = 0; }
+function renderRequest(){
+  $('#reqpage').innerHTML = `<div class="top"><button class="btn ghost small" id="rqBack" aria-label="Back">Back</button><strong>${tr('rqtitle')}</strong><span style="width:60px"></span></div>
+    <div class="rq-tabs" role="tablist"><button class="rq-tab${R.tab === 'new' ? ' on' : ''}" data-rqtab="new" role="tab" aria-selected="${R.tab === 'new'}">${tr('rqnew')}</button><button class="rq-tab${R.tab === 'mine' ? ' on' : ''}" data-rqtab="mine" role="tab" aria-selected="${R.tab === 'mine'}">${tr('rqmine')}</button></div><div id="rqBody"></div>`;
+  if (R.tab === 'new') paintRqForm(); else { paintRqList(); loadRequests(); }
+}
+const rqChips = (key, list) => `<div class="rq-chips" data-rqgrp="${key}">${list.map(x => `<button type="button" class="rq-chip${R.d[key] === x ? ' on' : ''}" data-rqval="${esc(x)}" aria-pressed="${R.d[key] === x}">${esc(x)}</button>`).join('')}</div>`;
+function paintRqForm(){
+  const d = R.d;
+  $('#rqBody').innerHTML = `<label class="field"><span>${tr('rqname')} *</span><input id="rq_name" value="${esc(d.name)}" maxlength="120" placeholder="${esc(tr('rqnameph'))}" autocomplete="off"></label>
+    <div id="rqHits" style="margin:-4px 16px 12px"></div>
+    <div class="field"><span>${tr('rqplat')} *</span><input id="rq_plat" value="${esc(d.platform)}" maxlength="60" placeholder="${esc(tr('rqplatph'))}" autocomplete="off" style="margin-bottom:8px">${rqChips('platform', RQ_PLATS.slice(0, 4))}</div>
+    <div class="field"><span>${tr('rqlang')} *</span>${rqChips('language', RQ_LANGS)}</div>
+    <div class="field"><span>${tr('rqstat')} *</span>${rqChips('status', RQ_STATUS)}</div>
+    <label class="field"><span>${tr('rqlink')}</span><input id="rq_link" type="url" inputmode="url" value="${esc(d.link)}" maxlength="500" placeholder="${esc(tr('rqlinkph'))}" autocomplete="off"><div class="rq-hint" id="rqLinkHint"></div></label>
+    <div class="field"><span>${tr('rqcover')}</span><input id="rq_photo" type="file" accept="image/*"><div id="rq_prev"></div></div>
+    <div class="pad" style="margin-top:6px"><button class="btn block" id="rqSubmit">${tr('rqsubmit')}</button></div>`;
+  paintRqPhoto();
+}
+function paintRqPhoto(){
+  const e = $('#rq_prev'); if (!e) return;
+  e.innerHTML = R.photo ? `<div class="rq-prev"><div class="cv has-img"><img src="${esc(R.photo)}" alt="Cover preview"></div><button class="btn danger small" id="rqPhotoRm" type="button">${tr('lrem')}</button></div>` : '';
+}
+const rqCatalogCheck = deb(async () => {
+  const box = $('#rqHits'), q = R.d.name.trim(); if (!box) return;
+  if (q.length < 3){ box.innerHTML = ''; return; }
+  try{
+    const d = await api('/api/catalog?limit=3&q=' + encodeURIComponent(q), {retry: false, signal: fresh('rqcat')});
+    if ($('#rqHits')) $('#rqHits').innerHTML = d.stories.length ? `<div class="rq-hint" style="margin:0 0 6px">${tr('rqstore')}</div><div style="display:grid;gap:8px">${d.stories.map(dMini).join('')}</div>` : '';
+  }catch(e){}
+}, 450);
+async function loadRequests(){
+  R.state = 'loading'; paintRqList();
+  try{ const d = await api('/api/requests', {signal: fresh('rqlist')}); R.items = d.items; R.state = 'ok'; }
+  catch(e){ if (e.aborted) return; R.state = 'error'; R.err = errText(e); }
+  if (R.tab === 'mine') paintRqList();
+}
+function paintRqList(){
+  const b = $('#rqBody'); if (!b || R.tab !== 'mine') return;
+  const legend = `<div class="rq-legend">${[1, 2, 3, 4].map(n => `<div class="rq-lg"><span class="no">0${n}</span><span><b>${tr('rqs' + n)}</b><small>${tr('rqd' + n)}</small></span></div>`).join('')}</div>`;
+  let list;
+  if (R.state === 'loading' && !R.items) list = '<div class="sk hero"></div>';
+  else if (R.state === 'error' && !R.items) list = retryBox(R.err, 'retryRq');
+  else if (!R.items || !R.items.length) list = `<div class="empty"><b style="color:var(--text);font-size:16px">${tr('rqempty')}</b><small style="display:block;margin:6px 0 12px">${tr('rqemptynote')}</small><button class="btn" data-rqtab="new">${tr('rqnew')}</button></div>`;
+  else list = R.items.map(r => {
+    const rej = r.state === 'rejected', cur = RQ_STAGES.indexOf(r.state);
+    return `<div class="rq-card${rej ? ' rej' : ''}"><h4>${esc(r.title)}</h4><div class="by">REQ-${r.id} | ${esc([r.platform, r.language, r.status].filter(Boolean).join(' | '))} | ${dateStr(r.created)}</div>
+      <div class="rq-pipe">${[1, 2, 3, 4].map((n, i) => `<div class="rq-st${i <= cur ? ' on' : ''}${i === cur ? ' cur' : ''}"><i></i>0${n} ${tr('rqs' + n)}</div>`).join('')}</div>
+      ${rej ? `<div class="rq-note" style="color:var(--bad)"><b>${tr('rqrej')}.</b> ${tr('rqrejnote')}</div>` : `<div class="rq-note">${tr('rqd' + (cur + 1))}</div>`}</div>`;
+  }).join('');
+  const has = R.items && R.items.length;
+  b.innerHTML = has ? list + `<h3 class="lsub">How requests move</h3>` + legend : legend + list;
+}
+async function submitRequest(){
+  if (R.sending) return;
+  const d = R.d; d.name = ($('#rq_name').value || '').trim(); d.platform = ($('#rq_plat').value || '').trim(); d.link = ($('#rq_link').value || '').trim();
+  if (d.name.length < 2 || !d.platform || !d.language || !d.status) return toast(tr('rqneed'), 4000);
+  if (d.link && !validWebLink(d.link)){ const h = $('#rqLinkHint'); if (h){ h.textContent = tr('rqbadlink'); h.className = 'rq-hint bad'; } return toast(tr('rqbadlink'), 4000); }
+  R.sending = true; const b = $('#rqSubmit'); b.disabled = true; b.textContent = tr('rqsending');
+  try{
+    await api('/api/requests', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({...d, cover: R.photo})});
+    toast(tr('rqdone'), 5000);
+    R.d = {name:'', platform:'', language:'', status:'', link:''}; R.photo = ''; R.items = null; R.tab = 'mine'; renderRequest();
+  }catch(e){ toast(errText(e), 6000); const b2 = $('#rqSubmit'); if (b2){ b2.disabled = false; b2.textContent = tr('rqsubmit'); } }
+  finally{ R.sending = false; }
 }
 
 /* ---------- browse ---------- */
@@ -941,8 +1060,8 @@ function renderFull(){
       <div class="chiprow">${[1, 1.25, 1.5, 2, 3, 4, 5].map(r => `<button data-rate="${r}">${r}x</button>`).join('')}</div></div>
     <div class="opt"><b>Sleep timer <span id="fSleep"></span></b><div class="chiprow">${[['Off', 0], ['15 min', 15], ['30 min', 30], ['45 min', 45], ['60 min', 60]].map(([t, m]) => `<button data-sleep="${m}">${t}</button>`).join('')}<button data-sleep="end">End of episode</button></div></div>
     <div class="opt"><b>Repeat</b><div class="chiprow"><button id="fRepeat" aria-pressed="false">Repeat this episode: off</button></div></div>
-    <div class="opt"><b>Listen with the screen off</b><div class="by" style="margin-bottom:8px">Telegram's own player keeps playing in the background and goes on to the next episode by itself. The episodes are placed in a private channel just for you. When the total listening time plus a little extra is over, they are removed and you leave the channel. Each episode can be sent ${5} times.</div>
-      <div id="dStatus" aria-live="polite"></div><div class="ctl" style="padding:0"><select id="dCount" aria-label="How many episodes"><option value="1">1 episode</option><option value="3">3 episodes</option><option value="5" selected>5 episodes</option><option value="10">10 episodes</option></select><button class="btn" id="dGo">Open a private room</button></div></div></div>`;
+    <div class="opt"><b>Listen with the screen off</b><div class="by" style="margin-bottom:8px">Send episodes into your bot chat and play them with Telegram's own player. It keeps playing in the background and moves on to the next episode by itself. Saving and forwarding are switched off. The episodes remove themselves from the chat when their audio time plus a little extra is over. Each episode can be sent <span id="dMax">5</span> times.</div>
+      <div id="dStatus" aria-live="polite"></div><div class="ctl" style="padding:0"><select id="dCount" aria-label="How many episodes"><option value="1">1 episode</option><option value="3">3 episodes</option><option value="5" selected>5 episodes</option><option value="10">10 episodes</option></select><button class="btn" id="dGo">Send to my chat</button></div><div class="by" id="dLeft" style="margin-top:6px"></div></div></div>`;
   paintFull(); loadDelivery();
 }
 function paintFull(){
@@ -964,19 +1083,16 @@ function paintFull(){
   $('#fRepeat').textContent = `Repeat this episode: ${P.repeat ? 'on' : 'off'}`; $('#fRepeat').classList.toggle('on', P.repeat); $('#fRepeat').setAttribute('aria-pressed', P.repeat);
 }
 const D = {info: null, fetched: 0};
-async function loadDelivery(){ try{ D.info = await api('/api/delivery'); D.fetched = Date.now(); paintDelivery(); }catch(e){} }
+async function loadDelivery(){ try{ D.info = await api('/api/delivery' + (P.ep ? '?episode_id=' + P.ep.id : '')); D.fetched = Date.now(); paintDelivery(); }catch(e){} }
 function paintDelivery(){
   const box = $('#dStatus'), go = $('#dGo'); if (!box) return;
-  const d = D.info && D.info.delivery;
-  if (go && D.info) go.textContent = `Open a private room (${D.info.extra_minutes} min extra)`;
-  if (!d){ box.innerHTML = ''; if (go) go.disabled = false; return; }
-  const now = Date.now() / 1000;
-  const line = d.status === 'active' ? `Room open. ${clock(Math.max(0, d.expires - now))} left.` : `Your room is ready. Join within ${clock(Math.max(0, d.join_by - now))}.`;
-  box.innerHTML = `<div class="access"><b>${esc(line)}</b><br>${d.episodes} episodes: ${esc(d.total_text)} + ${esc(d.extra_text)} extra = ${esc(d.window_text)}</div><button class="btn block" id="dOpen" data-link="${esc(d.link || '')}" style="margin-bottom:8px">Open the private room</button>`;
-  if (go) go.disabled = true;
+  const info = D.info || {}, list = (info.deliveries || []).filter(d => d.expires > Date.now() / 1000), now = Date.now() / 1000;
+  const mx = $('#dMax'); if (mx && info.max_per_episode) mx.textContent = info.max_per_episode;
+  const lf = $('#dLeft'); if (lf) lf.textContent = info.left != null ? `Sends left for this episode: ${info.left} of ${info.max_per_episode}` : '';
+  box.innerHTML = list.map(d => `<div class="access"><b>${esc(d.title || 'Your story')}: ${d.first === d.last ? 'episode ' + d.first : 'episodes ' + d.first + ' to ' + d.last} ${d.first === d.last ? 'is' : 'are'} in your chat</b><br>Removed in ${clock(Math.max(0, d.expires - now))} (${esc(d.total_text)} of audio + ${esc(d.extra_text)} extra)</div>`).join('') +
+    (list.length ? '<button class="btn block" data-pbot="1" style="margin-bottom:8px">Open the bot chat</button>' : '');
 }
-function openRoomLink(link){ if (!link) return; if (tg && tg.openTelegramLink) tg.openTelegramLink(link); else window.open(link, '_blank'); }
-setInterval(() => { if ($('#fullplayer').classList.contains('open') && D.info && D.info.delivery){ paintDelivery(); if (Date.now() - D.fetched > 20000) loadDelivery(); } }, 1000);
+setInterval(() => { if ($('#fullplayer').classList.contains('open') && D.info && (D.info.deliveries || []).length){ paintDelivery(); if (Date.now() - D.fetched > 20000 || D.info.deliveries.some(d => d.expires <= Date.now() / 1000)) loadDelivery(); } }, 1000);
 function paintAll(){ paintMini(); paintFull(); }
 function markPlaying(){ $$('#story .ep').forEach(b => b.classList.toggle('on', !!P.ep && b.dataset.ep === String(P.ep.id) && V.id === P.sid)); }
 
@@ -1120,7 +1236,7 @@ async function loadStoryPage(page){
     V.epState = 'error'; V.epErr = errText(e);
   }
   if (V.page !== page) return;
-  if (!$('#epBox') || V.state !== 'ok' || !$('#story .hero')) renderStory(); else renderEps();
+  if (!$('#epBox') || V.state !== 'ok' || !$('#story .sh')) renderStory(); else renderEps();
 }
 function ownedSummary(a){
   if (a.admin) return '<div class="access">Admin preview: you can play every episode.</div>';
@@ -1128,34 +1244,53 @@ function ownedSummary(a){
   if (a.full) return `<div class="access"><b>Full access</b>${a.ranges.filter(r => r.from === null)[0].expires ? ' until ' + dateStr(a.ranges.filter(r => r.from === null)[0].expires) : ' (yours to keep)'}</div>`;
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
+const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
+const planSub = o => `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
+function pickPlan(){
+  const opts = (V.story && V.story.options) || [], ok = o => +o.price > 0 && !planOwned(o);
+  if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
+}
+function planPillsHtml(){
+  return V.story.options.map(o => {
+    const sub = esc(planSub(o));
+    if (Number(o.price) === 0) return `<button class="pill2 free" data-free="${o.from || 1}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Listen free</span></button>`;
+    if (planOwned(o)) return `<div class="pill2 have"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Owned</span></div>`;
+    return `<button class="pill2${String(o.id) === String(V.sel) ? ' on' : ''}" data-plan="${esc(o.id)}" aria-pressed="${String(o.id) === String(V.sel)}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">${money(o.price)}</span></button>`;
+  }).join('');
+}
+function sbarHtml(){
+  const o = V.story.options.find(x => String(x.id) === String(V.sel)); if (!o) return '';
+  const inCart = cartHas(V.id, o.id);
+  return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}</small><b>${money(o.price)}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
+    <div class="sb-btns">${V.totalAll ? '<button class="btn ghost" data-demo="1">Click for Demo</button>' : '<span></span>'}<button class="btn${inCart ? ' ok' : ''}" id="sbCart">${inCart ? '&#10003; In cart' : '&#128722; ADD TO CART'}</button></div>`;
+}
+function paintPlanBar(){ const pp = $('#planPills'), sb = $('#sbar'); if (pp) pp.innerHTML = planPillsHtml(); if (sb) sb.innerHTML = sbarHtml(); }
 function renderStory(){
   const el = $('#story');
   const bar = (right = '') => `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button>${right}</div>`;
   if (V.state === 'loading'){ el.innerHTML = bar() + '<div class="sk hero" style="height:220px"></div><div class="sk line"></div><div class="sk line" style="width:60%"></div><div class="sk hero"></div>'; return; }
   if (V.state === 'unavailable'){ el.innerHTML = bar() + '<div class="empty"><h3 class="sec">This story is no longer available</h3><p>It may have been removed or hidden. If you bought it, your purchase is kept and you can see it under Library &rarr; Purchases.</p></div>'; return; }
   if (V.state === 'error'){ el.innerHTML = bar() + retryBox(V.err, 'retryStory'); return; }
-  const s = V.story, a = V.access, full = a.full || a.admin;
-  const plans = full ? '' : s.options.map(o => {
-    const have = a.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0));
-    const sub = `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days of access' : 'Yours to keep'}`;
-    if (Number(o.price) === 0) return `<button class="plan free" data-free="${o.from || 1}"><span>${esc(o.label)}<small>${esc(sub)}</small></span><b>Listen free</b></button>`;
-    if (have) return `<div class="plan have"><span>${esc(o.label)}<small>${esc(sub)}</small></span><b>Owned</b></div>`;
-    const inCart = cartHas(V.id, o.id);
-    return `<div class="prow"><button class="plan" data-buy="${esc(o.id)}"><span>${esc(o.label)}<small>${esc(sub)}</small></span><b>${money(o.price)}</b></button><button class="pcart${inCart ? ' on' : ''}" data-cartadd="${esc(o.id)}" aria-pressed="${inCart}" aria-label="${esc(tr(inCart ? 'cin' : 'cadd'))}">${inCart ? '\u2713' : '\uD83D\uDED2'}</button></div>`;
-  }).join('');
+  const s = V.story, a = V.access, full = a.full || a.admin; pickPlan();
   const act = V.resume ? `<button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${V.resume.no}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button>`
-    : V.totalAll ? `<button class="btn block" id="startListen">${a.owned || a.admin ? 'Start listening' : 'Start listening (free demo)'}</button>` : '<div class="msg">Episodes will be added soon.</div>';
-  el.innerHTML = bar(`<span class="by">${esc(priceLabel({min_price: Math.min(...s.options.map(o => +o.price)), max_price: Math.max(...s.options.map(o => +o.price)), has_free: s.options.some(o => +o.price === 0)}))}</span>`) + `
-    <div class="hero">${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">by ${esc(s.author || "AJ's FM")}</div>
+    : V.totalAll ? `<button class="btn block" id="startListen">${a.owned || a.admin ? 'Start listening' : 'Click for Demo (free episodes)'}</button>` : '<div class="msg">Episodes will be added soon.</div>';
+  const wishOn = S.wish && S.wish.has(V.id), prices = s.options.map(o => +o.price);
+  const range = priceLabel({min_price: Math.min(...prices), max_price: Math.max(...prices), has_free: prices.some(p => p === 0)});
+  el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
+      <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storySearch" aria-label="Search episodes">&#128269;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
+      ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">by ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${s.genre ? `<span class="tag">${esc(s.genre)}</span>` : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
-      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
+      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${full ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc">${esc(s.preview)}</div><div class="pad"><button class="link" id="more">Read more</button></div>` : ''}
     <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
       <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}<div class="pad" style="margin-bottom:6px">${act}</div>
-    ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div class="plans">${plans}</div><div class="info" style="margin-top:12px"><b>How it works</b><p>${esc(HOW_IT_WORKS)}</p></div>
-      <div class="info"><b>Questions before you buy?</b><p>Tap a plan to open our bot. It answers your doubts first, then shows how to pay.</p></div>`}
-    <h3 class="h3">Episodes</h3><div id="epBox"></div>`;
+    ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div class="pills" id="planPills">${planPillsHtml()}</div>
+      <h3 class="h3">How it works</h3>
+      <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
+      <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Forwarding and saving are switched off. Listen in the app, or send episodes to your bot chat to listen with the screen off. They remove themselves later.</small></span></div>
+      <div class="irow"><span class="ic">&#128172;</span><span><b>Questions before you buy?</b><small>Tap Buy now to open our bot. It answers your doubts first, then shows how to pay.</small></span></div>`}
+    <h3 class="h3">Episodes</h3><div id="epBox"></div>${full ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
   renderEps();
 }
 function epRow(e){
@@ -1202,7 +1337,7 @@ function renderAdmin(){
       <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
       <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
     </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Rooms'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
 async function loadAdmin(){
@@ -1232,12 +1367,11 @@ async function loadAdmin(){
       $('#aost').value = A.ostatus;
     } else if (tab === 'rooms'){
       const d = await api('/api/admin/rooms', {signal: sig}); if (A.tab !== tab) return;
-      const st = x => x.busy_by == null ? '<span class="tag live">Free</span>' : x.busy_by === -1 ? '<span class="tag bad">Blocked: send /pool clean in the bot</span>' : `<span class="tag warn">In use by room #${x.busy_by}</span>`;
-      body.innerHTML = `<div class="box"><b>Private rooms (channels)</b>${d.pool.map(x => `<div class="by" style="margin:6px 0">${esc(x.title || x.channel_id)} ${st(x)}</div>`).join('') || '<div class="by">No rooms yet. In the bot chat send /pool for the steps.</div>'}
-        <p class="note" style="margin:8px 0 0">Each listener gets a room to themselves for the episodes' total time + ${d.settings.extra_minutes} minutes. They have ${d.settings.join_minutes} minutes to join. One episode can be sent ${d.settings.max_per_episode} times per member.</p></div>` +
-        (d.deliveries.map(r => `<div class="mrow"><b>Room #${r.id}</b> <span class="tag">${esc(r.status)}</span><div class="by">User ${r.user_id} | ${esc(r.story_id)} | ${r.episodes} episodes | ${esc(r.window)}</div>
-          <div class="by">${r.expires && r.status === 'active' ? 'Ends ' + new Date(r.expires * 1000).toLocaleTimeString() : esc(r.reason || '')}</div>
-          ${r.status === 'waiting' || r.status === 'active' ? `<div class="actions" style="padding:8px 0 0"><button class="btn danger small" data-rend="${r.id}">Close now</button></div>` : ''}</div>`).join('') || '<div class="empty">No rooms used yet.</div>');
+      body.innerHTML = `<div class="box"><b>Episodes sent to members' bot chats</b>
+        <p class="note" style="margin:8px 0 0">Each delivery stays for the episodes' total time plus ${d.settings.extra_minutes} minutes or ${d.settings.extra_pct}% of it (whichever is more), at most ${d.settings.max_window_hours} hours. Then the bot deletes it. One episode can be sent ${d.settings.max_per_episode} times per member.</p></div>` +
+        (d.deliveries.map(r => `<div class="mrow"><b>Delivery #${r.id}</b> <span class="tag ${r.status === 'active' ? 'live' : ''}">${esc(r.status)}</span><div class="by">User ${r.user_id} | ${esc(r.title || r.story_id)} | ${r.episodes} episodes | ${esc(r.window)}</div>
+          <div class="by">${r.expires && r.status === 'active' ? 'Removed at ' + new Date(r.expires * 1000).toLocaleTimeString() : esc(r.reason || '')}</div>
+          ${r.status === 'active' ? `<div class="actions" style="padding:8px 0 0"><button class="btn danger small" data-rend="${r.id}">Remove now</button></div>` : ''}</div>`).join('') || '<div class="empty">Nothing has been sent yet.</div>');
     } else if (tab === 'stats'){
       const d = await api('/api/admin/stats', {signal: sig}); if (A.tab !== tab) return;
       const k = (t, v) => `<div class="kpi"><small>${t}</small><b>${v}</b></div>`;
@@ -1463,8 +1597,7 @@ document.addEventListener('click', async e => {
   if (c('#cartBrowse')) return setTab('home');
   if ((m = c('[data-pgo]'))){ const k = m.dataset.pgo; if (k === 'cart') return setTab('cart'); L.seg = k; return setTab('library'); }
   if (c('[data-pbot]')){ goBot(''); return; }
-  if (c('#preqBtn')) return paintReq();
-  if (c('#preqGo')) return reqSearch();
+  if (c('#preqBtn')) return openRequest('new');
   if (c('#presetBtn')) return askConfirm(tr('presetq'), resetAppData);
   if (c('#libRefresh')) return loadLibrary();
   if ((m = c('[data-lcx]'))) return libRemove(m, '/api/history/remove', {story_id: m.dataset.lcx}, () => { if (S.home && S.home.continue) S.home.continue = S.home.continue.filter(i => i.story.id !== m.dataset.lcx); toast(tr('removed')); });
@@ -1487,6 +1620,14 @@ document.addEventListener('click', async e => {
   }
   /* story page */
   if (c('#storyBack')) return closeSheet('story');
+  if (c('#storySearch')){ const i = $('#epq'); if (i){ i.scrollIntoView({behavior: 'smooth', block: 'center'}); setTimeout(() => i.focus(), 350); } return; }
+  if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; return paintPlanBar(); }
+  if (c('#sbCart')){ if (V.sel) cartToggle(V.sel); return paintPlanBar(); }
+  if (c('#sbBuy')){ const oid = V.sel; if (oid) return once('buy', async () => { goBot(`buy_${V.id}_${oid}`); await sleep(1200); }); return; }
+  if (c('[data-demo]')) return once('start', () => playFirst(1));
+  if (c('#storyWish')){ const b = c('#storyWish'), id = V.id, on = !S.wish.has(id); on ? S.wish.add(id) : S.wish.delete(id); b.innerHTML = on ? '&#9829;' : '&#9825;'; b.setAttribute('aria-pressed', on);
+    try{ await api('/api/wishlist', {method:'POST', retry:false, body: JSON.stringify({story_id: id, on})}); toast(tr(on ? 'wishon' : 'wishoff')); }
+    catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
   if (c('#startListen')) return once('start', () => playFirst(1));
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, title: V.resume.title}, storyTag(V.story), V.resume.pos);
@@ -1499,6 +1640,18 @@ document.addEventListener('click', async e => {
   }
   if ((m = c('[data-pg]'))){ const pages = Math.ceil(V.total / PAGE_SIZE), p = Math.min(pages, Math.max(1, V.page + (m.dataset.pg === 'next' ? 1 : -1))); return loadStoryPage(p); }
   if (c('#epGo')){ const p = parseInt($('#epJump').value), pages = Math.ceil(V.total / PAGE_SIZE); if (!p || p < 1 || p > pages) return toast(`Type a page from 1 to ${pages}`); return loadStoryPage(p); }
+  /* request a story */
+  if (c('#rqBack')) return closeSheet('reqpage');
+  if ((m = c('[data-rqtab]'))){ R.tab = m.dataset.rqtab; return renderRequest(); }
+  if (c('#retryRq')) return loadRequests();
+  if ((m = c('[data-rqval]'))){
+    const key = m.closest('[data-rqgrp]').dataset.rqgrp; R.d[key] = m.dataset.rqval;
+    if (key === 'platform'){ $('#rq_plat').value = R.d.platform; }
+    $$('[data-rqgrp="' + key + '"] .rq-chip').forEach(b => { const on = b === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    return;
+  }
+  if (c('#rqPhotoRm')){ R.photo = ''; const f = $('#rq_photo'); if (f) f.value = ''; return paintRqPhoto(); }
+  if (c('#rqSubmit')) return submitRequest();
   /* player */
   if (c('#mPlay')) return toggle();
   if (c('#mOpen')){ if (P.state === 'error') return recover(); renderFull(); return openSheet('fullplayer'); }
@@ -1514,20 +1667,23 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-sleep]'))) return setSleep(m.dataset.sleep);
   if ((m = c('#rMinus, #rPlus')) && e.detail === 0) return setRate(P.rate + (m.id === 'rPlus' ? 0.05 : -0.05));   // keyboard use
   if (c('#fRepeat')){ P.repeat = !P.repeat; return paintFull(); }
-  if (c('#dOpen')) return openRoomLink(c('#dOpen').dataset.link);
   if (c('#dGo')){
     if (!P.ep) return toast('Play an episode first');
     return once('room', async () => {
+      const btn = $('#dGo'); if (btn) btn.disabled = true;
       try{
         const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: P.ep.id, count: +$('#dCount').value})});
-        D.info = {...(D.info || {}), delivery: r.delivery}; paintDelivery(); P.userPaused = true; audio.pause();
-        toast('Your private room is ready. Ask to join; the time starts when you join.', 5000); openRoomLink(r.delivery.link);
+        P.userPaused = true; audio.pause(); await loadDelivery();
+        toast(r.delivery && r.delivery.trimmed ? `Sent, but fewer episodes: one reached its ${D.info.max_per_episode}-send limit.` : r.already ? 'These episodes are already in your chat.' : `Sent to your bot chat. They are removed in ${r.delivery.window_text}.`, 5500);
+        goBot('');
       }catch(err){
-        if (err.data && err.data.delivery){ D.info = {...(D.info || {}), delivery: err.data.delivery}; paintDelivery(); }
         toast(errText(err), 6000);
-      }
+        if (err.data && err.data.error === 'no_chat') goBot('');            // the member has to press Start in the bot first
+        else if (err.data && err.data.delivery) loadDelivery();
+      }finally{ const b2 = $('#dGo'); if (b2) b2.disabled = false; }
     });
   }
+  if (c('#mNext')) return goNeighbor('after');
   /* admin */
   if (c('#adminBtn')){ renderAdmin(); return openSheet('admin'); }
   if (c('#closeAdmin')) return closeSheet('admin');
@@ -1540,8 +1696,8 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-adel]'))) return adminDelete(m.dataset.adel, m.dataset.title);
   if ((m = c('[data-oact]'))) return orderAction(+m.dataset.oid, m.dataset.oact);
   if ((m = c('[data-rend]'))){
-    if (!confirm('Close this room now? The episodes are deleted and the member is removed.')) return;
-    return once('rend' + m.dataset.rend, async () => { try{ await api(`/api/admin/rooms/${m.dataset.rend}/end`, {method: 'POST', retry: false, body: '{}'}); toast('Room closed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+    if (!confirm('Remove these episodes from the member\'s chat now?')) return;
+    return once('rend' + m.dataset.rend, async () => { try{ await api(`/api/admin/rooms/${m.dataset.rend}/end`, {method: 'POST', retry: false, body: '{}'}); toast('Removed from the chat'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
   }
   if (c('#edClose') || c('#edClose2')) return closeSheet('editor');
   if (c('#emClose')) return closeSheet('epman');
@@ -1597,6 +1753,9 @@ document.addEventListener('click', async e => {
 document.addEventListener('input', e => {
   const id = e.target.id;
   if (id === 'bq'){ B.q = e.target.value.trim(); if (browseMode() !== B.painted) paintBrowse(); return browseSearch(); }
+  if (id === 'rq_name'){ R.d.name = e.target.value; return rqCatalogCheck(); }
+  if (id === 'rq_plat'){ R.d.platform = e.target.value; $$('[data-rqgrp="platform"] .rq-chip').forEach(b => { const on = b.dataset.rqval === R.d.platform; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); return; }
+  if (id === 'rq_link'){ R.d.link = e.target.value; const h = $('#rqLinkHint'); if (h){ const v = e.target.value.trim(); h.textContent = v && !validWebLink(v) ? tr('rqbadlink') : ''; h.className = 'rq-hint' + (v && !validWebLink(v) ? ' bad' : ''); } return; }
   if (id === 'epq'){ V.q = e.target.value.trim(); return epSearch(); }
   if (id === 'asq'){ A.sq = e.target.value.trim(); return adminSearch(); }
   if (id === 'aoq'){ A.oq = e.target.value.trim(); return adminSearch(); }
@@ -1614,10 +1773,11 @@ document.addEventListener('change', async e => {
   if (id === 'apub'){ A.pub = e.target.value; return loadAdmin(); }
   if (id === 'aost'){ A.ostatus = e.target.value; return loadAdmin(); }
   if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
+  if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 900); paintRqPhoto(); }catch(err){ toast(err.message); } }
   if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
   if (id === 'm_file' && e.target.files[0]){ $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); if (e.key === 'Enter' && e.target.id === 'preqQ') reqSearch(); });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); });
 document.addEventListener('pointerdown', e => {                   // hold the speed buttons to keep stepping by 0.05x
   const b = e.target.closest('#rMinus, #rPlus'); if (!b) return;
   const d = b.id === 'rPlus' ? 0.05 : -0.05; setRate(P.rate + d);
