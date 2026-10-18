@@ -11,7 +11,7 @@
 <style>
 :root{
   --ink:#0b101c; --panel:#141b2b; --panel2:#1a2338; --line:#27324d; --gold:#d6ab4f; --gold-2:#f1d48a;
-  --text:#f3ecda; --muted:#a3adc2; --ok:#6cc59a; --bad:#e27b7b; --warn:#e8b64c; --nav:60px; --mini:68px;
+  --text:#f3ecda; --muted:#a3adc2; --gold-rgb:214,171,79; --ok-rgb:108,197,154; --cv-a:#243052; --cv-b:#0f1526; --surf:#10172a; --nav-bg:#0e1424; --sk-a:#141b2b; --sk-b:#1e2842; --feat-a:#1d2646; --soft:#d4cdb9; --wish-bg:rgba(8,12,22,.7); color-scheme:dark; --ok:#6cc59a; --bad:#e27b7b; --warn:#e8b64c; --nav:60px; --mini:68px;
   --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
   --sans:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
 }
@@ -34,7 +34,7 @@ h1,h2,h3,h4{margin:0}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 12px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);min-height:38px}
-.chip.on{border-color:var(--gold);color:var(--gold-2);background:rgba(214,171,79,.1)}
+.chip.on{border-color:var(--gold);color:var(--gold-2);background:rgba(var(--gold-rgb),.1)}
 .sechead{display:flex;align-items:baseline;justify-content:space-between;margin:10px 16px 8px}
 .sec{font-family:var(--serif);font-size:24px;line-height:1.1}
 .link{background:none;border:0;color:var(--gold-2);padding:6px 0;font-size:13.5px;min-height:36px}
@@ -45,8 +45,8 @@ h1,h2,h3,h4{margin:0}
 @media (min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (min-width:860px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 .card{display:block;text-align:left;background:none;border:0;padding:0;min-width:0}
-.cv{aspect-ratio:3/4;width:100%;border-radius:12px;background:linear-gradient(160deg,#243052,#0f1526);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;position:relative}
-.cv.has-img{aspect-ratio:auto;display:block;background:#10172a}
+.cv{aspect-ratio:3/4;width:100%;border-radius:12px;background:linear-gradient(160deg,var(--cv-a),var(--cv-b));border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;position:relative}
+.cv.has-img{aspect-ratio:auto;display:block;background:var(--surf)}
 .cv.has-img img{width:100%;height:auto;display:block}
 .cv .fb{display:flex;aspect-ratio:3/4;align-items:center;justify-content:center;font-size:44px}
 .badge{position:absolute;top:8px;left:8px;background:var(--gold);color:#1a1405;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;z-index:1}
@@ -58,16 +58,16 @@ h1,h2,h3,h4{margin:0}
 .msg{margin:10px 16px;padding:12px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
 .msg.bad{border-color:var(--bad);color:var(--text)}
 /* skeletons */
-.sk{background:linear-gradient(90deg,#141b2b 25%,#1e2842 50%,#141b2b 75%);background-size:200% 100%;border-radius:12px}
+.sk{background:linear-gradient(90deg,var(--sk-a) 25%,var(--sk-b) 50%,var(--sk-a) 75%);background-size:200% 100%;border-radius:12px}
 @media (prefers-reduced-motion:no-preference){.sk{animation:sh 1.3s linear infinite}@keyframes sh{to{background-position:-200% 0}}}
 .sk.card-sk{aspect-ratio:3/4;width:136px;flex:none}
 .sk.line{height:16px;margin:8px 16px}
 .sk.hero{height:150px;margin:6px 16px}
 /* featured + continue */
-.feat{display:flex;gap:14px;margin:6px 16px 12px;padding:12px;border-radius:16px;border:1px solid var(--gold);background:linear-gradient(130deg,#1d2646,#10172a);text-align:left;width:calc(100% - 32px)}
+.feat{display:flex;gap:14px;margin:6px 16px 12px;padding:12px;border-radius:16px;border:1px solid var(--gold);background:linear-gradient(130deg,var(--feat-a),var(--surf));text-align:left;width:calc(100% - 32px)}
 .feat .cv{width:112px;flex:none}
 .feat h3{font-family:var(--serif);font-size:25px;line-height:1.05;color:var(--gold-2);overflow-wrap:anywhere}
-.feat p{margin:6px 0 10px;color:#d4cdb9;font-size:13.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.feat p{margin:6px 0 10px;color:var(--soft);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .feat .tagline{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
 .cont{flex:none;width:250px;display:flex;gap:10px;padding:10px;border-radius:14px;background:var(--panel);border:1px solid var(--line);text-align:left;scroll-snap-align:start}
 .cont .cv{width:56px;flex:none;font-size:26px}
@@ -76,7 +76,7 @@ h1,h2,h3,h4{margin:0}
 .bar{height:4px;border-radius:2px;background:var(--line);margin-top:8px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--gold)}
 /* nav */
-.bnav{position:fixed;left:0;right:0;bottom:0;z-index:4;height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;background:#0e1424;border-top:1px solid var(--line)}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:4;height:calc(var(--nav) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;background:var(--nav-bg);border-top:1px solid var(--line)}
 .bnav button{flex:1;background:none;border:0;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px}
 .bnav button.on{color:var(--gold-2)}
 .bnav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -102,7 +102,7 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
 .tag{font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--text)}
 .tag.live{border-color:var(--ok);color:var(--ok)}.tag.gold{border-color:var(--gold);color:var(--gold-2)}.tag.bad{border-color:var(--bad);color:var(--bad)}.tag.warn{border-color:var(--warn);color:var(--warn)}
-.desc{margin:12px 16px 2px;color:#d4cdb9;white-space:pre-wrap;overflow-wrap:anywhere}
+.desc{margin:12px 16px 2px;color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere}
 .desc.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 16px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
@@ -110,15 +110,15 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .stat b{font-size:15px;overflow-wrap:anywhere}
 .h3{font-family:var(--serif);font-size:23px;margin:16px 16px 10px}
 .plans{display:grid;gap:10px;padding:0 16px}
-.plan{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;width:100%;padding:14px;border-radius:12px;border:1px solid var(--gold);background:rgba(214,171,79,.07);min-height:56px}
+.plan{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;width:100%;padding:14px;border-radius:12px;border:1px solid var(--gold);background:rgba(var(--gold-rgb),.07);min-height:56px}
 .plan span{font-weight:700;min-width:0;overflow-wrap:anywhere}
 .plan small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
 .plan b{color:var(--gold-2);font-size:17px;white-space:nowrap}
-.plan.free{border-color:var(--ok);background:rgba(108,197,154,.08)}.plan.free b{color:var(--ok)}
+.plan.free{border-color:var(--ok);background:rgba(var(--ok-rgb),.08)}.plan.free b{color:var(--ok)}
 .plan.have{border-color:var(--line);background:var(--panel);opacity:.8}
 .info{margin:0 16px 10px;padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}
 .info b{display:block;margin-bottom:2px}.info p{margin:0;color:var(--muted);font-size:13.5px}
-.access{margin:10px 16px;padding:12px 14px;border-radius:12px;border:1px solid var(--ok);background:rgba(108,197,154,.08);font-size:13.5px}
+.access{margin:10px 16px;padding:12px 14px;border-radius:12px;border:1px solid var(--ok);background:rgba(var(--ok-rgb),.08);font-size:13.5px}
 .ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 10px}
 .ctl input,.ctl select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);min-height:44px}
 .pager{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px 10px}
@@ -126,7 +126,7 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .jump{display:flex;gap:8px;padding:0 16px 10px}
 .jump input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);min-height:44px;min-width:0}
 .ep{display:flex;gap:10px;align-items:center;width:calc(100% - 32px);margin:0 16px 8px;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);min-height:52px}
-.ep.on{border-color:var(--gold);background:rgba(214,171,79,.1)}
+.ep.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.1)}
 .ep.lock{opacity:.65}
 .ep .n{min-width:42px;color:var(--gold-2);font-weight:700}
 .ep .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -134,9 +134,9 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .pill{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
 .pill.free{border-color:var(--ok);color:var(--ok)}.pill.owned{border-color:var(--gold);color:var(--gold-2)}.pill.lock{border-color:var(--bad);color:var(--bad)}
 /* mini player */
-.mini{position:fixed;left:8px;right:8px;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 6px);z-index:9;background:#10172a;border:1px solid var(--gold);border-radius:14px;padding:8px 10px;display:none;align-items:center;gap:10px;height:var(--mini)}
+.mini{position:fixed;left:8px;right:8px;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 26px);z-index:9;background:var(--surf);border:1px solid var(--gold);border-radius:14px;padding:8px 10px;display:none;align-items:center;gap:10px;height:var(--mini)}
 .mini.show{display:flex}
-.mini .mcv{width:44px;height:44px;border-radius:8px;overflow:hidden;flex:none;background:#243052;display:flex;align-items:center;justify-content:center}
+.mini .mcv{width:44px;height:44px;border-radius:8px;overflow:hidden;flex:none;background:var(--cv-a);display:flex;align-items:center;justify-content:center}
 .mini .mcv img{width:100%;height:100%;object-fit:cover}
 .mini .mt{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0}
 .mini .mt b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -161,9 +161,9 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .fp .opt b{display:block;margin-bottom:6px}
 .fp .rr{display:flex;align-items:center;gap:8px}.fp .rr input{flex:1}
 .fp .rr button,.fp .chiprow button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--gold-2);font-size:13px;min-height:40px}
-.fp .bufbar{height:4px;border-radius:2px;background:var(--line);margin:-2px 0 4px;overflow:hidden}.fp .bufbar i{display:block;height:100%;width:0;background:rgba(214,171,79,.45)}
+.fp .bufbar{height:4px;border-radius:2px;background:var(--line);margin:-2px 0 4px;overflow:hidden}.fp .bufbar i{display:block;height:100%;width:0;background:rgba(var(--gold-rgb),.45)}
 .fp .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.fp .chiprow button.on{border-color:var(--gold);background:rgba(214,171,79,.15)}
+.fp .chiprow button.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.15)}
 /* forms and admin */
 .field{display:block;margin:0 16px 12px}
 .field>span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
@@ -184,22 +184,160 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}.kpi small{display:block;color:var(--muted);font-size:12px}.kpi b{font-size:20px}
 .toast{position:fixed;left:50%;bottom:calc(var(--nav) + var(--mini) + env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:var(--gold);color:#1a1405;padding:10px 16px;border-radius:999px;font-weight:700;z-index:30;display:none;max-width:92%;text-align:center}
 @media (prefers-reduced-motion:no-preference){.toast.show{animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}}
+
+/* home v2: header, carousel, deals, themes */
+.appbar{gap:10px;justify-content:flex-start}
+.avatar{flex:none;width:40px;height:40px;min-height:40px;border-radius:50%;border:1.5px solid var(--gold);background:var(--panel2) center/cover;color:var(--gold-2);font-weight:700;display:flex;align-items:center;justify-content:center;padding:0}
+.avatar.big{width:84px;height:84px;font-size:32px;margin:0 auto}
+.hgreet{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.hgreet small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hgreet b{color:var(--gold-2);font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hicons{display:flex;gap:6px;align-items:center}
+.hic{position:relative;width:36px;min-width:36px;height:36px;min-height:36px;padding:0;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--gold-2);font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.hic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dot{position:absolute;top:5px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.rail .slide{flex:none;width:78%;max-width:300px;position:relative;border-radius:16px;overflow:hidden;padding:0;border:1px solid var(--gold);background:var(--panel);text-align:left;scroll-snap-align:center}
+.slide .cv{aspect-ratio:4/5;border:0;border-radius:0}
+.sinfo{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 12px;background:linear-gradient(transparent,rgba(8,12,22,.92));color:#f3ecda;display:flex;flex-direction:column;gap:2px}
+.sinfo b{font-family:var(--serif);font-size:22px;line-height:1.05}.sinfo small{color:#cfd6e6}.sinfo .btn{align-self:flex-start;margin-top:6px;min-height:36px;padding:7px 14px}
+.flash{margin:6px 0 10px;padding:6px 0 2px;background:linear-gradient(120deg,rgba(var(--gold-rgb),.14),transparent);border-block:1px solid var(--gold)}
+.card s{opacity:.55;margin-right:5px;font-weight:400}.card .cd{color:var(--warn);font-weight:700}
+.contw{flex:none;position:relative;scroll-snap-align:start}
+.cx{position:absolute;top:-6px;right:-6px;width:28px;height:28px;min-height:28px;padding:0;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:17px;line-height:1;z-index:2}
+.card.up{position:relative}
+.plain{background:none;border:0;padding:0;text-align:left;width:100%;display:block}
+.wish{position:absolute;top:8px;right:8px;width:34px;height:34px;min-height:34px;padding:0;border-radius:50%;background:var(--wish-bg);border:1px solid var(--gold);color:var(--gold-2);z-index:2;font-size:17px}
+.wish.on{background:var(--gold);color:#1a1405}
+.chips.wrap{flex-wrap:wrap;overflow:visible}
+.bnav span{font-size:11px}
+@media (prefers-reduced-motion:no-preference){.rail .slide{transition:transform .15s}.rail .slide:active{transform:scale(.98)}}
+/* themes: dark (default, in :root) | light | warm */
+html[data-theme=light]{--ink:#F7F8FC;--panel:#FFFFFF;--panel2:#EEF1F6;--line:#E5E7EB;--gold:#C99A2E;--gold-2:#8F6A0E;--text:#171923;--muted:#667085;--ok:#1f8f5f;--bad:#c24545;--warn:#a86b00;--gold-rgb:201,154,46;--ok-rgb:31,143,95;--cv-a:#EEF1F6;--cv-b:#E2E6EE;--surf:#FFFFFF;--nav-bg:#FFFFFF;--sk-a:#EEF1F6;--sk-b:#F7F8FC;--feat-a:#FFF8E6;--soft:#3d4352;--wish-bg:rgba(255,255,255,.88);color-scheme:light}
+html[data-theme=light] .card,html[data-theme=light] .ep,html[data-theme=light] .plan,html[data-theme=light] .feat,html[data-theme=light] .mini{box-shadow:0 1px 3px rgba(23,25,35,.08),0 4px 14px rgba(23,25,35,.05)}
+html[data-theme=light] .bnav{box-shadow:0 -2px 12px rgba(23,25,35,.06)}
+html[data-theme=warm]{--ink:#fbf5e9;--panel:#fffaf0;--panel2:#f3e8d0;--line:#e2d3b1;--gold:#b9821f;--gold-2:#8a5a0a;--text:#2b2113;--muted:#74664d;--ok:#1f8f5f;--bad:#c24545;--warn:#a86b00;--gold-rgb:185,130,31;--ok-rgb:31,143,95;--cv-a:#f3e8d0;--cv-b:#e8d9b6;--surf:#fffaf0;--nav-bg:#fffaf0;--sk-a:#f3e8d0;--sk-b:#fbf5e9;--feat-a:#f3e8d0;--soft:#4a3d28;--wish-bg:rgba(255,250,240,.88);color-scheme:light}
+html[data-theme=warm] .card,html[data-theme=warm] .ep,html[data-theme=warm] .plan,html[data-theme=warm] .feat,html[data-theme=warm] .mini{box-shadow:0 1px 3px rgba(74,52,20,.10),0 4px 14px rgba(74,52,20,.06)}
+html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-color .25s ease,box-shadow .25s ease!important}
+.thsel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-size:13px;font-weight:700;min-height:64px}
+.thopt .sw{display:flex;width:44px;height:16px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}.thopt .sw i{flex:1}
+.thopt.on{border:2px solid var(--gold);color:var(--gold-2);background:rgba(var(--gold-rgb),.1)}
+/* splash screen */
+#splash{position:fixed;inset:0;z-index:200;background:var(--ink);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 34px) 24px calc(env(safe-area-inset-bottom,0px) + 34px);transition:opacity .45s ease}
+#splash.out{opacity:0;pointer-events:none}
+.sp-brand{text-align:center}.sp-brand small{display:block;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-2);font-weight:700;font-size:11px}
+.sp-brand h1{font-family:var(--serif);font-size:30px;line-height:1.1;margin:6px 0 0;color:var(--text)}
+.sp-stage{position:relative;width:min(100%,280px);aspect-ratio:4/5;max-height:46vh;border-radius:18px;overflow:hidden;border:1px solid var(--gold);background:linear-gradient(160deg,var(--cv-a),var(--cv-b));box-shadow:0 12px 36px rgba(0,0,0,.28)}
+.sp-logo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px}
+.sp-stage.has .sp-logo{display:none}
+.sl{position:absolute;inset:0;opacity:0;transform:translateX(36px);transition:opacity .5s ease,transform .5s ease;pointer-events:none}
+.sl.on{opacity:1;transform:none}.sl.out{opacity:0;transform:translateX(-36px)}
+.sl img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sl .sp-emo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px}
+.sl .slt{position:absolute;left:0;right:0;bottom:0;padding:48px 14px 26px;background:linear-gradient(transparent,rgba(8,12,22,.92));color:#f3ecda;display:flex;flex-direction:column;gap:6px}
+.sl .slt b{font-family:var(--serif);font-size:22px;line-height:1.08}.sl .slt small{color:#cfd6e6;font-size:12px}
+.sp-pills{display:flex;gap:6px;flex-wrap:wrap}.sp-pill{padding:2px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f1d48a;border:1px solid rgba(241,212,138,.5);background:rgba(214,171,79,.18)}
+.sp-dots{position:absolute;bottom:9px;right:12px;display:flex;gap:5px;z-index:2}.sp-dots i{height:6px;width:6px;border-radius:3px;background:rgba(255,255,255,.4);transition:width .3s,background .3s}.sp-dots i.on{width:16px;background:var(--gold-2)}
+.sp-foot{width:100%;max-width:280px;display:flex;flex-direction:column;gap:10px}
+.sp-tip{text-align:center;color:var(--muted);font-size:12.5px;min-height:18px;transition:opacity .25s}
+.sp-track{height:8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
+.sp-track i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold-2));transition:width .12s linear}
+.sp-meta{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+@media (prefers-reduced-motion:reduce){.sl,#splash{transition:none}}
+/* discover */
+.dsec{margin:0;padding:16px 16px 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
+.dcard{margin:0 16px 10px;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden;transition:border-color .25s}
+.dcard.open{border-color:var(--gold)}
+.drow{display:flex;align-items:center;gap:12px;width:100%;padding:10px 14px;background:none;border:0;text-align:left;min-height:64px}
+.dic{flex:none;width:44px;height:44px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px}
+.dtx{flex:1;min-width:0;display:flex;flex-direction:column}.dtx b{font-size:14.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dtx small{color:var(--muted);font-size:12px}
+.dchev{flex:none;width:28px;height:28px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:transform .25s,color .25s,background .25s}
+.dchev svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.dcard.open .dchev{transform:rotate(90deg);color:var(--gold-2);background:rgba(var(--gold-rgb),.14)}
+.dbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}.dcard.open .dbody{grid-template-rows:1fr}.dbody>div{overflow:hidden;min-height:0}
+.dpv{display:grid;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--line)}
+.dmini{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border-radius:12px;border:1px solid var(--line);background:var(--ink);text-align:left;min-height:60px}
+.dmini .th{flex:none;width:46px;height:46px;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,var(--cv-a),var(--cv-b));display:flex;align-items:center;justify-content:center;font-size:22px}.dmini .th img{width:100%;height:100%;object-fit:cover}
+.dmini .mt{flex:1;min-width:0;display:flex;flex-direction:column}.dmini .mt b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dmini .mt small{color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dmini .pr{flex:none;font-size:12px;font-weight:700;color:var(--gold-2)}
+.dnone{padding:6px 4px;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){.dbody,.dchev,.dcard{transition:none}}
+/* library */
+.lrow{display:flex;align-items:center;gap:8px;margin:0 16px 10px;padding:10px;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+.lmain{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;text-align:left;min-height:64px}
+.lth{flex:none;width:64px;height:64px;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,var(--cv-a),var(--cv-b));border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px}.lth img{width:100%;height:100%;object-fit:cover}
+.lmt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.lmt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lmt small{color:var(--muted);font-size:11.5px}.lmt .bar{margin-top:4px}
+.lact{flex:none;display:flex;flex-direction:column;gap:6px}
+.lbtn{min-height:34px;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--gold);background:rgba(var(--gold-rgb),.12);color:var(--gold-2)}
+.lbtn.rm{border-color:var(--line);background:var(--panel2);color:var(--muted);font-weight:600;font-size:11px;min-height:30px}
+.lbtn.rm:active{color:var(--bad);border-color:var(--bad)}
+.lsub{margin:6px 16px 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
+.seg .chip{white-space:nowrap}
+/* bottom nav: selected tab is a big gold button that slides up out of the bar */
+.bnav button{position:relative;justify-content:flex-end;padding-bottom:6px;transition:color .25s}
+.bnav button span{transition:color .25s,font-weight .25s}
+.bnav button svg{position:absolute;top:9px;left:50%;transform:translateX(-50%);box-sizing:content-box;width:22px;height:22px;padding:0;border-radius:50%;border:0 solid var(--nav-bg);background:transparent;box-shadow:0 0 0 rgba(0,0,0,0);transition:top .45s cubic-bezier(.34,1.56,.64,1),width .3s ease,height .3s ease,padding .3s ease,border-width .3s ease,background-color .3s ease,color .3s ease,box-shadow .3s ease,transform .2s ease}
+.bnav button.on{color:var(--gold-2)}
+.bnav button.on span{font-weight:700}
+.bnav button.on svg{top:-22px;width:24px;height:24px;padding:13px;border-width:4px;background:var(--gold);color:#1a1405;box-shadow:0 6px 16px rgba(var(--gold-rgb),.45)}
+.bnav button.on:active svg{transform:translateX(-50%) scale(.94)}
+@media (prefers-reduced-motion:reduce){.bnav button svg{transition:none}}
+/* cart */
+.prow{display:flex;gap:8px;align-items:stretch}.prow .plan{flex:1;width:auto}
+.pcart{flex:none;width:56px;min-height:56px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:20px;display:flex;align-items:center;justify-content:center;padding:0}
+.pcart.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.14);color:var(--gold-2)}
+.crow{display:flex;gap:12px;align-items:center;margin:0 16px 10px;padding:10px;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+.crow .cmt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.crow .cmt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.crow .cmt small{color:var(--muted);font-size:11.5px}
+.cplan{align-self:flex-start;padding:1px 8px;border-radius:6px;background:rgba(var(--gold-rgb),.14);color:var(--gold-2);font-size:11px;font-weight:700}
+.cpr{font-weight:800;color:var(--gold-2);font-size:14px}
+.cbill{margin:14px 16px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--panel);display:grid;gap:8px}
+.cbill div{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}.cbill .tot{border-top:1px solid var(--line);padding-top:10px;color:var(--text);font-size:16px;font-weight:800}.cbill .tot span:last-child{color:var(--gold-2)}
+.bnav .nbadge{position:absolute;top:6px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad);color:#fff;font-size:10px;font-weight:700;font-style:normal;display:flex;align-items:center;justify-content:center;z-index:2}
+.bnav button.on .nbadge{top:-18px;left:calc(50% + 16px)}
+/* profile */
+.pcard{display:flex;align-items:center;gap:14px;margin:6px 16px 12px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+.pcard .avatar{width:64px;height:64px;min-height:64px;font-size:26px;border-radius:18px}
+.pcard .pm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pcard .pm b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pcard .pm small{color:var(--muted);font-size:12px}
+.pstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 16px 12px}
+.pst{padding:12px 6px;border-radius:14px;border:1px solid var(--line);background:var(--panel);text-align:center;min-height:0}.pst b{display:block;font-size:20px;color:var(--gold-2)}.pst small{color:var(--muted);font-size:11.5px;font-weight:600}
+.pmenu{margin:0 16px 12px;border-radius:16px;border:1px solid var(--line);background:var(--panel);overflow:hidden}
+.pm-i{display:flex;align-items:center;gap:12px;width:100%;padding:14px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;min-height:52px;font-weight:600;font-size:14px}.pm-i:last-child{border-bottom:0}
+.pm-i .ic{font-size:20px;width:28px;text-align:center}.pm-i .tx{flex:1}.pm-i .ar{color:var(--muted)}
+.preqbox{margin:0 16px 12px;padding:12px;border-radius:16px;border:1px solid var(--gold);background:var(--panel);display:grid;gap:10px}
+.pdanger{margin:4px 16px 24px;width:calc(100% - 32px);padding:12px;border-radius:12px;border:1px solid var(--bad);background:rgba(226,123,123,.1);color:var(--bad);font-weight:700}
 </style>
+<script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
 <body>
+<div id="splash" role="status" aria-live="polite">
+  <div class="sp-brand"><small>AJ'S FM</small><h1>Stories Premium &#128081;</h1></div>
+  <div class="sp-stage" id="spStage"><div class="sp-logo">&#128081;</div><div class="sp-dots" id="spDots"></div></div>
+  <div class="sp-foot"><div class="sp-tip" id="spTip">Connecting to secure vault...</div><div class="sp-track"><i id="spBar"></i></div><div class="sp-meta"><span id="spLbl">LOADING</span><span id="spPct">0%</span></div></div>
+</div>
 
 <header class="appbar">
-  <div class="brand">AJ's FM <span>Stories</span></div>
-  <button class="ib" id="adminBtn" hidden aria-label="Open admin panel">Admin</button>
+  <button class="avatar" id="avatarBtn" aria-label="My account"></button>
+  <div class="hgreet" id="hgreet"></div>
+  <div class="hicons">
+    <button class="hic" data-act="lang" id="langBtn" aria-label="Change language"></button>
+    <button class="hic" data-act="theme" id="themeBtn" aria-label="Change theme"></button>
+    <button class="hic" id="searchBtn" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    <button class="hic" id="bellBtn" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z"/><path d="M10 21h4"/></svg><i class="dot" id="bellDot" hidden></i></button>
+    <button class="ib" id="adminBtn" hidden aria-label="Open admin panel">Admin</button>
+  </div>
 </header>
 <main id="view" aria-live="polite"></main>
 
 <nav class="bnav" aria-label="Main">
-  <button data-tab="home" class="on" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
-  <button data-tab="browse" aria-label="Browse and search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Browse</button>
-  <button data-tab="library" aria-label="My library"><svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>Library</button>
+  <button data-tab="home" class="on" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span data-i="home">Home</span></button>
+  <button data-tab="browse" aria-label="Discover"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span data-i="discover">Discover</span></button>
+  <button data-tab="library" aria-label="My library"><svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg><span data-i="library">Library</span></button>
+  <button data-tab="cart" aria-label="Cart"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.5 11h10L20 7H6.5"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg><span data-i="cart">Cart</span></button>
+  <button data-tab="me" aria-label="My account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span data-i="me">Me</span></button>
 </nav>
 
+<section class="sheet" id="search" aria-label="Search"></section>
+<section class="sheet" id="notif" aria-label="Notifications"></section>
 <section class="sheet" id="story" aria-label="Story"></section>
 <section class="sheet" id="admin" aria-label="Admin panel"></section>
 <section class="sheet" id="editor" aria-label="Story editor"></section>
@@ -300,8 +438,8 @@ function goBot(payload){
 }
 
 /* ---------- shared pieces ---------- */
-const priceLabel = s => s.min_price === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(s.min_price));
-const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
+const priceLabel = s => s.deal ? 'From ' + money(s.eff_price) + ' (-' + s.deal.pct + '%)' : s.min_price === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(s.min_price));
+const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
   <b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
 const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button class="btn" id="${id}">Try again</button></div>`;
@@ -309,8 +447,88 @@ const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button 
 /* ---------- state ---------- */
 const CONT = {}, HIST = {};
 const S = {tab:'home', admin:false, home:null, homeState:'idle', homeErr:''};
-const B = {q:'', genre:'', status:'', language:'', sort:'newest', items:[], total:0, state:'idle', err:'', facets:null};
-const L = {seg:'owned'};
+const B = {q:'', genre:'', status:'', language:'', sort:'newest', items:[], total:0, state:'idle', err:'', facets:null, view:'discover', all:null, allState:'idle', allErr:'', open:''};
+const L = {seg:'listening'};
+Object.assign(S, {wish:new Set(), tier:0, notices:[], io:null, feed:{items:[], offset:0, state:'idle', done:false, seeded:false, err:''}});
+
+/* ---------- language, theme, header ---------- */
+const store = {get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }};
+const TR = {
+  en: {gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
+    recent:'Recently added', ongoing:'Ongoing stories', completed:'Completed stories', upcoming:'Upcoming stories', viewall:'View all', listen:'Listen now', searchph:'Search title, author, genre or language',
+    recents:'Recent searches', tops:'Top searches', clear:'Clear', notif:'Notifications', nonotif:'No notifications yet.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
+    ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
+    cartnote:'Cart and checkout arrive in the next update. For now, open a story and tap Rent or Buy.', melib:'My library', lang:'Language', theme:'Theme', soon:'Soon',
+    wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'The bot takes one story per checkout. Pay for the first, then come back here for the next.', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
+  hi: {gm:'सुप्रभात', ga:'नमस्कार', ge:'शुभ संध्या', cont:'जहाँ छोड़ा था वहीं से सुनें', trending:'ट्रेंडिंग कहानियाँ', flash:'फ्लैश ऑफ़र', deals:'सुपर डील्स', under:'{p} से कम',
+    recent:'हाल ही में जोड़ी गईं', ongoing:'चल रही कहानियाँ', completed:'पूरी हो चुकी कहानियाँ', upcoming:'आने वाली कहानियाँ', viewall:'सभी देखें', listen:'अभी सुनें', searchph:'नाम, लेखक, जॉनर या भाषा खोजें',
+    recents:'हाल की खोजें', tops:'टॉप सर्च', clear:'हटाएँ', notif:'सूचनाएँ', nonotif:'अभी कोई सूचना नहीं।', home:'होम', discover:'खोजें', library:'लाइब्रेरी', cart:'कार्ट', me:'मैं',
+    ends:'खत्म होने में', ended:'खत्म', caught:'आप सब देख चुके हैं। हर हफ्ते नई कहानियाँ आती हैं।', removed:'हिस्ट्री से हटा दिया', cartempty:'आपका कार्ट खाली है',
+    cartnote:'कार्ट और चेकआउट अगले अपडेट में आएगा। अभी कहानी खोलकर Rent या Buy दबाएँ।', melib:'मेरी लाइब्रेरी', lang:'भाषा', theme:'थीम', soon:'जल्द',
+    wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'बॉट एक बार में एक कहानी लेता है। पहली का भुगतान करें, फिर अगली के लिए यहाँ लौटें।', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
+  hing: {gm:'Good morning', ga:'Namaste', ge:'Shubh sandhya', cont:'Jahan chhoda wahin se suno', trending:'Trending kahaniyan', flash:'Flash offers', deals:'Super deals', under:'{p} se kam',
+    recent:'Naye add hue', ongoing:'Chal rahi kahaniyan', completed:'Poori ho chuki kahaniyan', upcoming:'Aane wali kahaniyan', viewall:'Sab dekho', listen:'Abhi suno', searchph:'Naam, author, genre ya language search karo',
+    recents:'Recent searches', tops:'Top searches', clear:'Hatao', notif:'Notifications', nonotif:'Abhi koi notification nahi.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
+    ends:'Khatam hone mein', ended:'Khatam', caught:'Aap sab dekh chuke ho. Har hafte nayi kahaniyan aati hain.', removed:'History se hata diya', cartempty:'Aapka cart khali hai',
+    cartnote:'Cart aur checkout agle update mein aayega. Abhi story kholkar Rent ya Buy dabao.', melib:'Meri library', lang:'Language', theme:'Theme', soon:'Jald',
+    wishon:'Wishlist mein add hua', wishoff:'Wishlist se hataya', close:'Band karo', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Kahaniyan load ho rahi hain...', more:'Aur explore karo', sptip1:'Secure vault se connect ho rahe hain...', sptip2:'Aapki library sync ho rahi hai...', sptip3:'Kahaniyan load ho rahi hain...', sptip4:'Aapki theme lag rahi hai...', splbl:'LOAD HO RAHA HAI', dtitle:'Discover aur Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} kahaniyan', dsee:'Saari {n} kahaniyan dekho', dtrend:'Abhi trending', dupd:'Haal mein update', dbud:'Sabse kam price pehle', dnone:'Yahan abhi koi kahani nahi.', dback:'Discover', ltitle:'Meri Library', lw:'Wishlist', ll:'Listening', lo:'Meri Stories', lr:'Rentals', lh:'History', lopen:'Kholo', lres:'Resume', lrem:'Hatao', lref:'Refresh', lhead:'Sunne ki history', lew:'Wishlist khali hai. Kahani par heart dabake yahan save karo.', lel:'Abhi continue karne ko kuch nahi. Koi kahani shuru karo.', leo:'Abhi koi kahani nahi. Payment approve hone par kahani yahan dikhegi.', ler:'Abhi koi active rental nahi.', leh:'Abhi koi purchase request nahi.', lkeep:'Hamesha aapki', luntil:'{d} tak access', lleft:'{t} baaki', ctitle:'Shopping Cart', cempty:'Cart mein koi kahani nahi', cemptynote:'Catalog dekho aur pasandida kahaniyan add karo.', cbrowse:'Home page par dekho', crem:'Hatao', csub:'Subtotal', ctotal:'Total bill', cgo:'Secure checkout par jao', cpay:'Pay karo', cnote:'Bot ek baar mein ek kahani leta hai. Pehli ka payment karo, phir agli ke liye yahan wapas aao.', cadd:'Cart mein add karo', cin:'Cart mein hai', cadded:'Cart mein add hua', cremd:'Cart se hataya', citems:'{n} items', cown:'Pehle se aapki hai, cart se hata di', ptitle:'Mera Account', pguide:'App kaise kaam karta hai aur Guide', preq:'Kahani request karo', psup:'Help aur Support', pfb:'Feedback aur Suggestions', pdisp:'Display Settings', preset:'App data reset karo', presetq:'Isse is device ka cart, theme, language aur search history saaf hogi. Aapki purchases aur library par asar nahi padega.', presetdone:'App data reset ho gaya', preqph:'Kahani ka naam ya keywords', preqgo:'Search', preqfound:'Store mein pehle se hai:', preqnone:'Abhi store mein nahi hai. Bot se request bhejo.', preqbot:'Bot mein request karo', pid:'Telegram ID', pbot:'Bot mein khulega'}
+};
+const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi'}, LANG_NAME = {en:'English', hi:'हिन्दी', hing:'Hinglish'};
+let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
+let THEME = store.get('ajt', 'dark'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'dark';
+const tr = (k, v) => { let s = (TR[LANG] && TR[LANG][k]) || TR.en[k] || k; if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]); return s; };
+const TGU = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+const NAME = TGU.first_name || 'Friend';
+const THEME_ICON = {dark:'\u263E', light:'\u2600', warm:'\uD83D\uDD25'}, THEME_BG = {dark:'#0b101c', light:'#F7F8FC', warm:'#fbf5e9'}, THEME_SW = {dark:['#0b101c','#141b2b','#d6ab4f'], light:['#F7F8FC','#FFFFFF','#C99A2E'], warm:['#fbf5e9','#fffaf0','#b9821f']};
+function applyTheme(){
+  document.documentElement.dataset.theme = THEME;
+  try{ if (tg){ tg.setHeaderColor(THEME_BG[THEME]); tg.setBackgroundColor(THEME_BG[THEME]); } }catch(e){}
+  const tb = $('#themeBtn'); if (tb) tb.textContent = THEME_ICON[THEME];
+  $$('.thopt').forEach(b => { const on = b.dataset.setTheme === THEME; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+}
+function setTheme(t){
+  if (!THEME_ICON[t] || t === THEME) return;
+  const el = document.documentElement; el.classList.add('tt');
+  THEME = t; store.set('ajt', THEME); applyTheme();
+  clearTimeout(window._tt); window._tt = setTimeout(() => el.classList.remove('tt'), 400);
+}
+function cycleTheme(){ setTheme({dark:'light', light:'warm', warm:'dark'}[THEME]); toast(tr('theme') + ': ' + tr({dark:'tdark', light:'tlight', warm:'twarm'}[THEME])); }
+function cycleLang(){ LANG = LANGS[(LANGS.indexOf(LANG) + 1) % LANGS.length]; store.set('ajl', LANG); applyLang(); renderHeader(); setTab(S.tab); toast(LANG_NAME[LANG]); }
+function applyLang(){ $$('[data-i]').forEach(e => { e.textContent = tr(e.dataset.i); }); document.documentElement.lang = LANG === 'hi' ? 'hi' : 'en'; }
+const avatarStyle = () => TGU.photo_url ? `style="background-image:url('${esc(TGU.photo_url)}')"` : '';
+const avatarInit = () => TGU.photo_url ? '' : esc(NAME.charAt(0).toUpperCase());
+function renderHeader(){
+  const hr = new Date().getHours(), g = hr < 12 ? 'gm' : hr < 17 ? 'ga' : 'ge', wish = S.home && S.home.festive;
+  $('#hgreet').innerHTML = `<small>${tr(g)}, ${esc(NAME)}</small>` + (wish ? `<b>${esc(wish.replace(/\{name\}/g, NAME))}</b>` : `<b>AJ's FM Stories</b>`);
+  const av = $('#avatarBtn'); av.textContent = avatarInit(); av.style.backgroundImage = TGU.photo_url ? `url('${TGU.photo_url}')` : '';
+  $('#langBtn').textContent = LANG_LABEL[LANG]; $('#themeBtn').textContent = THEME_ICON[THEME];
+  $('#bellDot').hidden = !(S.notices.length && S.notices[0].id > +store.get('ajn', '0'));
+}
+
+/* ---------- search and notifications ---------- */
+function renderSearch(){
+  let rec = []; try{ rec = JSON.parse(store.get('ajrs', '[]')); }catch(e){}
+  const tops = [...((S.home && S.home.trending) || []).map(s => s.title), ...((S.home && S.home.genres) || []).map(g => g.name)].slice(0, 8);
+  $('#search').innerHTML = `<div class="top" style="display:flex;gap:8px;padding:14px 16px"><input class="search" id="sq" type="search" placeholder="${esc(tr('searchph'))}" autocomplete="off" aria-label="Search stories"><button class="btn ghost small" id="closeSearch">${tr('close')}</button></div>
+    ${rec.length ? `<div class="sechead"><h2 class="sec">${tr('recents')}</h2><button class="link" id="clearRecent">${tr('clear')}</button></div><div class="chips wrap">${rec.map(q => `<button class="chip" data-sq="${esc(q)}">${esc(q)}</button>`).join('')}</div>` : ''}
+    ${tops.length ? `<div class="sechead"><h2 class="sec">${tr('tops')}</h2></div><div class="chips wrap">${tops.map(q => `<button class="chip" data-sq="${esc(q)}">${esc(q)}</button>`).join('')}</div>` : ''}`;
+  $('#sq').addEventListener('keydown', ev => { if (ev.key === 'Enter') doSearch(ev.target.value); });
+}
+function doSearch(q){
+  q = String(q || '').trim(); if (!q) return;
+  let rec = []; try{ rec = JSON.parse(store.get('ajrs', '[]')); }catch(e){}
+  store.set('ajrs', JSON.stringify([q, ...rec.filter(x => x !== q)].slice(0, 8)));
+  Object.assign(B, {q, genre:'', status:'', language:'', sort:'newest', view:'list', state:'idle'}); closeSheet('search'); setTab('browse');
+}
+const noticeHead = `<div class="top" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px"><h2 class="sec">${'\u{1F514}'} <span data-i="notif"></span></h2><button class="btn ghost small" id="closeNotif" data-i="close"></button></div>`;
+function renderNotif(){
+  $('#notif').innerHTML = noticeHead + (S.notices.length ? S.notices.map(n => `<div class="mrow"><b>${esc(n.title)}</b><div class="by">${new Date(n.ts * 1000).toLocaleString()}</div>${n.body && n.body !== n.title ? `<div>${esc(n.body)}</div>` : ''}</div>`).join('') : `<div class="empty">${tr('nonotif')}</div>`);
+  applyLang();
+}
+async function openNotif(){
+  openSheet('notif'); renderNotif();
+  try{ const d = await api('/api/notices'); S.notices = d.items; if (d.items.length) store.set('ajn', String(d.items[0].id)); renderNotif(); renderHeader(); }catch(e){}
+}
 
 /* ---------- home ---------- */
 async function loadHome(){
@@ -318,42 +536,237 @@ async function loadHome(){
   S.homeState = 'loading'; if (S.tab === 'home') renderHome();
   try{ S.home = await api('/api/home', {timeout: 60000, signal: fresh('home')}); S.homeState = 'ok'; }
   catch(e){ if (e.aborted) return; S.homeState = 'error'; S.homeErr = errText(e); }
+  if (window.splashDone) splashDone();
   if (S.tab === 'home') renderHome();
 }
-const secRail = (title, items, key, render = card) => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="View all ${title}">View all</button>` : ''}</div>
+const secRail = (title, items, key, render = card) => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>
   <div class="rail">${items.map(render).join('')}</div>` : '';
+const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
+const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
+const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
+const dealCard = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>`;
+const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(s.genre || '')}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
+const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data-contx="${esc(i.story.id)}" aria-label="Remove ${esc(i.story.title)} from continue listening">&times;</button></div>`;
 const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}" aria-label="Continue ${esc(i.story.title)}, episode ${i.episode.no}">${cover(i.story.cover)}
   <div style="min-width:0;flex:1"><b>${esc(i.story.title)}</b><small>Episode ${i.episode.no}${i.pos ? ' | ' + clock(i.pos) : ' | start'}</small>
   <div class="bar"><i style="width:${i.episode.duration ? Math.min(100, i.pos / i.episode.duration * 100) : 0}%"></i></div></div></button>`);
+const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
+
 function renderHome(){
-  const v = $('#view');
-  const promo = `<div class="promo">${esc(PROMO_TITLE)}<small>${esc(PROMO_TEXT)}</small></div>`;
-  if (S.homeState === 'error' && !S.home){ v.innerHTML = promo + retryBox(S.homeErr, 'retryHome'); return; }
-  if (!S.home){ v.innerHTML = promo + `<div class="sk hero"></div><div class="sk line" style="width:40%"></div><div class="rail">${cardSk(4)}</div><div class="sk line" style="width:50%"></div><div class="rail">${cardSk(4)}</div>
-    <div class="empty"><small>Loading stories... the first load can take up to a minute.</small></div>`; return; }
-  const h = S.home, f = h.featured;
+  const v = $('#view'); renderHeader();
+  if (S.homeState === 'error' && !S.home){ v.innerHTML = retryBox(S.homeErr, 'retryHome'); return; }
+  if (!S.home){ v.innerHTML = `<div class="sk hero"></div><div class="sk line" style="width:40%"></div><div class="rail">${cardSk(4)}</div><div class="sk line" style="width:50%"></div><div class="rail">${cardSk(4)}</div>
+    <div class="empty"><small>${tr('loading')}</small></div>`; return; }
+  const h = S.home, hero = h.trending.length ? h.trending : h.recent, tier = h.tiers[Math.min(S.tier, h.tiers.length - 1)];
+  if (!S.feed.seeded){ S.feed.items = [...h.recommended]; S.feed.seeded = true; }
   const sections = [
-    h.continue.length ? `<div class="sechead"><h2 class="sec">Continue listening</h2></div><div class="rail">${h.continue.map(contCard).join('')}</div>` : '',
-    f ? `<button class="feat" data-story="${esc(f.id)}" aria-label="Open ${esc(f.title)}">${cover(f.cover)}<div style="min-width:0"><div class="tagline">${f.auto ? 'Newest' : 'Featured'}</div>
-      <h3>${esc(f.title)}</h3><p>${esc(f.preview || '')}</p><span class="btn small">View story</span></div></button>` : '',
-    secRail('Trending', h.trending, 'trending'), secRail('Recently added', h.recent, 'recent'), secRail('Recently updated', h.updated, 'updated'),
-    secRail('Recommended for you', h.recommended, ''), secRail('Completed stories', h.completed, 'completed'),
-    h.genres.length ? `<div class="sechead"><h2 class="sec">Genres</h2></div><div class="chips">${h.genres.map(g => `<button class="chip" data-genre="${esc(g.name)}">${esc(g.name)} (${g.count})</button>`).join('')}</div>` : ''
+    h.continue.length ? `<div class="sechead"><h2 class="sec">${tr('cont')}</h2></div><div class="rail">${h.continue.map(contCard2).join('')}</div>` : '',
+    secRail(tr('trending'), hero, 'trending', slide),
+    h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
+    tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(tr('under', {p: money(t2.max)}))}</button>`).join('')}</div><div class="rail">${tier.items.map(card).join('')}</div>` : '',
+    secRail(tr('recent'), h.recent, 'recent'), secRail(tr('ongoing'), h.ongoing, 'ongoing'), secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, '', upCard),
+    ...h.genre_rows.map(g => secRail(esc(g.name), g.items, 'g:' + g.name))
   ].join('');
-  v.innerHTML = promo + (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') +
+  v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
     (S.homeState === 'error' ? `<div class="msg bad">Could not refresh: ${esc(S.homeErr)} <button class="link" id="retryHome">Retry</button></div>` : '');
+  paintFeed(); watchFeed();
+}
+function paintFeed(){
+  const f = $('#feed'), F = S.feed; if (!f) return;
+  f.innerHTML = (F.items.length ? `<div class="sechead"><h2 class="sec">${tr('more')}</h2></div><div class="grid">${F.items.map(card).join('')}</div>` : '') +
+    (F.state === 'loading' ? `<div class="grid">${Array.from({length: 3}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>` : '') +
+    (F.state === 'error' ? retryBox(F.err, 'retryFeed') : '') + (F.done && F.items.length ? `<div class="empty"><small>${tr('caught')}</small></div>` : '');
+}
+async function loadFeed(){
+  const F = S.feed; if (F.state === 'loading' || F.done || !S.home || S.tab !== 'home') return;
+  F.state = 'loading'; paintFeed();
+  try{
+    for (let guard = 0; guard < 4; guard++){                                  // keep going until a page brings something not already on Home
+      const d = await api(`/api/catalog?limit=24&offset=${F.offset}&sort=updated`, {timeout: 60000});
+      F.offset += d.stories.length; const seen = shownIds(), add = d.stories.filter(s => s.episodes > 0 && !seen.has(s.id));
+      F.items.push(...add);
+      if (F.offset >= d.total || !d.stories.length){ F.done = true; break; }
+      if (add.length) break;
+    }
+    F.state = 'ok';
+  }catch(e){ F.state = 'error'; F.err = errText(e); }
+  paintFeed(); watchFeed();
+}
+function watchFeed(){
+  if (S.io) S.io.disconnect(); const e = $('#feedEnd'); if (!e || S.feed.done || S.feed.state === 'error') return;
+  S.io = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) loadFeed(); }, {rootMargin: '700px'}); S.io.observe(e);
+}
+setInterval(() => $$('[data-until]').forEach(e => { e.textContent = tr('ends') + ' ' + left(+e.dataset.until); }), 30000);
+
+async function toggleWish(id){
+  const on = !S.wish.has(id); on ? S.wish.add(id) : S.wish.delete(id); renderHome();
+  try{ await api('/api/wishlist', {method:'POST', retry:false, body: JSON.stringify({story_id: id, on})}); toast(tr(on ? 'wishon' : 'wishoff')); }
+  catch(e){ on ? S.wish.delete(id) : S.wish.add(id); renderHome(); toast(errText(e)); }
+}
+async function removeCont(id){
+  try{ await api('/api/history/remove', {method:'POST', retry:false, body: JSON.stringify({story_id: id})}); S.home.continue = S.home.continue.filter(i => i.story.id !== id); renderHome(); toast(tr('removed')); }
+  catch(e){ toast(errText(e)); }
+}
+function homeClick(c){
+  let m;
+  if (c('[data-act=lang]')){ cycleLang(); return true; }
+  { const m = c('[data-set-theme]'); if (m){ setTheme(m.dataset.setTheme); return true; } }
+  if (c('[data-act=theme]')){ cycleTheme(); return true; }
+  if (c('#searchBtn')){ renderSearch(); openSheet('search'); setTimeout(() => { const i = $('#sq'); if (i) i.focus(); }, 60); return true; }
+  if (c('#bellBtn')){ openNotif(); return true; }
+  if (c('#avatarBtn')){ setTab('me'); return true; }
+  if (c('#closeSearch')){ closeSheet('search'); return true; }
+  if (c('#closeNotif')){ closeSheet('notif'); return true; }
+  if (c('#clearRecent')){ store.set('ajrs', '[]'); renderSearch(); return true; }
+  if ((m = c('[data-sq]'))){ doSearch(m.dataset.sq); return true; }
+  if ((m = c('[data-tier]'))){ S.tier = +m.dataset.tier; renderHome(); return true; }
+  if ((m = c('[data-wish]'))){ toggleWish(m.dataset.wish); return true; }
+  if ((m = c('[data-contx]'))){ removeCont(m.dataset.contx); return true; }
+  if (c('#retryFeed')){ S.feed.state = 'idle'; loadFeed(); return true; }
+  if (c('#meLib')){ setTab('library'); return true; }
+  return false;
+}
+
+/* ---------- cart and me tabs (placeholders until their own screens are built) ---------- */
+/* ---------- cart (kept on this device; the bot takes one story per checkout) ---------- */
+let CART = (() => { try{ const v = JSON.parse(store.get('ajcart', '[]')); return Array.isArray(v) ? v : []; }catch(e){ return []; } })();
+const cartSave = () => { store.set('ajcart', JSON.stringify(CART)); updateCartBadge(); };
+const cartHas = (sid, oid) => CART.some(i => i.sid === sid && String(i.oid) === String(oid));
+function updateCartBadge(){
+  const b = $('.bnav [data-tab=cart]'); if (!b) return; let n = b.querySelector('.nbadge');
+  if (!n){ n = document.createElement('i'); n.className = 'nbadge'; b.appendChild(n); }
+  n.hidden = !CART.length; n.textContent = CART.length;
+}
+function cartToggle(oid){
+  const s = V.story, o = s && s.options.find(x => String(x.id) === String(oid)); if (!o) return false;
+  if (cartHas(V.id, oid)){ CART = CART.filter(i => !(i.sid === V.id && String(i.oid) === String(oid))); cartSave(); toast(tr('cremd')); return false; }
+  CART.push({sid: V.id, oid: o.id, title: s.title, cover: s.cover, label: o.label, price: +o.price, from: o.from || 0, to: o.to || 0, days: o.days || 0}); cartSave(); toast(tr('cadded')); return true;
+}
+async function refreshCart(){                       // drop what is already owned or no longer sold; refresh price and plan name
+  const sids = [...new Set(CART.map(i => i.sid))]; if (!sids.length) return;
+  let changed = false, owned = 0;
+  await Promise.all(sids.map(async sid => {
+    try{
+      const d = await api(`/api/story/${encodeURIComponent(sid)}?limit=1`, {timeout: 30000});
+      const opts = d.story.options || [], a = d.access || {};
+      CART = CART.filter(i => {
+        if (i.sid !== sid) return true;
+        const o = opts.find(x => String(x.id) === String(i.oid));
+        if (!o || +o.price === 0){ changed = true; return false; }
+        if (a.full || a.admin || (a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0))){ changed = true; owned++; return false; }
+        if (+o.price !== i.price || o.label !== i.label){ i.price = +o.price; i.label = o.label; changed = true; }
+        return true;
+      });
+    }catch(e){ if (e.data && e.data.unavailable){ CART = CART.filter(i => i.sid !== sid); changed = true; } }
+  }));
+  if (changed){ cartSave(); if (owned) toast(tr('cown')); if (S.tab === 'cart') paintCart(); }
+}
+function paintCart(){
+  const v = $('#view'); if (S.tab !== 'cart' || !v) return;
+  if (!CART.length){ v.innerHTML = `<div class="empty"><div style="font-size:44px">&#128722;</div><b style="color:var(--text);font-size:17px">${tr('cempty')}</b><small style="display:block;margin:6px 0 14px">${tr('cemptynote')}</small><button class="btn" id="cartBrowse">${tr('cbrowse')}</button></div>`; return; }
+  const total = CART.reduce((t, i) => t + Number(i.price), 0);
+  v.innerHTML = `<div class="sechead"><h2 class="sec">${tr('ctitle')}</h2><span class="by">${tr('citems', {n: CART.length})}</span></div>` +
+    CART.map(i => `<div class="crow"><button class="lmain" data-story="${esc(i.sid)}" aria-label="Open ${esc(i.title)}">${lthumb(i.cover)}<span class="cmt"><span class="cplan">${esc(i.label)}</span><b>${esc(i.title)}</b><small>${i.from ? `Episodes ${i.from} to ${i.to}` : 'All episodes'} | ${Number(i.days) > 0 ? i.days + ' days' : tr('lkeep')}</small><span class="cpr">${money(i.price)}</span></span></button>
+      <div class="lact"><button class="lbtn" data-cartpay="${esc(i.sid)}|${esc(i.oid)}">${tr('cpay')}</button><button class="lbtn rm" data-cartrm="${esc(i.sid)}|${esc(i.oid)}">${tr('crem')}</button></div></div>`).join('') +
+    `<div class="cbill"><div><span>${tr('csub')}</span><span>${money(total)}</span></div><div class="tot"><span>${tr('ctotal')}</span><span>${money(total)}</span></div><small class="by">${tr('cnote')}</small></div>
+    <div class="pad"><button class="btn block" id="cartGo">${tr('cgo')} &rarr;</button></div>`;
+}
+function renderCart(){ paintCart(); refreshCart(); }
+function askConfirm(msg, ok){ if (tg && tg.showConfirm) tg.showConfirm(msg, y => { if (y) ok(); }); else if (confirm(msg)) ok(); }
+function renderMe(){
+  const sel = `<div class="thsel">${['dark','light','warm'].map(k => `<button class="thopt${THEME === k ? ' on' : ''}" data-set-theme="${k}" aria-pressed="${THEME === k}"><span class="sw">${THEME_SW[k].map(c2 => `<i style="background:${c2}"></i>`).join('')}</span>${THEME_ICON[k]} ${tr({dark:'tdark', light:'tlight', warm:'twarm'}[k])}</button>`).join('')}</div>`;
+  const item = (ic, label, attr) => `<button class="pm-i" ${attr}><span class="ic">${ic}</span><span class="tx">${label}</span><span class="ar">&rsaquo;</span></button>`;
+  $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
+    <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
+    <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
+    <div class="pmenu">${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="1"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="1"')}${item('\u2B50', tr('pfb'), 'data-pbot="1"')}</div>
+    <div id="preqSlot"></div>
+    <h3 class="lsub">${tr('pdisp')}</h3>
+    <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
+    <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
+  api('/api/library').then(d => { const e = $('#pcOwn'); if (e) e.textContent = d.stories.length; }).catch(() => {});
+  if (!S.wish) api('/api/wishlist').then(d => { S.wish = new Set(d.ids); const e = $('#pcWish'); if (e) e.textContent = S.wish.size; }).catch(() => {});
+}
+function paintReq(){
+  const slot = $('#preqSlot'); if (!slot) return;
+  slot.innerHTML = slot.innerHTML ? '' : `<div class="preqbox"><input class="search" id="preqQ" type="search" placeholder="${esc(tr('preqph'))}" aria-label="${esc(tr('preq'))}"><button class="btn block" id="preqGo" style="margin-top:0">${tr('preqgo')}</button><div id="preqRes"></div></div>`;
+  const q = $('#preqQ'); if (q) q.focus();
+}
+async function reqSearch(){
+  const q = ($('#preqQ').value || '').trim(), out = $('#preqRes'); if (!q) return;
+  out.innerHTML = '<div class="sk" style="height:56px"></div>';
+  try{
+    const d = await api('/api/catalog?limit=3&q=' + encodeURIComponent(q), {retry: false});
+    out.innerHTML = d.stories.length ? `<div class="by" style="margin-bottom:8px">${tr('preqfound')}</div><div style="display:grid;gap:8px">${d.stories.map(dMini).join('')}</div>`
+      : `<div class="by" style="margin-bottom:8px">${tr('preqnone')}</div><button class="btn block" data-pbot="1" style="margin-top:0">${tr('preqbot')}</button>`;
+  }catch(e){ out.innerHTML = `<div class="msg bad">${esc(errText(e))}</div>`; }
+}
+function resetAppData(){
+  ['ajcart', 'ajt', 'ajl', 'ajrs', 'ajn'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+  CART = []; THEME = 'dark'; LANG = 'en'; applyTheme(); applyLang(); renderHeader(); updateCartBadge(); renderMe(); toast(tr('presetdone'));
 }
 
 /* ---------- browse ---------- */
 function browseActive(){ return !!(B.q || B.genre || B.status || B.language || B.sort !== 'newest'); }
+const browseMode = () => (B.view === 'list' || browseActive()) ? 'list' : 'discover';
 function renderBrowse(){
-  $('#view').innerHTML = `<div class="pad"><input class="search" id="bq" type="search" placeholder="Search title, author, genre or language" value="${esc(B.q)}" aria-label="Search stories"></div>
-    <div class="ctl" style="padding-top:10px"><select id="bsort" aria-label="Sort"><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">A to Z</option><option value="popular">Most listened</option><option value="updated">Recently updated</option></select>
-    <select id="bstatus" aria-label="Status"><option value="">All stories</option><option>Ongoing</option><option>Completed</option></select></div>
+  $('#view').innerHTML = `<div class="pad"><input class="search" id="bq" type="search" placeholder="Search title, author, genre or language" value="${esc(B.q)}" aria-label="Search stories"></div><div id="bbody"></div>`;
+  paintBrowse();
+}
+function paintBrowse(){
+  const body = $('#bbody'); if (!body) return; B.painted = browseMode();
+  if (B.painted === 'discover'){ paintDiscover(); if (B.allState === 'idle') loadDiscover(); return; }
+  const sts = (B.facets && B.facets.statuses && B.facets.statuses.length) ? B.facets.statuses : ['Ongoing', 'Completed'];
+  body.innerHTML = `<div class="pad" style="padding-top:8px"><button class="link" id="dback">&larr; ${tr('dback')}</button></div>
+    <div class="ctl" style="padding-top:6px"><select id="bsort" aria-label="Sort"><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">A to Z</option><option value="popular">Most listened</option><option value="updated">Recently updated</option><option value="price_low">Price: Low to High</option><option value="price_high">Price: High to Low</option></select>
+    <select id="bstatus" aria-label="Status"><option value="">All stories</option>${sts.map(x => `<option>${esc(x)}</option>`).join('')}</select></div>
     <div id="blang"></div><div class="chips" id="bchips" aria-label="Genres"></div><div class="actions" id="bclearbox" style="padding-bottom:8px"></div><div id="bres"></div>`;
   $('#bsort').value = B.sort; $('#bstatus').value = B.status;
   browseChips(); browseResults();
   if (B.state === 'idle') loadBrowse(true);
+}
+/* ---- discover: 1 row = 1 card, tap to preview 3 stories, See all opens the full list ---- */
+const GENRE_ICON = [[/romanc|love/i,'\u2764\uFE0F'],[/horror|ghost|haunt/i,'\uD83D\uDC7B'],[/thrill|crime|detect/i,'\uD83D\uDD75\uFE0F'],[/mystery/i,'\uD83D\uDD0E'],[/fantas|magic/i,'\uD83E\uDDD9'],[/action|war/i,'\u2694\uFE0F'],[/comed|humou?r/i,'\uD83D\uDE02'],[/drama|family/i,'\uD83C\uDFAD'],[/sci|space/i,'\uD83D\uDE80'],[/mytholog|devot|spirit/i,'\uD83D\uDD49\uFE0F'],[/kid|child/i,'\uD83E\uDDF8']];
+const STATUS_ICON = {Completed:'\u2705', Ongoing:'\u26A1', Upcoming:'\uD83D\uDD52', Stopped:'\u23F8\uFE0F', Paused:'\u23F8\uFE0F'};
+function discoverRows(){
+  const all = B.all || [], f = B.facets || {}, byUpd = (a, b) => b.updated - a.updated;
+  const rows = [], mk = (sec, key, icon, title, items, see) => rows.push({sec, key, icon, title, items, see});
+  mk('dcol', 'trend', '\uD83D\uDD25', tr('dtrend'), all.filter(s => s.listeners > 0).sort((a, b) => b.listeners - a.listeners || byUpd(a, b)), {sort:'popular'});
+  mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
+  mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
+  (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
+  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => s.genre === g.name).sort(byUpd), {genre:g.name, sort:'updated'}); });
+  if ((f.languages || []).length > 1) f.languages.forEach(l => mk('dlang', 'l:' + l, '\uD83C\uDF10', l, all.filter(s => s.language === l).sort(byUpd), {language:l, sort:'updated'}));
+  return rows.filter(r => r.items.length);
+}
+function paintDiscover(){
+  const body = $('#bbody'); if (!body) return;
+  if (B.allState === 'error' && !B.all){ body.innerHTML = retryBox(B.allErr, 'retryDisc'); return; }
+  if (!B.all){ body.innerHTML = Array.from({length: 6}, () => '<div class="sk" style="height:64px;margin:0 16px 10px"></div>').join(''); return; }
+  const rows = discoverRows(); B.rows = rows; let sec = '';
+  body.innerHTML = `<h2 class="sec" style="padding:4px 16px 0">${tr('dtitle')}</h2>` + (rows.map(r => {
+    const head = r.sec !== sec ? `<h3 class="dsec">${tr(r.sec)}</h3>` : ''; sec = r.sec;
+    return head + `<div class="dcard${B.open === r.key ? ' open' : ''}" data-dkey="${esc(r.key)}"><button class="drow" data-drow="${esc(r.key)}" aria-expanded="${B.open === r.key}"><span class="dic">${r.icon}</span><span class="dtx"><b>${esc(r.title)}</b><small>${tr('dcount', {n: r.items.length})}</small></span><span class="dchev"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span></button><div class="dbody"><div>${B.open === r.key ? dPreview(r) : ''}</div></div></div>`;
+  }).join('') || `<div class="empty">${tr('dnone')}</div>`);
+}
+const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([s.genre, s.status, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
+const dPreview = r => `<div class="dpv">${r.items.slice(0, 3).map(dMini).join('')}<button class="btn ghost block" data-dsee="${esc(r.key)}">${tr('dsee', {n: r.items.length})} &rarr;</button></div>`;
+function toggleRow(key){
+  const card = $$('#bbody .dcard').find(c => c.dataset.dkey === key), r = (B.rows || []).find(x => x.key === key); if (!card || !r) return;
+  const open = !card.classList.contains('open');
+  $$('#bbody .dcard.open').forEach(c => { c.classList.remove('open'); c.querySelector('.drow').setAttribute('aria-expanded', 'false'); });
+  B.open = open ? key : '';
+  if (open){ const slot = card.querySelector('.dbody > div'); if (!slot.firstChild) slot.innerHTML = dPreview(r); card.classList.add('open'); card.querySelector('.drow').setAttribute('aria-expanded', 'true'); setTimeout(() => card.scrollIntoView({block:'nearest', behavior:'smooth'}), 320); }
+}
+function seeAllRow(key){
+  const r = (B.rows || []).find(x => x.key === key); if (!r) return;
+  Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', ...r.see, view:'list', state:'idle'}); renderBrowse();
+}
+async function loadDiscover(){
+  if (B.allState === 'loading') return; B.allState = 'loading'; paintDiscover();
+  try{ const d = await api('/api/catalog?limit=500&sort=updated', {timeout: 60000}); B.all = d.stories || []; if (d.facets) B.facets = d.facets; B.allState = 'ok'; }
+  catch(e){ B.allState = 'error'; B.allErr = errText(e); }
+  if (S.tab === 'browse' && browseMode() === 'discover') paintDiscover();
 }
 function browseChips(){
   const g = (B.facets && B.facets.genres) || [];
@@ -387,7 +800,7 @@ async function loadBrowse(reset){
 }
 const browseSearch = deb(() => { loadBrowse(true); browseChips(); }, 350);
 function viewAll(key){
-  Object.assign(B, {q:'', genre:'', language:'', status: key === 'completed' ? 'Completed' : '', sort: {trending:'popular', recent:'newest', updated:'updated', completed:'updated'}[key] || 'newest', state:'idle'});
+  Object.assign(B, {q:'', genre: key.startsWith('g:') ? key.slice(2) : '', language:'', status: key === 'completed' ? 'Completed' : key === 'ongoing' ? 'Ongoing' : '', sort: {trending:'popular', recent:'newest', updated:'updated', completed:'updated', ongoing:'updated'}[key] || 'newest', view:'list', state:'idle'});
   setTab('browse');
 }
 
@@ -395,9 +808,15 @@ function viewAll(key){
 const STATUS = {approved:['Active','free'], pending:['Pending approval','warn'], expired:['Expired',''], rejected:['Rejected','bad'], revoked:['Revoked','bad'], refunded:['Refunded','bad'], cancelled:['Cancelled','']};
 const statusPill = s => { const [t, c] = STATUS[s] || [s, '']; return `<span class="tag ${c === 'free' ? 'live' : c}">${esc(t)}</span>`; };
 const rangeText = r => r.from ? `Episodes ${r.from} to ${r.to}` : 'All episodes';
+const LIB_TABS = [['listening', '\uD83C\uDFA7', 'll'], ['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
+const lthumb = c => `<span class="lth">${isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="?">` : esc(c || '?')}</span>`;
+const lrow = o => `<div class="lrow"><button class="lmain" ${o.attrs || `data-story="${esc(o.sid)}"`} ${o.avail === false ? 'data-avail="0"' : ''} aria-label="Open ${esc(o.title)}">${lthumb(o.cover)}<span class="lmt"><b>${esc(o.title)}</b>${(o.lines || []).filter(Boolean).map(l => `<small>${l}</small>`).join('')}${o.bar !== undefined ? `<span class="bar"><i style="width:${o.bar}%"></i></span>` : ''}</span></button><div class="lact">${o.actions || ''}</div></div>`;
+const leftText = ts => { const s = ts - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), hr = Math.floor(s % 86400 / 3600); return d ? d + 'd ' + hr + 'h' : hr + 'h ' + Math.floor(s % 3600 / 60) + 'm'; };
+const libEmpty = k => `<div class="empty">${tr(k)}</div>`;
 function renderLibrary(){
-  $('#view').innerHTML = `<div class="sechead"><h2 class="sec">Library</h2><button class="link" id="libRefresh" aria-label="Refresh library">Refresh</button></div>
-    <div class="seg" role="tablist">${[['owned', 'My stories'], ['history', 'History'], ['orders', 'Purchases']].map(([k, t]) => `<button class="chip${L.seg === k ? ' on' : ''}" data-seg="${k}" role="tab" aria-selected="${L.seg === k}">${t}</button>`).join('')}</div><div id="libBody"></div>`;
+  if (!LIB_TABS.some(t => t[0] === L.seg)) L.seg = 'listening';
+  $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ltitle')}</h2><button class="link" id="libRefresh" aria-label="${esc(tr('lref'))}">${tr('lref')}</button></div>
+    <div class="seg" role="tablist">${LIB_TABS.map(([k, ic, lb]) => `<button class="chip${L.seg === k ? ' on' : ''}" data-seg="${k}" role="tab" aria-selected="${L.seg === k}">${ic} ${tr(lb)}</button>`).join('')}</div><div id="libBody"></div>`;
   loadLibrary();
 }
 async function loadLibrary(){
@@ -405,31 +824,42 @@ async function loadLibrary(){
   body.innerHTML = `<div class="rail">${cardSk(3)}</div>`;
   const sig = fresh('library'), seg = L.seg;
   try{
-    if (seg === 'owned'){
-      const [d, c] = await Promise.all([api('/api/library', {signal: sig}), api('/api/continue', {signal: sig}).catch(() => ({items: []}))]);
-      if (L.seg !== seg) return;
-      body.innerHTML = (c.items.length ? `<div class="sechead"><h3 class="sec" style="font-size:20px">Continue listening</h3></div><div class="rail">${c.items.map(contCard).join('')}</div>` : '') +
-        (d.stories.length ? `<div class="grid">${d.stories.map(s => `<button class="card" data-story="${esc(s.id)}" data-avail="${s.available ? 1 : 0}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.available ? '' : 'Unavailable')}
-          <b>${esc(s.title)}</b><small>${esc(s.ranges.map(rangeText).join(', '))}</small><small>${s.expires ? 'Access until ' + dateStr(s.expires) : 'Yours to keep'}</small>
-          ${s.available ? '' : '<small style="color:var(--warn)">This story is no longer in the store. Your purchase is kept.</small>'}</button>`).join('')}</div>`
-        : '<div class="empty">You have no stories yet. After your payment is approved, your story appears here.</div>');
-    } else if (seg === 'history'){
-      const d = await api('/api/history?limit=60', {signal: sig}); if (L.seg !== seg) return;
-      body.innerHTML = d.items.length ? d.items.map(h => (HIST[h.episode_id] = h, `<button class="ep" data-hist="${h.episode_id}" data-story="${esc(h.story_id)}" data-pos="${h.pos}" ${h.available ? '' : 'disabled'}>
-        <span class="n">${h.no}</span><span class="t"><b>${esc(h.story_title)}</b><br><small>${esc(h.title)}</small></span><small>${h.completed ? 'Done' : clock(h.pos)}</small></button>`)).join('')
-        : '<div class="empty">Your listening history will appear here.</div>';
+    if (seg === 'listening'){
+      const [c, hd] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []}))]); if (L.seg !== seg) return;
+      body.innerHTML = (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
+          lines: [`Episode ${i.episode.no}${i.pos ? ' | ' + clock(i.pos) : ' | start'}`], bar: i.episode.duration ? Math.min(100, Math.round(i.pos / i.episode.duration * 100)) : 0,
+          actions: `<button class="lbtn" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}">${tr('lres')}</button><button class="lbtn rm" data-lcx="${esc(i.story.id)}">${tr('lrem')}</button>`}))).join('') : libEmpty('lel')) +
+        (hd.items.length ? `<h3 class="lsub">${tr('lhead')}</h3>` + hd.items.map(h => (HIST[h.episode_id] = h, `<button class="ep" data-hist="${h.episode_id}" data-story="${esc(h.story_id)}" data-pos="${h.pos}" ${h.available ? '' : 'disabled'}>
+          <span class="n">${h.no}</span><span class="t"><b>${esc(h.story_title)}</b><br><small>${esc(h.title)}</small></span><small>${h.completed ? 'Done' : clock(h.pos)}</small></button>`)).join('') : '');
+    } else if (seg === 'owned' || seg === 'rentals'){
+      const d = await api('/api/library', {signal: sig}); if (L.seg !== seg) return;
+      let list = d.stories.filter(s => seg === 'owned' ? !s.expires : !!s.expires);
+      if (seg === 'rentals') list.sort((a, b) => a.expires - b.expires);
+      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, avail: s.available,
+        lines: [esc(s.ranges.map(rangeText).join(', ')), seg === 'owned' ? tr('lkeep') : esc(tr('luntil', {d: dateStr(s.expires)})) + ' | ' + esc(tr('lleft', {t: leftText(s.expires)})), s.available ? '' : `<span style="color:var(--warn)">This story is no longer in the store. Your purchase is kept.</span>`],
+        actions: `<button class="lbtn" data-story="${esc(s.id)}" ${s.available ? '' : 'data-avail="0"'}>${tr('lopen')}</button>`})).join('') : libEmpty(seg === 'owned' ? 'leo' : 'ler');
+    } else if (seg === 'wishlist'){
+      const [w, cat] = await Promise.all([api('/api/wishlist', {signal: sig}), B.all ? Promise.resolve({stories: B.all}) : api('/api/catalog?limit=500&sort=updated', {signal: sig})]); if (L.seg !== seg) return;
+      const by = new Map((cat.stories || []).map(s => [s.id, s])); S.wish = new Set(w.ids);
+      const list = w.ids.map(id => by.get(id)).filter(Boolean);
+      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([s.genre, s.status, s.episodes ? s.episodes + ' eps' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
+        actions: `<button class="lbtn" data-story="${esc(s.id)}">${tr('lopen')}</button><button class="lbtn rm" data-lwx="${esc(s.id)}">${tr('lrem')}</button>`})).join('') : libEmpty('lew');
     } else {
       const d = await api('/api/account?limit=60', {signal: sig}); if (L.seg !== seg) return;
       body.innerHTML = d.orders.length ? d.orders.map(o => `<div class="mrow"><h4>${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
         <div style="margin:6px 0">${statusPill(o.status)}</div><div class="by">Order #${o.id} | ${dateStr(o.created)}${o.expires ? ' | ' + (o.status === 'expired' ? 'ended ' : 'until ') + dateStr(o.expires) : ''}</div>
         ${o.available ? '' : '<div class="by" style="color:var(--warn)">This story is no longer in the store.</div>'}
-        ${o.status === 'pending' ? '<div class="by">Waiting for approval after your screenshot. If you have not sent one, open the bot and send it.</div>' : ''}</div>`).join('')
-        : '<div class="empty">No purchases yet.</div>';
+        ${o.status === 'pending' ? '<div class="by">Waiting for approval after your screenshot. If you have not sent one, open the bot and send it.</div>' : ''}</div>`).join('') : libEmpty('leh');
     }
   }catch(e){
     if (e.aborted) return;
     body.innerHTML = retryBox(errText(e), 'retryLib');
   }
+}
+async function libRemove(btn, url, payload, after){
+  const row = btn.closest('.lrow'); btn.disabled = true;
+  try{ await api(url, {method:'POST', retry:false, body: JSON.stringify(payload)}); after && after(); row && row.remove(); if (!$('#libBody .lrow')) loadLibrary(); }
+  catch(e){ btn.disabled = false; toast(errText(e)); }
 }
 
 /* ---------- player (one audio element, one authoritative state) ---------- */
@@ -669,7 +1099,8 @@ function renderStory(){
     const sub = `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days of access' : 'Yours to keep'}`;
     if (Number(o.price) === 0) return `<button class="plan free" data-free="${o.from || 1}"><span>${esc(o.label)}<small>${esc(sub)}</small></span><b>Listen free</b></button>`;
     if (have) return `<div class="plan have"><span>${esc(o.label)}<small>${esc(sub)}</small></span><b>Owned</b></div>`;
-    return `<button class="plan" data-buy="${esc(o.id)}"><span>${esc(o.label)}<small>${esc(sub)}</small></span><b>${money(o.price)}</b></button>`;
+    const inCart = cartHas(V.id, o.id);
+    return `<div class="prow"><button class="plan" data-buy="${esc(o.id)}"><span>${esc(o.label)}<small>${esc(sub)}</small></span><b>${money(o.price)}</b></button><button class="pcart${inCart ? ' on' : ''}" data-cartadd="${esc(o.id)}" aria-pressed="${inCart}" aria-label="${esc(tr(inCart ? 'cin' : 'cadd'))}">${inCart ? '\u2713' : '\uD83D\uDED2'}</button></div>`;
   }).join('');
   const act = V.resume ? `<button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${V.resume.no}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button>`
     : V.totalAll ? `<button class="btn block" id="startListen">${a.owned || a.admin ? 'Start listening' : 'Start listening (free demo)'}</button>` : '<div class="msg">Episodes will be added soon.</div>';
@@ -964,14 +1395,15 @@ function setTab(t){
   S.tab = t; $$('.bnav button').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
   [...stack].forEach(closeSheet); $('#view').scrollTop = 0; window.scrollTo(0, 0);
   if (t === 'home'){ if (S.home) renderHome(); else loadHome(); if (S.home && S.homeState !== 'loading') loadHome(); }
-  else if (t === 'browse') renderBrowse(); else renderLibrary();
+  else if (t === 'browse') renderBrowse(); else if (t === 'library') renderLibrary(); else if (t === 'cart') renderCart(); else renderMe();
 }
 
 /* ---------- events ---------- */
 document.addEventListener('click', async e => {
   const t = e.target, c = s => t.closest(s);
   let m;
-  if ((m = c('.bnav button'))) return setTab(m.dataset.tab);
+  if (homeClick(c)) return;
+  if ((m = c('.bnav button'))){ if (m.dataset.tab === 'browse' && S.tab === 'browse') Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover'}); return setTab(m.dataset.tab); }
   if (c('#retryHome')){ S.homeState = 'idle'; return loadHome(); }
   if (c('#retryBrowse')) return loadBrowse(B.items.length ? false : true);
   if (c('#retryLib')) return loadLibrary();
@@ -979,14 +1411,30 @@ document.addEventListener('click', async e => {
   if (c('#retryEps')) return loadStoryPage(V.page);
   if (c('#retryAdmin')) return loadAdmin();
   if (c('#retryManage')) return loadManage();
+  if ((m = c('[data-cartadd]'))){ const on = cartToggle(m.dataset.cartadd); m.classList.toggle('on', on); m.setAttribute('aria-pressed', on); m.textContent = on ? '\u2713' : '\uD83D\uDED2'; return; }
+  if ((m = c('[data-cartrm]'))){ const [sid, oid] = m.dataset.cartrm.split('|'); CART = CART.filter(i => !(i.sid === sid && String(i.oid) === oid)); cartSave(); toast(tr('cremd')); return paintCart(); }
+  if ((m = c('[data-cartpay]'))){ const [sid, oid] = m.dataset.cartpay.split('|'); return once('buy', async () => { goBot(`buy_${sid}_${oid}`); await sleep(1200); }); }
+  if (c('#cartGo')){ const i = CART[0]; if (i) return once('buy', async () => { goBot(`buy_${i.sid}_${i.oid}`); await sleep(1200); }); return; }
+  if (c('#cartBrowse')) return setTab('home');
+  if ((m = c('[data-pgo]'))){ const k = m.dataset.pgo; if (k === 'cart') return setTab('cart'); L.seg = k; return setTab('library'); }
+  if (c('[data-pbot]')){ goBot(''); return; }
+  if (c('#preqBtn')) return paintReq();
+  if (c('#preqGo')) return reqSearch();
+  if (c('#presetBtn')) return askConfirm(tr('presetq'), resetAppData);
   if (c('#libRefresh')) return loadLibrary();
+  if ((m = c('[data-lcx]'))) return libRemove(m, '/api/history/remove', {story_id: m.dataset.lcx}, () => { if (S.home && S.home.continue) S.home.continue = S.home.continue.filter(i => i.story.id !== m.dataset.lcx); toast(tr('removed')); });
+  if ((m = c('[data-lwx]'))) return libRemove(m, '/api/wishlist', {story_id: m.dataset.lwx, on: false}, () => { if (S.wish) S.wish.delete(m.dataset.lwx); toast(tr('wishoff')); });
   if ((m = c('[data-viewall]'))) return viewAll(m.dataset.viewall);
   if ((m = c('[data-cont]'))){ const i = CONT[m.dataset.cont]; if (i) playEpisode({id: i.episode.id, no: i.episode.no, title: i.episode.title, duration: i.episode.duration}, i.story, i.pos); return; }
   if ((m = c('[data-hist]'))){ const h = HIST[m.dataset.hist]; if (h) playEpisode({id: h.episode_id, no: h.no, title: h.title, duration: h.duration}, {id: h.story_id, title: h.story_title, cover: h.cover}, h.completed ? 0 : h.pos); return; }
   if ((m = c('[data-seg]'))){ L.seg = m.dataset.seg; $$('[data-seg]').forEach(b => { b.classList.toggle('on', b === m); b.setAttribute('aria-selected', b === m); }); return loadLibrary(); }
   if ((m = c('[data-bgenre]'))){ B.genre = m.dataset.bgenre; browseChips(); return loadBrowse(true); }
-  if ((m = c('.chip[data-genre]'))){ Object.assign(B, {q:'', genre: m.dataset.genre, status:'', language:'', sort:'newest', state:'idle'}); return setTab('browse'); }
+  if ((m = c('.chip[data-genre]'))){ Object.assign(B, {q:'', genre: m.dataset.genre, status:'', language:'', sort:'newest', view:'list', state:'idle'}); return setTab('browse'); }
   if (c('#bclear') || c('#bclear2')){ Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest'}); renderBrowse(); return loadBrowse(true); }
+  if ((m = c('[data-drow]'))){ toggleRow(m.dataset.drow); return; }
+  if ((m = c('[data-dsee]'))){ seeAllRow(m.dataset.dsee); return; }
+  if (c('#dback')){ Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover'}); renderBrowse(); return; }
+  if (c('#retryDisc')){ B.allState = 'idle'; return loadDiscover(); }
   if (c('#bmore')) return loadBrowse(false);
   if ((m = c('[data-story]'))){
     if (m.dataset.avail === '0') return toast('This story is no longer in the store. Your purchase is kept.');
@@ -1102,7 +1550,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('input', e => {
   const id = e.target.id;
-  if (id === 'bq'){ B.q = e.target.value.trim(); return browseSearch(); }
+  if (id === 'bq'){ B.q = e.target.value.trim(); if (browseMode() !== B.painted) paintBrowse(); return browseSearch(); }
   if (id === 'epq'){ V.q = e.target.value.trim(); return epSearch(); }
   if (id === 'asq'){ A.sq = e.target.value.trim(); return adminSearch(); }
   if (id === 'aoq'){ A.oq = e.target.value.trim(); return adminSearch(); }
@@ -1123,7 +1571,7 @@ document.addEventListener('change', async e => {
   if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
   if (id === 'm_file' && e.target.files[0]){ $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); if (e.key === 'Enter' && e.target.id === 'preqQ') reqSearch(); });
 document.addEventListener('pointerdown', e => {                   // hold the speed buttons to keep stepping by 0.05x
   const b = e.target.closest('#rMinus, #rPlus'); if (!b) return;
   const d = b.id === 'rPlus' ? 0.05 : -0.05; setRate(P.rate + d);
@@ -1133,9 +1581,49 @@ document.addEventListener('pointerdown', e => {                   // hold the sp
 if (tg) tg.BackButton.onClick(goBack);
 
 /* ---------- start ---------- */
+/* ---------- splash screen ---------- */
+function splashInit(){
+  const el = $('#splash'); if (!el) return;
+  const t0 = Date.now(), tips = ['sptip1', 'sptip2', 'sptip3', 'sptip4'];
+  let pct = 0, idx = 0, tip = 0, slides = [], homeDone = false, closed = false;
+  const setPct = v => { pct = Math.max(pct, Math.min(100, v)); $('#spBar').style.width = pct + '%'; $('#spPct').textContent = Math.round(pct) + '%'; };
+  const showTip = () => { const t = $('#spTip'); t.style.opacity = 0; setTimeout(() => { t.textContent = tr(tips[tip++ % tips.length]); t.style.opacity = 1; }, 180); };
+  $('#spLbl').textContent = tr('splbl'); $('#spTip').textContent = tr(tips[tip++]);
+  const ints = [];
+  const close = () => { if (closed) return; closed = true; ints.forEach(clearInterval); window.splashDone = null; el.classList.add('out'); setTimeout(() => el.remove(), 500); };
+  window.splashDone = () => { homeDone = true; };
+  ints.push(setInterval(() => {
+    const el2 = Date.now() - t0;
+    if (!homeDone && S.tab !== 'home' && el2 > 1200) homeDone = true;
+    if (el2 > 9000) homeDone = true;                                     // never trap the user on the splash
+    setPct(homeDone ? pct + 7 : pct + (88 - pct) * 0.05);
+    if (pct >= 100 && el2 >= 1600) close();
+  }, 80));
+  ints.push(setInterval(showTip, 1400));
+  ints.push(setInterval(() => {
+    if (slides.length < 2) return;
+    const dots = $$('#spDots i'); slides[idx].classList.replace('on', 'out'); const prev = slides[idx]; setTimeout(() => prev.classList.remove('out'), 520);
+    idx = (idx + 1) % slides.length; slides[idx].classList.add('on'); dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+  }, 2400));
+  api('/api/catalog?limit=40&sort=popular', {timeout: 8000, retry: false}).then(d => {
+    if (closed) return;
+    const pool = (d.stories || []).filter(s => s.episodes > 0 && s.title);
+    for (let i = pool.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    const pick = pool.slice(0, 6); if (!pick.length) return;
+    const stage = $('#spStage');
+    stage.insertAdjacentHTML('afterbegin', pick.map((s, i) => `<div class="sl${i ? '' : ' on'}">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" data-fb="?">` : `<div class="sp-emo">${esc(s.cover || '?')}</div>`}<div class="slt"><div class="sp-pills">${[s.genre, s.status].filter(Boolean).map(x => `<span class="sp-pill">${esc(x)}</span>`).join('')}</div><b>${esc(s.title)}</b><small>${esc([s.author, s.episodes + ' eps'].filter(Boolean).join(' | '))}</small></div></div>`).join(''));
+    stage.classList.add('has'); slides = $$('#spStage .sl');
+    $('#spDots').innerHTML = pick.map((_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('');
+  }).catch(() => {});
+}
+
 (function boot(){
+  splashInit(); updateCartBadge();
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
   api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(() => {});
+  applyTheme(); applyLang(); renderHeader();
+  api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
+  api('/api/notices').then(d => { S.notices = d.items; renderHeader(); }).catch(() => {});
   setTab(S.tab);
   const _sid = new URLSearchParams(location.search).get('story');
   if (_sid) setTimeout(() => openStory(_sid), 300);      // deep link from the bot: ?story=<story id>
