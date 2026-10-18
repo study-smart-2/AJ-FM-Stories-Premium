@@ -451,7 +451,7 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
+const BOT_USERNAME = "Saverestrictioncontentbyaj_bot";      // your bot, without @
 const CURRENCY     = "₹";
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and listen right here in the app.";
@@ -536,6 +536,7 @@ function goBot(payload){
 /* ---------- shared pieces ---------- */
 const priceMax = s => { if (s.max_price != null) return +s.max_price; if (s.options && s.options.length) return Math.max(...s.options.map(o => +o.price)); return null; };
 const priceLabel = s => {
+  if (s.plans === 0) return 'Price soon';
   if (s.deal) return 'From ' + money(s.eff_price) + ' (-' + s.deal.pct + '%)';
   const hi = priceMax(s), lo = +s.min_price;
   if (hi != null && hi > lo) return money(lo) + ' - ' + money(hi);          // low and high price of the story's plans
@@ -1288,12 +1289,12 @@ function renderStory(){
   const act = V.resume ? `<button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${V.resume.no}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button>`
     : V.totalAll ? `<button class="btn block" id="startListen">${a.owned || a.admin ? 'Start listening' : 'Click for Demo (free episodes)'}</button>` : '<div class="msg">Episodes will be added soon.</div>';
   const wishOn = S.wish && S.wish.has(V.id), prices = s.options.map(o => +o.price);
-  const range = priceLabel({min_price: Math.min(...prices), max_price: Math.max(...prices), has_free: prices.some(p => p === 0)});
+  const range = prices.length ? priceLabel({min_price: Math.min(...prices), max_price: Math.max(...prices), has_free: prices.some(p => p === 0)}) : '';
   el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storySearch" aria-label="Search episodes">&#128269;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
       ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">by ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${s.genre ? `<span class="tag">${esc(s.genre)}</span>` : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
-      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${full ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
+      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${full || !range ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc">${esc(s.preview)}</div><div class="pad"><button class="link" id="more">Read more</button></div>` : ''}
     <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
       <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
@@ -1365,7 +1366,7 @@ async function loadAdmin(){
       body.innerHTML = `<div class="ctl"><input id="asq" type="search" placeholder="Search stories" value="${esc(A.sq)}" aria-label="Search stories"><select id="apub" aria-label="Visibility"><option value="">All</option><option value="1">Published</option><option value="0">Hidden</option></select></div>
         <div class="actions" style="margin-bottom:12px"><button class="btn" id="newStory">Add a story</button></div>` +
         (d.stories.map(s => `<div class="mrow"><h4>${esc(s.title)}</h4><div style="margin:4px 0">${s.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${s.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${s.episodes} eps</span></div>
-          <div class="by">${s.options.map(o => esc(o.label) + ' ' + money(o.price)).join(' | ')}</div><div class="by">ID: <b>${esc(s.id)}</b></div>
+          <div class="by">${s.options.map(o => esc(o.label) + ' ' + money(o.price)).join(' | ') || 'No plans yet (add them under Topics)'}</div><div class="by">ID: <b>${esc(s.id)}</b></div>
           <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-atop="${esc(s.id)}" data-title="${esc(s.title)}">Topics</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
           <button class="btn ghost small" data-apub="${esc(s.id)}" data-to="${s.published ? 0 : 1}">${s.published ? 'Unpublish' : 'Publish'}</button><button class="btn danger small" data-adel="${esc(s.id)}" data-title="${esc(s.title)}">Delete</button></div></div>`).join('') || '<div class="empty">No stories found.</div>');
       $('#apub').value = A.pub;
@@ -1426,7 +1427,7 @@ function optRow(o = {}){
 }
 async function openEditor(id){
   Object.assign(E, {id: id || null, cover: '', photo: ''});
-  let s = {options: [{label: 'Full story, keep forever', days: 0}], status: 'Ongoing', published: true};
+  let s = {status: 'Ongoing', published: true};
   openSheet('editor'); $('#editor').innerHTML = '<div class="sk hero"></div>';
   if (id){
     try{ s = (await api('/api/admin/story/' + encodeURIComponent(id))).story; }
@@ -1446,11 +1447,7 @@ async function openEditor(id){
     <label class="field"><span>Cover emoji or image link</span><input id="e_cover" value="${esc(/^data:/.test(E.cover) ? '' : E.cover)}" placeholder="📖"></label>
     <div class="field"><span>Or upload a cover photo (keeps its own shape)</span><input id="e_photo" type="file" accept="image/*"><div id="e_prev" style="margin-top:8px"></div></div>
     <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
-    <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Price 0 means free for everyone. Days 0 means keep forever. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
-    <div style="padding:0 16px" id="e_opts">${(s.options || []).filter(o => !o.topic).map(optRow).join('')}</div><div class="actions"><button class="btn ghost small" id="addOpt" type="button">Add plan</button></div>
-    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="g_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="g_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="g_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="g_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
-      <button class="btn ghost small" id="genPacks" type="button">Add packs</button></div>
-    <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
+    <p class="note">Plans, prices, topics and episodes are added after saving: save the story, then tap Topics.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
   $('#e_status').value = s.status || 'Ongoing'; paintPhoto();
 }
@@ -1474,14 +1471,11 @@ function addPacks(sel, pre){                      // pre = prefix of the four ge
 }
 async function saveEditor(){
   await once('save', async () => {
-    const title = $('#e_title').value.trim(), options = readPlans();
+    const title = $('#e_title').value.trim();
     if (!title) return toast('Add a title first');
-    if (!options.length) return toast('Add at least one plan');
-    const bad = options.find(o => (o.from || o.to) && (!o.from || !o.to || o.from > o.to));
-    if (bad) return toast(`Plan "${bad.label}": From must be a number not greater than To`);
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: $('#e_genre').value.trim(), language: $('#e_lang').value.trim(),
       status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked,
-      cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), options};
+      cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim()};
     const btn = $('#saveStory'); btn.disabled = true; btn.textContent = 'Saving...';
     const body = {story, allow_free: false, confirm_affects: false};
     try{
@@ -1813,9 +1807,7 @@ document.addEventListener('click', async e => {
   }
   if (c('#edClose') || c('#edClose2')) return closeSheet('editor');
   if (c('#emClose')) return closeSheet('epman');
-  if (c('#addOpt')){ $('#e_opts').insertAdjacentHTML('beforeend', optRow()); return; }
   if (c('.o-del')) return c('.optrow').remove();
-  if (c('#genPacks')) return addPacks('#e_opts', 'g_');
   if (c('#photoRemove')){ E.photo = ''; E.cover = ''; $('#e_cover').value = ''; $('#e_photo').value = ''; return paintPhoto(); }
   if (c('#saveStory')) return saveEditor();
   if (c('#autofill')){
