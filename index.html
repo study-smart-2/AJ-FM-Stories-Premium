@@ -1397,7 +1397,7 @@ function renderAdmin(){
       <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
       <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
     </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
 async function loadAdmin(){
@@ -1440,6 +1440,12 @@ async function loadAdmin(){
         <div class="box"><b>Popular episodes</b>${d.popular_episodes.map(t => `<div class="by">${esc(t.title)} ep ${t.ep_no}: ${t.listeners} listeners</div>`).join('') || '<div class="by">No listening data yet.</div>'}</div>
         <div class="box"><b>Recent orders</b>${d.recent_orders.map(o => `<div class="by">#${o.id} ${esc(o.title)} | ${money(o.price)} | ${esc(STATUS[o.status] ? STATUS[o.status][0] : o.status)}</div>`).join('') || '<div class="by">No orders yet.</div>'}</div>
         <div class="box"><b>What these numbers mean</b>${Object.entries(d.definitions).map(([a, b]) => `<div class="by"><b>${esc(a.replace(/_/g, ' '))}:</b> ${esc(b)}</div>`).join('')}</div>`;
+    } else if (tab === 'reset'){
+      const card = (k, ic, title, items, note) => `<div class="mrow" style="border-color:var(--bad)"><h4>${ic} ${title}</h4><ul class="note" style="margin:6px 0 8px 0;padding-left:18px">${items.map(i => `<li>${i}</li>`).join('')}</ul>${note ? `<div class="by" style="margin-bottom:8px">${note}</div>` : ''}<div class="actions" style="padding:0"><button class="btn danger" data-areset="${k}">${title}</button></div></div>`;
+      body.innerHTML = `<div class="box" style="border-color:var(--bad)"><b>&#9888;&#65039; Danger zone</b><p class="note" style="margin:6px 0 0">These actions cannot be undone. You must confirm 5 times. Before anything is erased, the bot sends a safety copy of the database to your admin chat. Your Telegram file-access login is never touched.</p></div>` +
+        card('app', '&#128241;', 'Clear all app data', ['Stories, topics, plans, covers and episodes', 'All purchases, rentals and orders', 'Listening history, progress, wishlist and notices', 'Saved imports and episode links', 'Episodes sitting in members\' chats are removed, and send counters reset'], 'Keeps: users, requests, FAQs, bans, banners, bot settings.') +
+        card('bot', '&#129302;', 'Clear all bot data', ['Users list, story requests and support replies', 'Pending payment drafts', 'Your own FAQs, 30-day blocks, welcome banners', 'Festive wish and the buyer log channel setting', 'The audit log'], 'Keeps: stories, episodes, purchases and rentals.') +
+        card('all', '&#128165;', 'Clear all data (both)', ['Everything listed above, app and bot together'], 'The app and the bot start completely empty.');
     } else {
       const d = await api('/api/admin/audit?limit=60', {signal: sig}); if (A.tab !== tab) return;
       body.innerHTML = d.items.map(a => `<div class="mrow"><b>${esc(a.action)}</b> <span class="by">on ${esc(a.target)}</span><div class="by">${new Date(a.ts * 1000).toLocaleString()} | admin ${a.admin_id}</div>${a.detail ? `<div class="by">${esc(a.detail)}</div>` : ''}</div>`).join('') || '<div class="empty">Nothing recorded yet.</div>';
@@ -1461,6 +1467,39 @@ async function adminPublish(id, to){ await once('pub' + id, async () => { try{ a
 async function adminDelete(id, title){
   if (!confirm(`Remove "${title}" from the store?\n\nBuyers keep their purchase records. Episodes stay in the database.`)) return;
   await once('del' + id, async () => { try{ await api('/api/admin/delete', {method:'POST', retry:false, body: JSON.stringify({id})}); toast('Story removed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+}
+
+/* ---- admin data reset: 5 confirmations, also counted by the server ---- */
+const RESET_NAME = {app: 'CLEAR ALL APP DATA', bot: 'CLEAR ALL BOT DATA', all: 'CLEAR ALL DATA (APP + BOT)'};
+const RESET_WHAT = {app: 'all stories, episodes, covers, purchases, rentals, listening activity and wishlists', bot: 'all users, requests, support data, FAQs, bans, banners and the audit log', all: 'EVERYTHING: the whole app and the whole bot'};
+async function resetFlow(scope){
+  await once('reset', async () => {
+    const name = RESET_NAME[scope], what = RESET_WHAT[scope];
+    const asks = [
+      `Step 1 of 5\n\n${name}?\n\nThis erases ${what}.`,
+      `Step 2 of 5\n\nThis cannot be undone. Members will lose their purchases and rentals if you continue.\n\nContinue?`,
+      `Step 3 of 5\n\nAre you really sure you want to ${name.toLowerCase()}?`,
+      `Step 4 of 5\n\nLast chance to stop. A safety copy of the database will be sent to your admin chat first.\n\nErase now?`
+    ];
+    const step = (n, extra = {}) => api('/api/admin/reset', {method: 'POST', retry: false, timeout: 120000, body: JSON.stringify({scope, step: n, ...extra})});
+    try{
+      for (let i = 0; i < 4; i++){
+        if (!confirm(asks[i])) return toast('Reset cancelled, nothing was erased');
+        await step(i + 1);
+      }
+      const word = (prompt(`Step 5 of 5\n\nType DELETE (capital letters) to ${name.toLowerCase()}:`) || '').trim();
+      if (word !== 'DELETE') return toast('Reset cancelled, nothing was erased');
+      toast('Erasing...', 60000);
+      const r = await step(5, {text: word});
+      const total = Object.values(r.deleted || {}).reduce((a, b) => a + b, 0);
+      try{ audio.pause(); }catch(e){}
+      P.ep = null; P.sid = null; P.state = 'idle'; $('#mini').classList.remove('show'); document.body.classList.remove('hasplayer');
+      S.home = null; S.homeState = 'idle'; S.wish = new Set(); Object.assign(S.feed, {items: [], offset: 0, state: 'idle', done: false, seeded: false, err: ''});
+      Object.assign(B, {all: null, allState: 'idle', items: [], state: 'idle'});
+      toast(`Done. ${total} records erased.`, 6000);
+      loadAdmin(); loadHome();
+    }catch(e){ toast(adminErr(e), 7000); }
+  });
 }
 
 /* ---- story editor (metadata only) ---- */
@@ -1826,6 +1865,7 @@ document.addEventListener('click', async e => {
   if (c('#closeAdmin')) return closeSheet('admin');
   if (c('#refreshAdmin')) return loadAdmin();
   if ((m = c('[data-atab]'))){ A.tab = m.dataset.atab; $$('[data-atab]').forEach(b => b.classList.toggle('on', b === m)); return loadAdmin(); }
+  if ((m = c('[data-areset]'))) return resetFlow(m.dataset.areset);
   if (c('#newStory')) return openEditor(null);
   if ((m = c('[data-aedit]'))) return openEditor(m.dataset.aedit);
   if ((m = c('[data-aeps]'))) return openEpisodesOrTopics(m.dataset.aeps, m.dataset.title);
