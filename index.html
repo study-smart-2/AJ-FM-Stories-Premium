@@ -84,7 +84,7 @@ h1,h2,h3,h4{margin:0}
 .sheet{position:fixed;inset:0;background:var(--ink);overflow:auto;overflow-x:hidden;z-index:6;display:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px)}
 .sheet.open{display:block}
 body.hasplayer .sheet{padding-bottom:calc(var(--mini) + env(safe-area-inset-bottom,0px) + 40px)}
-#fullplayer{z-index:10}#editor,#epman,#topics{z-index:8}#topiced{z-index:9}#admin{z-index:7}
+#fullplayer{z-index:10}#editor,#epman,#topics{z-index:8}#topiced,#cpedit{z-index:9}#admin{z-index:7}
 .top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;gap:10px}
 .btn{border:1px solid var(--gold);background:var(--gold);color:#1a1405;font-weight:700;padding:11px 16px;border-radius:10px;min-height:44px}
 .btn.ghost{background:transparent;color:var(--gold-2)}
@@ -460,6 +460,7 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 <section class="sheet" id="topics" aria-label="Topics"></section>
 <section class="sheet" id="epman" aria-label="Episode manager"></section>
 <section class="sheet" id="topiced" aria-label="Topic editor"></section>
+<section class="sheet" id="cpedit" aria-label="Coupon editor"></section>
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="couponed" aria-label="Coupon editor"></section>
 <section class="sheet" id="fullplayer" aria-label="Player"></section>
@@ -673,7 +674,8 @@ const secRail = (title, items, key, render = card) => items && items.length ? `<
   <div class="rail">${items.map(render).join('')}</div>` : '';
 const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
 const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
-const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
+const big = u => typeof u === 'string' ? u.replace('size=thumb', 'size=full') : u;      // the large home cards use the full-size picture
+const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
 const dealCard = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>`;
 const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(s.genre || '')}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
 const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data-contx="${esc(i.story.id)}" aria-label="Remove ${esc(i.story.title)} from continue listening">&times;</button></div>`;
@@ -814,7 +816,8 @@ function renderOffers(){
   $('#offerpage').innerHTML = `<div class="top"><button class="btn ghost small" id="offBack">Back</button><strong>${tr('otitle')}</strong><span style="width:60px"></span></div>` +
     bn.map(b => `<div class="ocard">${b.image ? `<img src="${esc(b.image)}" alt="" loading="lazy">` : ''}<div class="obody"><b>${esc(b.title)}</b>${b.body ? `<p>${esc(b.body)}</p>` : ''}</div></div>`).join('') +
     (cs.length ? cs.map(c => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(c.code)}</span><b>${esc(c.text)}</b>${c.title ? `<small>${esc(c.title)}</small>` : ''}<small>${esc([c.min_order ? tr('cpmin', {m: money(c.min_order)}) : '', c.expires_at ? tr('cpexp', {d: dateStr(c.expires_at)}) : ''].filter(Boolean).join(' | '))}</small></div>` +
-      `<div class="lact"><button class="lbtn" data-cpcopy="${esc(c.code)}">${tr('cpcopy')}</button><button class="lbtn" data-cpuse="${esc(c.code)}">${tr('cpuse')}</button></div></div>`).join('') : `<div class="empty">${tr('cpnone')}</div>`);
+      `<div class="lact"><button class="lbtn" data-cpcopy="${esc(c.code)}">${tr('cpcopy')}</button><button class="lbtn" data-cpuse="${esc(c.code)}">${tr('cpuse')}</button></div></div>`).join('') : `<div class="empty">${tr('cpnone')}</div>`) +
+    ((o.used || []).length ? `<h3 class="lsub">Used coupons</h3>` + o.used.map(u => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(u.code)}</span><b>-${money(u.discount)}</b><small>${esc(u.title || '')} | ${esc(dateStr(u.at))}${u.status === 'pending' ? ' | waiting for approval' : ''}</small></div></div>`).join('') : '');
 }
 function openOffers(){ renderOffers(); openSheet('offerpage'); $('#offerpage').scrollTop = 0; loadOffers(); }
 async function copyText(t, msg){
@@ -835,7 +838,7 @@ function updateCartBadge(){
 function cartToggle(oid){
   const s = V.story, o = s && s.options.find(x => String(x.id) === String(oid)); if (!o) return false;
   if (cartHas(V.id, oid)){ CART = CART.filter(i => !(i.sid === V.id && String(i.oid) === String(oid))); cartSave(); toast(tr('cremd')); return false; }
-  CART.push({sid: V.id, oid: o.id, title: s.title, cover: s.cover, label: o.label, price: +o.price, from: o.from || 0, to: o.to || 0, days: o.days || 0}); cartSave(); toast(tr('cadded')); return true;
+  CART.push({sid: V.id, oid: o.id, title: s.title, cover: s.cover, label: o.label, price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0}); cartSave(); toast(tr('cadded')); return true;
 }
 async function refreshCart(){                       // drop what is already owned or no longer sold; refresh price and plan name
   const sids = [...new Set(CART.map(i => i.sid))]; if (!sids.length) return;
@@ -849,7 +852,7 @@ async function refreshCart(){                       // drop what is already owne
         const o = opts.find(x => String(x.id) === String(i.oid));
         if (!o || +o.price === 0){ changed = true; return false; }
         if (a.full || a.admin || (a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0))){ changed = true; owned++; return false; }
-        if (+o.price !== i.price || o.label !== i.label){ i.price = +o.price; i.label = o.label; changed = true; }
+        if (payOf(o) !== i.price || o.label !== i.label){ i.price = payOf(o); i.label = o.label; changed = true; }
         return true;
       });
     }catch(e){ if (e.data && e.data.unavailable){ CART = CART.filter(i => i.sid !== sid); changed = true; } }
@@ -881,7 +884,7 @@ function renderMe(){
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
     <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
-    <div class="pmenu">${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="1"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="1"')}${item('\u2B50', tr('pfb'), 'data-pbot="1"')}</div>
+    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="1"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="1"')}${item('\u2B50', tr('pfb'), 'data-pbot="1"')}</div>
     <h3 class="lsub">${tr('pdisp')}</h3>
     <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
     <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
@@ -998,7 +1001,7 @@ function discoverRows(){
   mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
   mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
   (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
-  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => s.genre === g.name).sort(byUpd), {genre:g.name, sort:'updated'}); });
+  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => (s.genre || '').split(',').map(x => x.trim()).includes(g.name)).sort(byUpd), {genre:g.name, sort:'updated'}); });
   if ((f.languages || []).length > 1) f.languages.forEach(l => mk('dlang', 'l:' + l, '\uD83C\uDF10', l, all.filter(s => s.language === l).sort(byUpd), {language:l, sort:'updated'}));
   return rows.filter(r => r.items.length);
 }
@@ -1151,7 +1154,7 @@ function paintMini(){
   const c = P.story && P.story.cover;
   $('#mCover').innerHTML = isImg(c) ? `<img src="${esc(c)}" alt="" data-fb="📖">` : esc(c || '📖');
   $('#mTitle').textContent = `${P.story ? P.story.title : ''}`;
-  $('#mSub').textContent = P.state === 'loading' ? 'Loading...' : P.state === 'buffering' ? 'Buffering...' : P.state === 'error' ? 'Problem. Tap to retry' : `Episode ${P.ep.no}: ${P.ep.title || ''}`;
+  $('#mSub').textContent = P.state === 'loading' ? 'Loading...' : P.state === 'buffering' ? 'Buffering...' : P.state === 'error' ? 'Problem. Tap to retry' : `Episode ${epn(P.ep)}: ${P.ep.title || ''}`;
   $('#mPlay').innerHTML = playing() || P.state === 'loading' ? '&#10074;&#10074;' : '&#9654;';
   const d = isFinite(audio.duration) && audio.duration ? audio.duration : (P.ep.duration || 0);
   $('#mProg').style.width = d ? Math.min(100, audio.currentTime / d * 100) + '%' : '0';
@@ -1174,7 +1177,7 @@ function renderFull(){
 }
 function paintFull(){
   if (!$('#fTitle')) return;
-  if (P.ep){ $('#fTitle').textContent = `Episode ${P.ep.no}: ${P.ep.title || ''}`; $('#fStoryTitle').textContent = P.story ? P.story.title : ''; }
+  if (P.ep){ $('#fTitle').textContent = `Episode ${epn(P.ep)}: ${P.ep.title || ''}`; $('#fStoryTitle').textContent = P.story ? P.story.title : ''; }
   const st = {loading:'Loading episode...', buffering:'Buffering...', playing:'Playing', paused:'Paused', error:P.err, idle:''}[P.state] || '';
   const s = $('#fState'); s.textContent = st; s.className = 'state' + (P.state === 'error' ? ' bad' : '');
   $('#fRetry').innerHTML = P.state === 'error' ? '<button class="btn small" id="fRetryBtn">Try again</button>' : '';
@@ -1385,7 +1388,9 @@ function ownedSummary(a){
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
 const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
-const planSub = o => `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
+const planSub = o => o.ongoing ? `Ongoing | covers only till episode ${o.to}` : `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
+const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
+const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
 function pickPlan(){
   const opts = visOpts(), ok = o => +o.price > 0 && !planOwned(o);
   if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
@@ -1396,13 +1401,13 @@ function planPillsHtml(){
     const sub = esc(planSub(o));
     if (Number(o.price) === 0) return `<button class="pill2 free" data-free="${o.from || 1}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Listen free</span></button>`;
     if (planOwned(o)) return `<div class="pill2 have"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Owned</span></div>`;
-    return `<button class="pill2${String(o.id) === String(V.sel) ? ' on' : ''}" data-plan="${esc(o.id)}" aria-pressed="${String(o.id) === String(V.sel)}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">${money(o.price)}</span></button>`;
+    return `<button class="pill2${String(o.id) === String(V.sel) ? ' on' : ''}" data-plan="${esc(o.id)}" aria-pressed="${String(o.id) === String(V.sel)}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}</span></button>`;
   }).join('');
 }
 function sbarHtml(){
   const o = visOpts().find(x => String(x.id) === String(V.sel)); if (!o) return '';
   const inCart = cartHas(V.id, o.id);
-  return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}</small><b>${money(o.price)}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
+  return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}${o.credit ? ' | upgrade credit -' + money(o.credit) : ''}</small><b>${money(payOf(o))}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
     <div class="sb-btns">${V.totalAll ? '<button class="btn ghost" data-demo="1">Click for Demo</button>' : '<span></span>'}<button class="btn${inCart ? ' ok' : ''}" id="sbCart">${inCart ? '&#10003; In cart' : '&#128722; ADD TO CART'}</button></div>`;
 }
 function paintPlanBar(){ const pp = $('#planPills'), sb = $('#sbar'); if (pp) pp.innerHTML = planPillsHtml(); if (sb) sb.innerHTML = sbarHtml(); }
@@ -1424,7 +1429,7 @@ function renderStory(){
   el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
       ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">by ${esc(s.author || "AJ's FM")}</div>
-      <div class="tags">${s.genre ? `<span class="tag">${esc(s.genre)}</span>` : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
+      <div class="tags">${(s.genre || '').split(',').map(x => x.trim()).filter(Boolean).map(g => `<span class="tag">${esc(g)}</span>`).join('')}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc">${esc(s.preview)}</div><div class="pad"><button class="link" id="more">Read more</button></div>` : ''}
     <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
@@ -1451,8 +1456,8 @@ function renderTopicPage(){
 function epRow(e){
   const adm = V.access && V.access.admin;
   const tagHtml = e.locked ? '<span class="pill lock">Locked</span>' : adm ? '' : (e.kind === 'free' ? '<span class="pill free">Free</span>' : '<span class="pill owned">Owned</span>');
-  return `<button class="ep${e.locked ? ' lock' : ''}${P.ep && P.ep.id === e.id && P.sid === V.id ? ' on' : ''}" data-ep="${e.id}" aria-label="Episode ${e.no}, ${esc(e.title)}${e.locked ? ', locked' : ''}">
-    <span class="n">${e.no}</span><span class="t">${esc(e.title)}</span>${e.published === false ? '<span class="pill lock">Hidden</span>' : ''}${tagHtml}<small>${clock(e.duration)}</small></button>`;
+  return `<button class="ep${e.locked ? ' lock' : ''}${P.ep && P.ep.id === e.id && P.sid === V.id ? ' on' : ''}" data-ep="${e.id}" aria-label="Episode ${epn(e)}, ${esc(e.title)}${e.locked ? ', locked' : ''}">
+    <span class="n">${epn(e)}</span><span class="t">${esc(e.title)}</span>${e.published === false ? '<span class="pill lock">Hidden</span>' : ''}${tagHtml}<small>${clock(e.duration)}</small></button>`;
 }
 function renderEps(){
   const box = $('#epBox'); if (!box) return;
@@ -1485,6 +1490,7 @@ const A = {tab:'stories', sq:'', pub:'', oq:'', ostatus:''};
 const M = {sid:null, title:'', topic:'', tname:'', scope:'', page:1, q:'', eps:[], total:0, state:'idle', edit:null, fileName:''};
 const E = {id:null, cover:'', photo:''};
 const INFO = {};                                       // remembers cards so a tap can start playback without another request
+const CPA = {list: [], id: null};
 const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
 function renderAdmin(){
   $('#admin').innerHTML = `<header class="admin-head">
@@ -1492,9 +1498,33 @@ function renderAdmin(){
       <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
       <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
     </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
+function openCouponEditor(id){
+  const c = CPA.list.find(x => x.id === id) || {discount_type: 'percentage', is_active: true, listed: true}; CPA.id = c.id || null;
+  const dt = ts => ts ? new Date(ts * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+  $('#cpedit').innerHTML = `<div class="top"><button class="btn ghost small" id="cpClose">Back</button><strong>${c.id ? 'Edit coupon' : 'New coupon'}</strong></div>
+    <div class="two"><label class="field"><span>Code *</span><input id="cp_code" value="${esc(c.code || '')}" maxlength="20" autocapitalize="characters" placeholder="DIWALI20"></label><label class="field"><span>Short title</span><input id="cp_title" value="${esc(c.title || '')}" maxlength="60"></label></div>
+    <div class="two"><label class="field"><span>Discount type</span><select id="cp_type"><option value="percentage"${c.discount_type === 'percentage' ? ' selected' : ''}>Percentage (%)</option><option value="fixed"${c.discount_type === 'fixed' ? ' selected' : ''}>Fixed amount</option></select></label><label class="field"><span>Discount value *</span><input id="cp_value" type="number" min="0" step="any" inputmode="decimal" value="${c.discount_value ?? ''}"></label></div>
+    <div class="two"><label class="field"><span>Minimum order (0 = none)</span><input id="cp_min" type="number" min="0" inputmode="decimal" value="${c.min_order_value || ''}"></label><label class="field"><span>Total uses (0 = unlimited)</span><input id="cp_use" type="number" min="0" inputmode="numeric" value="${c.usage_limit || ''}"></label></div>
+    <div class="two"><label class="field"><span>Uses per member (0 = unlimited)</span><input id="cp_per" type="number" min="0" inputmode="numeric" value="${c.id ? (c.per_user_limit || '') : 1}"></label><span></span></div>
+    <div class="two"><label class="field"><span>Valid from</span><input id="cp_start" type="datetime-local" value="${dt(c.starts_at)}"></label><label class="field"><span>Valid till</span><input id="cp_end" type="datetime-local" value="${dt(c.expires_at)}"></label></div>
+    <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cp_active"${c.is_active ? ' checked' : ''}> <span>Active (members can use it; untick to hide it completely)</span></label>
+    <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cp_listed"${c.listed ? ' checked' : ''}> <span>Show in members' Coupons &amp; Offers (untick for a private code you share yourself)</span></label>
+    <div class="actions"><button class="btn" id="cpSave">Save coupon</button><button class="btn ghost" id="cpClose2">Cancel</button></div>`;
+  openSheet('cpedit');
+}
+async function saveCoupon(){
+  await once('cpsave', async () => {
+    const g = k => $('#cp_' + k), dt = v => v ? Math.floor(new Date(v).getTime() / 1000) : null;
+    const body = {id: CPA.id, code: g('code').value.trim(), title: g('title').value.trim(), discount_type: g('type').value, discount_value: g('value').value, min_order_value: g('min').value || 0,
+      usage_limit: g('use').value || 0, per_user_limit: g('per').value || 0, starts_at: dt(g('start').value), expires_at: dt(g('end').value), is_active: g('active').checked, listed: g('listed').checked};
+    try{ await api('/api/admin/coupon', {method: 'POST', retry: false, body: JSON.stringify(body)}); toast('Coupon saved'); closeSheet('cpedit'); loadAdmin(); loadOffers(); }
+    catch(e){ toast(adminErr(e), 5000); }
+  });
+}
+const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JSON.stringify(body)});
 async function loadAdmin(){
   const body = $('#abody'); if (!body) return;
   const tab = A.tab, sig = fresh('admin');
@@ -1520,6 +1550,17 @@ async function loadAdmin(){
           <div class="actions" style="padding:8px 0 0">${o.status === 'pending' ? `<button class="btn ok small" data-oact="approve" data-oid="${o.id}">Approve</button><button class="btn danger small" data-oact="reject" data-oid="${o.id}">Reject</button><button class="btn ghost small" data-oact="cancel" data-oid="${o.id}">Cancel</button>` : ''}
           ${o.status === 'approved' ? `<button class="btn danger small" data-oact="revoke" data-oid="${o.id}">Revoke</button><button class="btn danger small" data-oact="refund" data-oid="${o.id}">Mark refunded</button>` : ''}</div></div>`).join('') || '<div class="empty">No orders found.</div>');
       $('#aost').value = A.ostatus;
+    } else if (tab === 'coupons'){
+      const [d, bn] = await Promise.all([api('/api/admin/coupons', {signal: sig}), api('/api/admin/banners', {signal: sig})]); if (A.tab !== tab) return;
+      CPA.list = d.coupons;
+      body.innerHTML = `<div class="actions" style="margin-bottom:12px"><button class="btn" id="cpNew">＋ New coupon</button><button class="btn ghost" id="bnNew">＋ New banner</button></div>` +
+        (d.coupons.map(c => `<div class="mrow"><h4>${esc(c.code)} <span class="tag ${c.state === 'active' ? 'live' : ''}">${esc(c.state)}</span>${c.listed ? '' : ' <span class="tag">private</span>'}</h4>
+          <div class="by">${esc(c.text)}${c.title ? ' | ' + esc(c.title) : ''}</div>
+          <div class="by">Used ${c.used}${c.usage_limit ? ' of ' + c.usage_limit : ''} | per member ${c.per_user_limit || 'no limit'} | min order ${money(c.min_order_value)}${c.discount_cost ? ' | discount given ' + money(c.discount_cost) : ''}${c.expires_at ? ' | valid till ' + new Date(c.expires_at * 1000).toLocaleDateString() : ''}</div>
+          <div class="actions" style="padding:8px 0 0"><button class="btn small" data-cpedit="${c.id}">Edit</button><button class="btn ghost small" data-cptog="${c.id}">${c.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-cpdel="${c.id}">Delete</button></div></div>`).join('') || '<div class="empty">No coupons yet. Tap New coupon.</div>') +
+        `<h3 class="h3" style="font-size:20px">Offer banners</h3>` +
+        (bn.banners.map(x => `<div class="mrow"><h4>${esc(x.title)} <span class="tag ${x.live ? 'live' : ''}">${x.live ? 'live' : 'hidden'}</span></h4>${x.body ? `<div class="by">${esc(x.body)}</div>` : ''}
+          <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-bntog="${x.id}">${x.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-bndel="${x.id}">Delete</button></div></div>`).join('') || '<div class="empty">No banners.</div>');
     } else if (tab === 'rooms'){
       const d = await api('/api/admin/rooms', {signal: sig}); if (A.tab !== tab) return;
       body.innerHTML = `<div class="box"><b>Episodes sent to members' bot chats</b>
@@ -1618,14 +1659,15 @@ async function openEditor(id){
     <div class="actions" style="margin-bottom:14px"><button class="btn ghost small" id="autofill" type="button">Auto-fill details</button></div>
     <label class="field"><span>Title *</span><input id="e_title" value="${esc(s.title || '')}" maxlength="120"></label>
     <label class="field"><span>Platform or author</span><input id="e_author" value="${esc(s.author || '')}" placeholder="Pocket FM"></label>
-    <div class="two"><label class="field"><span>Genre</span><input id="e_genre" value="${esc(s.genre || '')}" placeholder="Fantasy"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
-    <div class="two"><label class="field"><span>Status</span><select id="e_status"><option>Ongoing</option><option>Completed</option></select></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
+    <div class="two"><label class="field"><span>Genre</span><input id="e_genre" value="${esc(s.genre || '')}" placeholder="Fantasy, Thriller"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
+    <div class="two"><label class="field"><span>Status</span><input id="e_status" list="e_status_l" maxlength="30" placeholder="Ongoing"><datalist id="e_status_l"><option value="Ongoing"><option value="Completed"><option value="Upcoming"></datalist></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
     <label class="field"><span>Episodes label (optional, e.g. 1101 To 1150)</span><input id="e_epstext" value="${esc(s.episodes_text || '')}"></label>
     <label class="field check"><input type="checkbox" id="e_pub" ${s.published === false ? '' : 'checked'}><span style="margin:0">Published (visible in the store)</span></label>
     <label class="field check"><input type="checkbox" id="e_feat" ${s.featured ? 'checked' : ''}><span style="margin:0">Feature on the home page</span></label>
     <label class="field"><span>Cover emoji or image link</span><input id="e_cover" value="${esc(/^data:/.test(E.cover) ? '' : E.cover)}" placeholder="📖"></label>
     <div class="field"><span>Or upload a cover photo (keeps its own shape)</span><input id="e_photo" type="file" accept="image/*"><div id="e_prev" style="margin-top:8px"></div></div>
     <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
+    <label class="field"><span>Upgrade credit cut % for this story (0 to 10, blank = default)</span><input id="e_ucut" type="number" min="0" max="10" step="0.5" inputmode="decimal" value="${s.upgrade_cut ?? ''}"></label>
     <label class="field"><span>Notes (shown below the topic cards)</span><textarea id="e_notes" maxlength="2000">${esc(s.notes || '')}</textarea></label>
     <p class="note">Plans, prices, topics and episodes are added after saving: save the story, then tap Topics.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
@@ -1654,7 +1696,7 @@ async function saveEditor(){
     const title = $('#e_title').value.trim();
     if (!title) return toast('Add a title first');
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: $('#e_genre').value.trim(), language: $('#e_lang').value.trim(),
-      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked,
+      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value),
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim()};
     const btn = $('#saveStory'); btn.disabled = true; btn.textContent = 'Saving...';
     const body = {story, allow_free: false, confirm_affects: false};
@@ -1726,11 +1768,12 @@ function openTopicEditor(tid){
     <label class="field"><span>Topic name *</span><input id="te_name" value="${esc(t.name)}" maxlength="60"></label>
     <label class="field"><span>Note shown on the topic card (optional)</span><textarea id="te_note" maxlength="300" style="min-height:70px">${esc(t.note || '')}</textarea></label>
     <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Every plan needs From and To episode numbers. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
-    <div style="padding:0 16px" id="te_opts">${(s.options || []).filter(o => o.topic === tid).map(optRow).join('')}</div><div class="actions"><button class="btn ghost small" id="teAddOpt" type="button">Add plan</button></div>
+    <div style="padding:0 16px" id="te_opts">${(s.options || []).filter(o => o.topic === tid && !o.auto).map(o => optRow(o)).join('')}</div><div class="actions"><button class="btn ghost small" id="teAddOpt" type="button">Add plan</button></div>
     <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="tg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="tg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="tg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="tg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
-      <button class="btn ghost small" id="teGen" type="button">Add packs</button><p class="note" style="margin:8px 0 0">Ongoing story and the total is not known? Leave Total blank. One pack is made; tap Add packs again for the next pack when more episodes arrive.</p></div>
+      <button class="btn ghost small" id="teGen" type="button">Add packs</button><label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="tg_auto"> <span>Make the next packs automatically as new episodes arrive (leave Total blank)</span></label><p class="note" style="margin:8px 0 0">Ongoing story and the total is not known? Leave Total blank. One pack is made; tap Add packs again for the next pack when more episodes arrive.</p></div>
     <div class="actions"><button class="btn" id="teSave">Save topic</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
   openSheet('topiced');
+  if (t.pack){ $('#tg_start').value = t.pack.start; $('#tg_size').value = t.pack.size; $('#tg_price').value = t.pack.price; $('#tg_auto').checked = true; }
 }
 function openPlanAdd(tid){
   const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
@@ -1751,7 +1794,7 @@ async function savePlanAdd(){
     if (!np.from || !np.to || np.from > np.to) return toast('Fill From and To (From must not be greater than To)');
     try{
       const d = await api(`/api/story/${encodeURIComponent(T.sid)}?limit=1`);                              // newest plans, so nothing saved elsewhere is overwritten
-      const mine = (d.story.options || []).filter(o => o.topic === tid).map(o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to}));
+      const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto).map(o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to}));
       const r = await topicCall({action: 'edit', id: tid, options: [...mine, {...np, id: ''}]}); if (!r) return;
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
       toast('Plan added'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
@@ -1761,10 +1804,12 @@ async function savePlanAdd(){
 async function saveTopic(){
   await once('tesave', async () => {
     const name = $('#te_name').value.trim(); if (!name) return toast('Give the topic a name');
+    const auto = $('#tg_auto').checked, pack = auto ? {start: parseInt($('#tg_start').value), size: parseInt($('#tg_size').value), price: Number($('#tg_price').value) || 0, days: 0} : null;
+    if (auto && !(pack.start && pack.size)) return toast('For automatic packs fill First ep and Pack size');
     const options = readPlans('#te_opts'), bad = options.find(o => !o.from || !o.to || o.from > o.to);
     if (bad) return toast(`Plan "${bad.label}": fill From and To (From must not be greater than To)`);
     try{
-      const r = await topicCall({action: 'edit', id: TE.id, name, note: $('#te_note').value.trim(), options}); if (!r) return;
+      const r = await topicCall({action: 'edit', id: TE.id, name, note: $('#te_note').value.trim(), options, pack}); if (!r) return;
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
       toast('Topic saved'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
     }catch(e){ toast(adminErr(e), 5000); }
@@ -1818,11 +1863,11 @@ async function loadManage(){
 }
 function renderManageList(){
   const list = $('#m_list'); if (!list) return; const pages = Math.max(1, Math.ceil(M.total / 30));
-  const row = e => `<div class="mrow"><b>${e.no}.</b> ${esc(e.title)}<div style="margin:4px 0"><span class="pill ${e.free ? 'free' : 'owned'}">${e.free ? 'Free' : 'Premium'}</span> <span class="pill ${e.published ? 'free' : 'lock'}">${e.published ? 'Published' : 'Hidden'}</span></div>
+  const row = e => `<div class="mrow"><b>${epn(e)}.</b> ${esc(e.title)}<div style="margin:4px 0"><span class="pill ${e.free ? 'free' : 'owned'}">${e.free ? 'Free' : 'Premium'}</span> <span class="pill ${e.published ? 'free' : 'lock'}">${e.published ? 'Published' : 'Hidden'}</span></div>
       ${e.fname ? `<div class="by">${esc(e.fname)}</div>` : ''}
       <div class="actions" style="padding:0"><button class="btn ghost small" data-eedit="${e.id}">Edit</button><button class="btn ghost small" data-efree="${e.id}" data-to="${e.free ? 0 : 1}">${e.free ? 'Make premium' : 'Make free'}</button>
       <button class="btn ghost small" data-epub="${e.id}" data-to="${e.published ? 0 : 1}">${e.published ? 'Hide' : 'Publish'}</button><button class="btn danger small" data-edel="${e.id}">Delete</button></div></div>`;
-  const form = e => `<div class="mrow"><b>Edit episode ${e.no}</b>
+  const form = e => `<div class="mrow"><b>Edit episode ${epn(e)}</b>
       <label class="field"><span>File name</span><input id="x_fname" value="${esc(e.fname || '')}" maxlength="200"></label>
       <label class="field"><span>Episode link</span><input id="x_link" type="url" value="${esc(e.link || '')}" placeholder="https://t.me/c/1234567890/10"></label>
       <div class="two"><label class="field"><span>Episode no</span><input id="x_no" type="number" min="1" inputmode="numeric" value="${e.no}"></label><label class="field"><span>Ep title</span><input id="x_title" value="${esc(e.title || '')}" maxlength="200"></label></div>
@@ -2008,6 +2053,15 @@ document.addEventListener('click', async e => {
   }
   if ((m = c('[data-tedit]'))) return openTopicEditor(m.dataset.tedit);
   if ((m = c('[data-tplan]'))) return openPlanAdd(m.dataset.tplan);
+  if (c('#cpNew')) return openCouponEditor(0);
+  if ((m = c('[data-cpedit]'))) return openCouponEditor(+m.dataset.cpedit);
+  if (c('#cpSave')) return saveCoupon();
+  if (c('#cpClose') || c('#cpClose2')) return closeSheet('cpedit');
+  if ((m = c('[data-cptog]'))){ const id = +m.dataset.cptog; return once('cptog' + id, async () => { try{ await cpPost('/api/admin/coupon/action', {id, action: 'toggle'}); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadOffers(); }); }
+  if ((m = c('[data-cpdel]'))){ const id = +m.dataset.cpdel; if (!confirm('Delete this coupon?')) return; return once('cpdel' + id, async () => { try{ await cpPost('/api/admin/coupon/action', {id, action: 'delete'}); toast('Coupon deleted'); }catch(e){ toast(adminErr(e), 5000); } loadAdmin(); loadOffers(); }); }
+  if (c('#bnNew')){ const title = (prompt('Banner title:') || '').trim(); if (!title) return; const body = (prompt('Banner text (optional):') || '').trim(); return once('bnnew', async () => { try{ await cpPost('/api/admin/banner', {title, body}); toast('Banner added'); }catch(e){ toast(adminErr(e), 5000); } loadAdmin(); loadOffers(); }); }
+  if ((m = c('[data-bntog]'))){ const id = +m.dataset.bntog; return once('bntog' + id, async () => { try{ await cpPost('/api/admin/banner/action', {id, action: 'toggle'}); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadOffers(); }); }
+  if ((m = c('[data-bndel]'))){ const id = +m.dataset.bndel; if (!confirm('Delete this banner?')) return; return once('bndel' + id, async () => { try{ await cpPost('/api/admin/banner/action', {id, action: 'delete'}); }catch(e){ toast(adminErr(e)); } loadAdmin(); loadOffers(); }); }
   if (c('#paSave')) return savePlanAdd();
   if ((m = c('[data-tdel]'))){
     const t = ((T.story && T.story.topics) || []).find(x => x.id === m.dataset.tdel);
