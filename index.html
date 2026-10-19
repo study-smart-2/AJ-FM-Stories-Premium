@@ -471,7 +471,6 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="couponed" aria-label="Coupon editor"></section>
 <section class="sheet" id="fullplayer" aria-label="Player"></section>
-<section class="sheet" id="dlsheet" aria-label="Downloads"></section>
 
 <div class="mini" id="mini" role="region" aria-label="Now playing">
   <div class="mcv" id="mCover"></div>
@@ -485,12 +484,13 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
+const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
 const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
 const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
 const PROMO_TITLE  = "New stories every week";
-const PROMO_TEXT   = "Rent or buy a story and listen right here in the app.";
-const HOW_IT_WORKS = "Pick a plan, pay, and send the payment screenshot to our bot. Once it is confirmed, your episodes unlock in this app.";
+const PROMO_TEXT   = "Rent or buy a story and get the episodes in your bot chat.";
+const HOW_IT_WORKS = "Pick a plan, pay, and send the payment screenshot to our bot. Once it is confirmed, your episodes unlock here and you can send them to your chat.";
 const PAGE_SIZE    = 50;
 /* ============================================== */
 
@@ -586,7 +586,7 @@ const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button 
 const CONT = {}, HIST = {};
 const S = {tab:'home', admin:false, home:null, homeState:'idle', homeErr:''};
 const B = {q:'', genre:'', status:'', language:'', sort:'newest', items:[], total:0, state:'idle', err:'', facets:null, view:'discover', all:null, allState:'idle', allErr:'', open:''};
-const L = {seg:'listening'};
+const L = {seg:'owned'};
 Object.assign(S, {wish:new Set(), tier:0, notices:[], io:null, feed:{items:[], offset:0, state:'idle', done:false, seeded:false, err:''}});
 
 /* ---------- language, theme, header ---------- */
@@ -700,7 +700,7 @@ function renderHome(){
   const h = S.home, hero = h.trending.length ? h.trending : h.recent, tier = h.tiers[Math.min(S.tier, h.tiers.length - 1)];
   if (!S.feed.seeded){ S.feed.items = [...h.recommended]; S.feed.seeded = true; }
   const sections = [
-    h.continue.length ? `<div class="sechead"><h2 class="sec">${tr('cont')}</h2></div><div class="rail">${h.continue.map(contCard2).join('')}</div>` : '',
+    '',
     secRail(tr('trending'), hero, 'trending', slide),
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
     tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(tr('under', {p: money(t2.max)}))}</button>`).join('')}</div><div class="rail">${tier.items.map(card).join('')}</div>` : '',
@@ -1090,14 +1090,14 @@ function viewAll(key){                                   // "View all" on Home =
 const STATUS = {approved:['Active','free'], pending:['Pending approval','warn'], expired:['Expired',''], rejected:['Rejected','bad'], revoked:['Revoked','bad'], refunded:['Refunded','bad'], cancelled:['Cancelled','']};
 const statusPill = s => { const [t, c] = STATUS[s] || [s, '']; return `<span class="tag ${c === 'free' ? 'live' : c}">${esc(t)}</span>`; };
 const rangeText = r => r.from ? `Episodes ${r.from} to ${r.to}` : 'All episodes';
-const LIB_TABS = [['listening', '\uD83C\uDFA7', 'll'], ['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
+const LIB_TABS = [['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
 const lthumb = c => `<span class="lth">${isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="?">` : esc(c || '?')}</span>`;
 const lrow = o => `<div class="lrow"><button class="lmain" ${o.attrs || `data-story="${esc(o.sid)}"`} ${o.avail === false ? 'data-avail="0"' : ''} aria-label="Open ${esc(o.title)}">${lthumb(o.cover)}<span class="lmt"><b>${esc(o.title)}</b>${(o.lines || []).filter(Boolean).map(l => `<small>${l}</small>`).join('')}${o.bar !== undefined ? `<span class="bar"><i style="width:${o.bar}%"></i></span>` : ''}</span></button><div class="lact">${o.actions || ''}</div></div>`;
 const leftText = ts => { const s = ts - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), hr = Math.floor(s % 86400 / 3600); return d ? d + 'd ' + hr + 'h' : hr + 'h ' + Math.floor(s % 3600 / 60) + 'm'; };
 const libEmpty = k => `<div class="empty">${tr(k)}</div>`;
 function renderLibrary(){
-  if (!LIB_TABS.some(t => t[0] === L.seg)) L.seg = 'listening';
-  $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ltitle')}</h2><span><button class="link" id="openDl">\u2B07 Downloads</button> <button class="link" id="libRefresh" aria-label="${esc(tr('lref'))}">${tr('lref')}</button></span></div>
+  if (!LIB_TABS.some(t => t[0] === L.seg)) L.seg = 'owned';
+  $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ltitle')}</h2><span><button class="link" id="libRefresh" aria-label="${esc(tr('lref'))}">${tr('lref')}</button></span></div>
     <div class="seg" role="tablist">${LIB_TABS.map(([k, ic, lb]) => `<button class="chip${L.seg === k ? ' on' : ''}" data-seg="${k}" role="tab" aria-selected="${L.seg === k}">${ic} ${tr(lb)}</button>`).join('')}</div><div id="libBody"></div>`;
   loadLibrary();
 }
@@ -1181,7 +1181,6 @@ function renderFull(){
     <div class="opt"><b>Speed <span id="fRate"></span></b><div class="rr"><button id="rMinus" aria-label="Slower by 0.05">-0.05</button><input type="range" id="rSlide" min="0.5" max="5" step="0.05" aria-label="Playback speed"><button id="rPlus" aria-label="Faster by 0.05">+0.05</button></div>
       <div class="chiprow">${[1, 1.25, 1.5, 2, 3, 4, 5].map(r => `<button data-rate="${r}">${r}x</button>`).join('')}</div></div>
     <div class="opt"><b>Sleep timer <span id="fSleep"></span></b><div class="chiprow">${[['Off', 0], ['15 min', 15], ['30 min', 30], ['45 min', 45], ['60 min', 60]].map(([t, m]) => `<button data-sleep="${m}">${t}</button>`).join('')}<button data-sleep="end">End of episode</button></div></div>
-    <div class="opt"><b>Offline</b><div class="by" style="margin-bottom:6px">Save this episode on your phone to listen without internet.</div><button id="fDl" class="dlx" data-dl="0" data-long="1">Download for offline</button><button class="dlx ${OFF.auto ? 'on' : ''}" id="fAuto" aria-pressed="${OFF.auto}">Auto-download next: ${OFF.auto ? 'on' : 'off'}</button><button class="dlx" id="fDlList">My downloads</button></div>
     <div class="opt"><b>Repeat</b><div class="chiprow"><button id="fRepeat" aria-pressed="false">Repeat this episode: off</button></div></div>
     <div class="opt"><b>Listen with the screen off</b><div class="by" style="margin-bottom:8px">Send episodes into your bot chat and play them with Telegram's own player. It keeps playing in the background and moves on to the next episode by itself. Saving and forwarding are switched off. The episodes remove themselves from the chat when their audio time plus a little extra is over. Each episode can be sent <span id="dMax">5</span> times.</div>
       <div id="dStatus" aria-live="polite"></div><div class="ctl" style="padding:0"><select id="dCount" aria-label="How many episodes"><option value="1">1 episode</option><option value="3">3 episodes</option><option value="5" selected>5 episodes</option><option value="10">10 episodes</option></select><button class="btn" id="dGo">Send to my chat</button></div><div class="by" id="dLeft" style="margin-top:6px"></div></div></div>`;
@@ -1220,7 +1219,30 @@ setInterval(() => { if ($('#fullplayer').classList.contains('open') && D.info &&
 function paintAll(){ paintMini(); paintFull(); }
 function markPlaying(){ $$('#story .ep').forEach(b => b.classList.toggle('on', !!P.ep && b.dataset.ep === String(P.ep.id) && V.id === P.sid)); }
 
-async function playEpisode(ep, story, pos = 0, retries = 0){
+
+/* ---------- episodes are not played in the app: tapping one sends it straight to the member's bot chat ---------- */
+const SENDN = () => { const n = parseInt(store.get('ajsendn', '1')); return [1, 3, 5, 10].includes(n) ? n : 1; };
+function openChat(){
+  const url = `https://t.me/${AUDIO_BOT_USERNAME || BOT_USERNAME}`;
+  if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank');
+}
+async function playEpisode(ep){
+  if (!ep) return;
+  if (ep.locked) return toast('Locked. Choose a plan to unlock it.');
+  return once('send' + ep.id, async () => {
+    toast('Sending to your chat...', 2500);
+    try{
+      const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN()})});
+      const d = r.delivery || {};
+      toast(r.already ? 'Already in your chat' : `Sent ${d.episodes || 1} episode${(d.episodes || 1) > 1 ? 's' : ''} to your chat${d.window_text ? '. It stays ' + d.window_text : ''}`, 4000);
+      await sleep(900); openChat();
+    }catch(e){
+      toast(errText(e), 5000);
+      if (e.data && e.data.error === 'no_chat'){ await sleep(1500); openChat(); }
+    }
+  });
+}
+async function playEpisodeInApp(ep, story, pos = 0, retries = 0){
   const seq = ++P.seq; discardNext();                // a newer request always replaces an older one
   P.sid = story.id; P.story = {id: story.id, title: story.title, cover: story.cover};
   P.ep = {id: ep.id, no: ep.no, to: ep.to, title: ep.title, duration: ep.duration}; P.state = 'loading'; P.err = ''; P.userPaused = false; P.retries = retries;
@@ -1272,7 +1294,8 @@ function setSleep(v){
 function setSession(){
   if (!('mediaSession' in navigator) || !P.ep) return;
   try{
-    navigator.mediaSession.metadata = new MediaMetadata({title: P.ep.title || ('Episode ' + epn(P.ep)), artist: P.story ? P.story.title : "AJ's FM Stories"});
+    const cv = P.story && P.story.cover, art = typeof cv === 'string' && /^https?:/.test(cv) ? [{src: cv, sizes: '512x512'}] : [];
+    navigator.mediaSession.metadata = new MediaMetadata({title: P.ep.title || ('Episode ' + epn(P.ep)), artist: P.story ? P.story.title : "AJ's FM Stories", album: "AJ's FM Stories", artwork: art});
     const set = (a, f) => navigator.mediaSession.setActionHandler(a, f);
     set('play', () => { P.userPaused = false; audio.play(); }); set('pause', () => { P.userPaused = true; audio.pause(); });
     set('previoustrack', () => goNeighbor('before')); set('nexttrack', () => goNeighbor('after'));
@@ -1285,7 +1308,7 @@ function toggle(){ if (!P.ep) return; if (audio.paused){ P.userPaused = false; i
 function makeAudio(){ const a = new Audio(); a.preload = 'auto'; wireAudio(a); return a; }
 function wireAudio(a){
   const on = (ev, fn) => a.addEventListener(ev, (...x) => { if (a === audio) fn(...x); });         // a buffering spare element never changes the player state
-  on('playing', () => { P.state = 'playing'; paintAll(); try{ navigator.mediaSession.playbackState = 'playing'; }catch(e){} });
+  on('playing', () => { P.state = 'playing'; paintAll(); setSession(); try{ navigator.mediaSession.playbackState = 'playing'; if (isFinite(audio.duration) && audio.duration > 0) navigator.mediaSession.setPositionState({duration: audio.duration, playbackRate: audio.playbackRate || 1, position: Math.min(audio.currentTime, audio.duration)}); }catch(e){} });
   on('waiting', () => { if (P.state === 'playing'){ P.state = 'buffering'; paintAll(); } });
   on('canplay', () => { if (P.state === 'buffering'){ P.state = audio.paused ? 'paused' : 'playing'; paintAll(); } });
   on('progress', paintFull);
@@ -1342,10 +1365,11 @@ window.addEventListener('pagehide', () => saveProgress(true, false, true));
 if (tg && tg.onEvent){ try{ tg.onEvent('deactivated', () => { saveProgress(true, false, true); keepAlive(); }); }catch(e){} }
 
 /* ---------- offline downloads: episodes are saved on the phone in 4 MB parts, so a stopped download carries on where it left off ---------- */
-const OFF = {ok: !!window.indexedDB, ready: null, meta: new Map(), jobs: new Map(), queue: [], active: 0, urls: new Map(), max: 2, auto: store.get('ajauto', '1') !== '0'};
+const OFF = {ok: false, ready: null, meta: new Map(), jobs: new Map(), queue: [], active: 0, urls: new Map(), max: 2, auto: store.get('ajauto', '1') !== '0'};
 const CHUNK = 4 * 1024 * 1024;
 const fmtSize = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : Math.max(1, Math.round(b / 1048576)) + ' MB';
 function offOpen(){
+  return Promise.reject(new Error('Downloads are removed'));      // the offline download feature is switched off
   if (OFF.ready) return OFF.ready;
   OFF.ready = new Promise((res, rej) => {
     if (!window.indexedDB) return rej(new Error('no storage'));
@@ -1379,7 +1403,7 @@ function dlLabel(id, long){
   if (s === 'pause') return long ? [`Paused at ${pct}% (tap to continue)`, 'Paused. Tap to continue', 'pause'] : ['\u27F3', 'Paused. Tap to continue', 'pause'];
   return long ? ['\u2B07 Download for offline', 'Download for offline listening', ''] : ['\u2B07', 'Download for offline listening', ''];
 }
-const dlBtnHtml = id => { const [t, l, c] = dlLabel(id); return `<button class="dl ${c}" data-dl="${id}" aria-label="${l}">${t}</button>`; };
+const dlBtnHtml = () => '';
 function paintDl(id){
   $$(`[data-dl="${id}"]`).forEach(b => { const long = b.dataset.long === '1', [t, l, c] = dlLabel(id, long); b.textContent = t; b.setAttribute('aria-label', l); b.className = (long ? 'dlx ' : 'dl ') + c + (long && c ? ' on' : ''); });
   const m = OFF.meta.get(id), el = $(`[data-dlp="${id}"]`);
@@ -1461,7 +1485,7 @@ async function offRun(id, j){
     if (j.removed) return;
     if (e.status === 403 || e.status === 404){ toast(e.status === 403 ? 'This episode is locked. Choose a plan to download it.' : 'This episode is not available.', 4000); await offWipe(id); return; }
     j.state = 'pause'; paintDl(id);
-    if (!j.auto && navigator.onLine && !(j.ctl && j.ctl.signal.aborted)) toast('Download paused. It will continue when the connection is back.', 4000);
+    if (!j.auto && navigator.onLine && !(j.ctl && j.ctl.signal.aborted)) toast('Download paused (' + ((e && e.message) || 'error').slice(0, 80) + '). It will continue when the connection is back.', 5000);
   }
 }
 async function offWipe(id, keepJob){
@@ -1538,7 +1562,7 @@ function renderDownloads(){
 }
 function offlineBoot(){ offOpen().then(offLoad).then(() => { if ([...OFF.meta.values()].some(offPlayable)) openDownloads(); }).catch(() => {}); }
 window.addEventListener('online', () => { offResumeAll(); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
-window.addEventListener('offline', () => { toast('You are offline. Open Library > Downloads to play saved episodes.', 4500); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
+window.addEventListener('offline', () => { toast('You are offline.', 3000); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
 
 /* ---------- story page ---------- */
 const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null, mode:'overview'};
@@ -1635,7 +1659,7 @@ function renderStory(){
   if (V.state === 'error'){ el.innerHTML = bar() + retryBox(V.err, 'retryStory'); return; }
   if (V.mode === 'topic') return renderTopicPage();
   const s = V.story, a = V.access;
-  const act = V.resume ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${epn(V.resume)}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
+  const act = false ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${epn(V.resume)}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
   const wishOn = S.wish && S.wish.has(V.id);
   const range = rangeOf(s.options || []);
   const cards = topicCards().map((t, i) => {
@@ -1657,14 +1681,14 @@ function renderStory(){
 function renderTopicPage(){
   const el = $('#story'), s = V.story, a = V.access, full = a.full || a.admin; pickPlan();
   const t = topicCards().find(x => x.id === V.topic) || {name: 'Episodes', n: V.total, note: ''};
-  const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Start listening' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
+  const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
     <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(t.note)}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
     ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div class="pills" id="planPills">${planPillsHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
-      <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Forwarding and saving are switched off. Listen in the app, or send episodes to your bot chat to listen with the screen off. They remove themselves later.</small></span></div>
+      <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Tap an episode and it is sent to your bot chat. Forwarding and saving are switched off, and the episodes remove themselves after the listening time.</small></span></div>
       <div class="irow"><span class="ic">&#128172;</span><span><b>Questions before you buy?</b><small>Tap Buy now to open our bot. It answers your doubts first, then shows how to pay.</small></span></div>`}
     <h3 class="h3">Episodes</h3><div id="epBox"></div>${full ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
   renderEps();
@@ -1675,8 +1699,7 @@ function epRow(e){
   const btn = `<button class="ep${e.locked ? ' lock' : ''}${P.ep && P.ep.id === e.id && P.sid === V.id ? ' on' : ''}" data-ep="${e.id}" aria-label="Episode ${epn(e)}, ${esc(e.title)}${e.locked ? ', locked' : ''}">
     <span class="n">${epn(e)}</span><span class="t">${esc(e.title)}</span>${e.published === false ? '<span class="pill lock">Hidden</span>' : ''}${tagHtml}<small>${clock(e.duration)}</small></button>`;
   if (e.locked) return btn;
-  const [t, l, c] = dlLabel(e.id);
-  return `<div class="eprow">${btn}<button class="dl ${c}" data-dl="${e.id}" aria-label="${l}">${t}</button></div>`;
+  return btn;
 }
 function renderEps(){
   const box = $('#epBox'); if (!box) return;
@@ -1692,7 +1715,8 @@ function renderEps(){
     <span>Page ${V.page} of ${pages}<br>${V.total} episodes</span><button class="btn ghost small" data-pg="next" ${V.page >= pages ? 'disabled' : ''} aria-label="Next page">Next</button></div>
     <div class="jump"><input id="epJump" type="number" min="1" max="${pages}" inputmode="numeric" placeholder="Go to page (1-${pages})" aria-label="Jump to page"><button class="btn ghost small" id="epGo">Go</button></div>` : '';
   const keep = document.activeElement && document.activeElement.id === 'epq';
-  box.innerHTML = ctl + pager + body + (V.total > PAGE_SIZE ? pager.split('<div class="jump">')[0] : '');
+  const sendbar = `<div class="by" style="padding:0 16px 6px">Tap an episode to send it to your chat. How many to send:</div><div class="chiprow" style="padding:0 16px 10px">${[1, 3, 5, 10].map(n => `<button class="chip${SENDN() === n ? ' on' : ''}" data-sendn="${n}">${n}</button>`).join('')}</div>`;
+  box.innerHTML = sendbar + ctl + pager + body + (V.total > PAGE_SIZE ? pager.split('<div class="jump">')[0] : '');
   $('#epf').value = V.filter;
   if (keep){ const i = $('#epq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   box.dataset.page = V.page;
@@ -2236,6 +2260,7 @@ document.addEventListener('click', async e => {
     catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
   if (c('#startListen')) return once('start', () => playFirst(1));
+  if ((m = c('[data-sendn]'))){ store.set('ajsendn', m.dataset.sendn); return renderEps(); }
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
   if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
   if ((m = c('[data-buy]'))) return once('buy', async () => { goBot(`buy_${V.id}_${m.dataset.buy}`); await sleep(1200); });
@@ -2459,7 +2484,7 @@ function splashInit(){
   splashInit(); updateCartBadge();
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
   try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
-  offOpen().then(offLoad).catch(() => {});
+  try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
   api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(e => { if (e.network || !navigator.onLine) offlineBoot(); });
   applyTheme(); applyLang(); renderHeader();
   api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
