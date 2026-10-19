@@ -484,7 +484,7 @@ body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const AUDIO_BOT_USERNAME = "AJ_FM_Audio_Express_Bot";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
+const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
 const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
 const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
@@ -1129,7 +1129,7 @@ async function loadLibrary(){
     } else {
       const d = await api('/api/account?limit=60', {signal: sig}); if (L.seg !== seg) return;
       body.innerHTML = d.orders.length ? d.orders.map(o => `<div class="mrow"><h4>${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
-        <div style="margin:6px 0">${statusPill(o.status)}</div><div class="by">Order #${o.id} | ${dateStr(o.created)}${o.expires ? ' | ' + (o.status === 'expired' ? 'ended ' : 'until ') + dateStr(o.expires) : ''}</div>
+        <div style="margin:6px 0">${statusPill(o.status)}</div><div class="by">Order ${o.code || o.id} | ${dateStr(o.created)}${o.expires ? ' | ' + (o.status === 'expired' ? 'ended ' : 'until ') + dateStr(o.expires) : ''}</div>
         ${o.available ? '' : '<div class="by" style="color:var(--warn)">This story is no longer in the store.</div>'}
         ${o.status === 'pending' ? '<div class="by">Waiting for approval after your screenshot. If you have not sent one, open the bot and send it.</div>' : ''}</div>`).join('') : libEmpty('leh');
     }
@@ -1230,16 +1230,13 @@ async function playEpisode(ep){
   if (!ep) return;
   if (ep.locked) return toast('Locked. Choose a plan to unlock it.');
   return once('send' + ep.id, async () => {
-    toast('Sending to your chat...', 2500);
     try{
       const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN()})});
-      const d = r.delivery || {};
-      toast(r.already ? 'Already in your chat' : `Sent ${d.episodes || 1} episode${(d.episodes || 1) > 1 ? 's' : ''} to your chat${d.window_text ? '. It stays ' + d.window_text : ''}`, 4000);
-      await sleep(900); openChat();
-    }catch(e){
-      toast(errText(e), 5000);
-      if (e.data && e.data.error === 'no_chat'){ await sleep(1500); openChat(); }
-    }
+      toast('Opening the audio bot...', 2500);
+      const url = `https://t.me/${r.bot || AUDIO_BOT_USERNAME || BOT_USERNAME}?start=d_${r.token}`;      // the bot gets /start and sends the episodes into the chat
+      if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank');
+      await sleep(1200);
+    }catch(e){ toast(errText(e), 5000); }
   });
 }
 async function playEpisodeInApp(ep, story, pos = 0, retries = 0){
@@ -1688,7 +1685,7 @@ function renderTopicPage(){
     ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div class="pills" id="planPills">${planPillsHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
-      <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Tap an episode and it is sent to your bot chat. Forwarding and saving are switched off, and the episodes remove themselves after the listening time.</small></span></div>
+      <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Tap an episode and the audio bot opens and sends it to you. It stays in the chat for 48 hours. Forwarding and saving are switched off.</small></span></div>
       <div class="irow"><span class="ic">&#128172;</span><span><b>Questions before you buy?</b><small>Tap Buy now to open our bot. It answers your doubts first, then shows how to pay.</small></span></div>`}
     <h3 class="h3">Episodes</h3><div id="epBox"></div>${full ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
   renderEps();
@@ -1715,7 +1712,7 @@ function renderEps(){
     <span>Page ${V.page} of ${pages}<br>${V.total} episodes</span><button class="btn ghost small" data-pg="next" ${V.page >= pages ? 'disabled' : ''} aria-label="Next page">Next</button></div>
     <div class="jump"><input id="epJump" type="number" min="1" max="${pages}" inputmode="numeric" placeholder="Go to page (1-${pages})" aria-label="Jump to page"><button class="btn ghost small" id="epGo">Go</button></div>` : '';
   const keep = document.activeElement && document.activeElement.id === 'epq';
-  const sendbar = `<div class="by" style="padding:0 16px 6px">Tap an episode to send it to your chat. How many to send:</div><div class="chiprow" style="padding:0 16px 10px">${[1, 3, 5, 10].map(n => `<button class="chip${SENDN() === n ? ' on' : ''}" data-sendn="${n}">${n}</button>`).join('')}</div>`;
+  const sendbar = `<div class="by" style="padding:0 16px 6px">Tap an episode and the audio bot opens and sends it to you. How many to send:</div><div class="chiprow" style="padding:0 16px 10px"><button class="chip" id="openChatBtn">Open chat</button>${[1, 3, 5, 10].map(n => `<button class="chip${SENDN() === n ? ' on' : ''}" data-sendn="${n}">${n}</button>`).join('')}</div>`;
   box.innerHTML = sendbar + ctl + pager + body + (V.total > PAGE_SIZE ? pager.split('<div class="jump">')[0] : '');
   $('#epf').value = V.filter;
   if (keep){ const i = $('#epq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
@@ -1787,7 +1784,7 @@ async function loadAdmin(){
       const qs = new URLSearchParams({limit: 40}); if (A.ostatus) qs.set('status', A.ostatus); if (A.oq) qs.set('q', A.oq);
       const d = await api('/api/admin/orders?' + qs, {signal: sig}); if (A.tab !== tab) return;
       body.innerHTML = `<div class="ctl"><input id="aoq" type="search" placeholder="Order ID, user ID, @username or UTR" value="${esc(A.oq)}" aria-label="Search orders"><select id="aost" aria-label="Status"><option value="">All statuses</option>${Object.keys(STATUS).filter(k => k !== 'expired').map(k => `<option value="${k}">${STATUS[k][0]}</option>`).join('')}</select></div>
-        <div class="by" style="margin:0 16px 8px">${d.total} orders</div>` + (d.orders.map(o => `<div class="mrow"><h4>#${o.id} ${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
+        <div class="by" style="margin:0 16px 8px">${d.total} orders</div>` + (d.orders.map(o => `<div class="mrow"><h4>${esc(o.code || o.id)} ${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
           <div style="margin:6px 0">${statusPill(o.status)}${o.has_proof ? ' <span class="tag">Screenshot</span>' : ''}${o.utr_reused ? ' <span class="tag bad">UTR used on another order</span>' : ''}</div>
           <div class="by">${esc(o.name || '')} ${o.username ? '@' + esc(o.username) : ''} | ID ${o.user_id}</div><div class="by">UTR: ${esc(o.utr || 'not given')} | ${dateStr(o.created)}${o.expires ? ' | until ' + dateStr(o.expires) : ''}</div>
           <div class="actions" style="padding:8px 0 0">${o.status === 'pending' ? `<button class="btn ok small" data-oact="approve" data-oid="${o.id}">Approve</button><button class="btn danger small" data-oact="reject" data-oid="${o.id}">Reject</button><button class="btn ghost small" data-oact="cancel" data-oid="${o.id}">Cancel</button>` : ''}
@@ -1817,7 +1814,7 @@ async function loadAdmin(){
       body.innerHTML = `<div class="kpis">${k('Stories', d.stories)}${k('Episodes', d.episodes)}${k('Users', d.users)}${k('Paid orders', d.paid_orders)}${k('Pending orders', d.pending_orders)}${k('Confirmed revenue', money(d.confirmed_revenue))}${k('Pending amount', money(d.pending_amount))}${k('Refunded', money(d.refunded_amount))}</div>
         <div class="box"><b>Most listened stories</b>${d.top_stories.map(t => `<div class="by">${esc(t.title)}: ${t.listeners} listeners</div>`).join('') || '<div class="by">No listening data yet.</div>'}</div>
         <div class="box"><b>Popular episodes</b>${d.popular_episodes.map(t => `<div class="by">${esc(t.title)} ep ${t.ep_no}: ${t.listeners} listeners</div>`).join('') || '<div class="by">No listening data yet.</div>'}</div>
-        <div class="box"><b>Recent orders</b>${d.recent_orders.map(o => `<div class="by">#${o.id} ${esc(o.title)} | ${money(o.price)} | ${esc(STATUS[o.status] ? STATUS[o.status][0] : o.status)}</div>`).join('') || '<div class="by">No orders yet.</div>'}</div>
+        <div class="box"><b>Recent orders</b>${d.recent_orders.map(o => `<div class="by">${esc(o.code || o.id)} ${esc(o.title)} | ${money(o.price)} | ${esc(STATUS[o.status] ? STATUS[o.status][0] : o.status)}</div>`).join('') || '<div class="by">No orders yet.</div>'}</div>
         <div class="box"><b>What these numbers mean</b>${Object.entries(d.definitions).map(([a, b]) => `<div class="by"><b>${esc(a.replace(/_/g, ' '))}:</b> ${esc(b)}</div>`).join('')}</div>`;
     } else if (tab === 'reset'){
       const card = (k, ic, title, items, note) => `<div class="mrow" style="border-color:var(--bad)"><h4>${ic} ${title}</h4><ul class="note" style="margin:6px 0 8px 0;padding-left:18px">${items.map(i => `<li>${i}</li>`).join('')}</ul>${note ? `<div class="by" style="margin-bottom:8px">${note}</div>` : ''}<div class="actions" style="padding:0"><button class="btn danger" data-areset="${k}">${title}</button></div></div>`;
@@ -2260,6 +2257,7 @@ document.addEventListener('click', async e => {
     catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
   if (c('#startListen')) return once('start', () => playFirst(1));
+  if (c('#openChatBtn')) return openChat();
   if ((m = c('[data-sendn]'))){ store.set('ajsendn', m.dataset.sendn); return renderEps(); }
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
   if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
