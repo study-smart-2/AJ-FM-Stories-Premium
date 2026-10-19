@@ -473,6 +473,44 @@ html[data-theme=warm] .btn{box-shadow:0 3px 10px rgba(123,61,32,.12)}
 input,textarea,select{border-color:var(--line)}
 ::placeholder{color:var(--muted);opacity:1}
 
+
+/* Premium visual refresh: editorial spacing, refined surfaces and adaptive campaign banners. */
+:root{--radius-card:20px}
+#view{max-width:1180px;margin-inline:auto;padding-bottom:12px}
+.appbar{padding:16px clamp(16px,3vw,28px) 12px;position:relative}
+.appbar:after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+.brand,.sec{letter-spacing:-.025em}
+.sechead{margin-top:22px;margin-bottom:12px;gap:12px}
+.sec{font-size:clamp(23px,5vw,29px)}
+.rail{gap:14px;padding-bottom:18px}
+.rail .card{width:clamp(132px,34vw,176px)}
+.grid{gap:clamp(12px,2vw,20px);padding-inline:clamp(16px,3vw,28px)}
+.cv{border-radius:16px;border-color:color-mix(in srgb,var(--gold) 62%,var(--line));box-shadow:0 7px 18px rgba(0,0,0,.09)}
+.card b{font-size:14px;line-height:1.35}
+.feat,.cont,.dcard,.lrow,.pcard,.pmenu,.rq-card,.mrow,.box{border-radius:18px}
+.btn{border-radius:13px;letter-spacing:.01em;box-shadow:0 5px 14px rgba(var(--gold-rgb),.12)}
+.chip{transition:background .18s,border-color .18s,transform .18s}
+.chip:active,.btn:active{transform:translateY(1px)}
+.offer-strip{margin:8px 0 4px}
+.offer-strip .sechead{margin-top:14px}
+.offer-rail{padding-top:2px}
+.obn{width:clamp(270px,84vw,430px);max-width:calc(100vw - 32px);border-radius:20px;border-color:color-mix(in srgb,var(--gold) 65%,var(--line));box-shadow:0 12px 28px rgba(0,0,0,.12);background:linear-gradient(135deg,var(--feat-a),var(--panel));}
+.obn img{width:100%;height:auto;aspect-ratio:16/6;max-height:190px;object-fit:cover;object-position:center;display:block;background:var(--panel2)}
+.obn-art{display:grid;place-items:center;aspect-ratio:16/6;max-height:150px;background:radial-gradient(circle at 75% 25%,rgba(var(--gold-rgb),.34),transparent 35%),linear-gradient(120deg,var(--feat-a),var(--surf));font-size:48px;color:var(--gold-2)}
+.obn .obt{padding:13px 15px 15px;gap:5px}
+.obn b{font-size:17px;line-height:1.25;color:var(--gold-2)}
+.obn small{font-size:12.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.obn-cta{display:flex;align-items:center;justify-content:space-between;margin-top:7px;padding-top:9px;border-top:1px solid var(--line);font-size:12px;font-weight:800;color:var(--gold-2)}
+.ocard img{width:100%;height:auto;aspect-ratio:16/7;max-height:240px;object-fit:cover;object-position:center;background:var(--panel2)}
+html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgba(25,40,60,.08)}
+.browse-tail{padding:12px 16px 24px;display:grid;gap:10px}
+#browseCount{text-align:center;font-size:12px}
+.browse-end{height:2px;width:100%;pointer-events:none}
+.browse-finished{text-align:center;color:var(--muted);font-size:12px;padding:12px}
+#bres .grid{padding-top:4px}
+@media(min-width:760px){.obn{width:min(38vw,430px)}.offer-rail{padding-inline:clamp(16px,3vw,28px)}.sechead{margin-inline:clamp(16px,3vw,28px)}}
+@media(prefers-reduced-motion:reduce){.chip,.btn{transition:none}}
+
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -746,7 +784,7 @@ function renderHome(){
   const h = S.home, hero = h.trending.length ? h.trending : h.recent, tier = h.tiers[Math.min(S.tier, h.tiers.length - 1)];
   if (!S.feed.seeded){ S.feed.items = [...h.recommended]; S.feed.seeded = true; }
   const sections = [
-    '',
+    offersStrip(),
     secRail(tr('trending'), hero, 'trending', slide),
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
     tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(tr('under', {p: money(t2.max)}))}</button>`).join('')}</div><div class="rail">${tier.items.map(card).join('')}</div>` : '',
@@ -769,7 +807,8 @@ async function loadFeed(){
   try{
     for (let guard = 0; guard < 4; guard++){                                  // keep going until a page brings something not already on Home
       const d = await api(`/api/catalog?limit=24&offset=${F.offset}&sort=updated`, {timeout: 60000});
-      F.offset += d.stories.length; const seen = shownIds(), add = d.stories.filter(s => s.episodes > 0 && !seen.has(s.id));
+      F.offset += d.stories.length; const seen = shownIds(), add = [];
+      for (const story of (d.stories || [])){ const id = String(story.id); if (story.episodes > 0 && story.title && !seen.has(id)){ add.push(story); seen.add(id); } } // unique across Home rails and every feed page
       F.items.push(...add);
       if (F.offset >= d.total || !d.stories.length){ F.done = true; break; }
       if (add.length) break;
@@ -863,7 +902,7 @@ async function loadOffers(){
 }
 function offersStrip(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
-  if (bn.length) return `<div class="rail">${bn.map(b => `<button class="obn" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="" loading="lazy">` : ''}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}</span></button>`).join('')}</div>`;
+  if (bn.length) return `<section class="offer-strip"><div class="sechead"><h2 class="sec">${esc(tr('otitle'))}</h2><button class="link" data-offers="1">View all &rarr;</button></div><div class="rail offer-rail">${bn.map(b => `<button class="obn" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="${esc(b.title)}" loading="lazy" decoding="async">` : `<span class="obn-art" aria-hidden="true">✦</span>`}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}<span class="obn-cta">Explore offer <span aria-hidden="true">→</span></span></span></button>`).join('')}</div></section>`;
   if (cs.length) return `<button class="promo" data-offers="1" style="display:block;width:calc(100% - 32px);text-align:left">&#127991;&#65039; ${esc(tr('cpavail', {n: cs.length}))}<small>${esc(cs.slice(0, 3).map(c => c.code + ' - ' + c.text).join(' | '))}</small></button>`;
   return '';
 }
@@ -1108,9 +1147,10 @@ function browseResults(){
   if (B.state === 'error' && !B.items.length){ r.innerHTML = retryBox(B.err, 'retryBrowse'); return; }
   if (B.state === 'loading' && !B.items.length){ r.innerHTML = `<div class="grid">${Array.from({length: 6}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>`; return; }
   if (!B.items.length){ r.innerHTML = `<div class="empty">No stories match${B.q ? ` "${esc(B.q)}"` : ' these filters'}.${browseActive() ? '<br><button class="btn ghost small" id="bclear2">Clear search and filters</button>' : ''}</div>`; return; }
-  r.innerHTML = `<div class="grid">${B.items.map(card).join('')}</div><div class="pad" style="margin:14px 0"><div class="by" style="text-align:center;margin-bottom:8px">${B.items.length} of ${B.total}</div>
-    ${B.items.length < B.total ? `<button class="btn ghost block" id="bmore"${B.state === 'loading' ? ' disabled' : ''}>${B.state === 'loading' ? 'Loading...' : 'Load more'}</button>` : ''}
+  r.innerHTML = `<div class="grid">${B.items.map(card).join('')}</div><div class="browse-tail"><div class="by" id="browseCount" aria-live="polite">${B.items.length} of ${B.total}</div>
+    ${B.items.length < B.total ? `<div id="browseEnd" class="browse-end" aria-hidden="true"></div><button class="btn ghost block" id="bmore"${B.state === 'loading' ? ' disabled' : ''}>${B.state === 'loading' ? 'Loading more stories…' : 'Load more stories ↓'}</button>` : `<div class="browse-finished">You’re all caught up ✨</div>`}
     ${B.state === 'error' ? `<div class="msg bad">${esc(B.err)} <button class="link" id="retryBrowse">Retry</button></div>` : ''}</div>`;
+  watchBrowse();
 }
 async function loadBrowse(reset){
   const sig = fresh('browse');
@@ -1120,12 +1160,25 @@ async function loadBrowse(reset){
   for (const k of ['q', 'genre', 'status', 'language']) if (B[k]) qs.set(k, B[k]);
   try{
     const d = await api('/api/catalog?' + qs, {signal: sig, timeout: 60000});
-    B.items = reset ? d.stories : B.items.concat(d.stories.filter(s => !B.items.some(x => x.id === s.id)));    // never show a story twice
+    if (reset) B.items = [];
+    const seenIds = new Set(B.items.map(s => String(s.id)));
+    for (const story of (d.stories || [])){ const id = String(story.id); if (!seenIds.has(id)){ B.items.push(story); seenIds.add(id); } } // de-duplicate both against prior pages and within this page
     B.total = d.total; if (d.facets){ B.facets = d.facets; browseChips(); } B.state = 'ok';
   }catch(e){ if (e.aborted) return; B.state = 'error'; B.err = errText(e); }
   browseResults();
 }
-const browseSearch = deb(() => { loadBrowse(true); browseChips(); }, 350);
+let browseIO = null;
+function watchBrowse(){
+  if (browseIO){ browseIO.disconnect(); browseIO = null; }
+  const end = $('#browseEnd');
+  if (!end || B.state === 'loading' || B.state === 'error' || B.items.length >= B.total) return;
+  if (!('IntersectionObserver' in window)) return;
+  browseIO = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting) && B.state !== 'loading' && B.items.length < B.total) loadBrowse(false);
+  }, {root: null, rootMargin: '650px 0px', threshold: 0});
+  browseIO.observe(end);
+}
+const browseSearch = deb(() => { if (browseIO) browseIO.disconnect(); loadBrowse(true); browseChips(); }, 350);
 function viewAll(key){                                   // "View all" on Home = go to the Discover tab and open that category
   const row = {trending:'trend', recent:'new', updated:'upd', completed:'s:Completed', ongoing:'s:Ongoing'}[key] || key;      // genre rows already use g:<name>
   Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover', open: row, focus: row});
