@@ -383,6 +383,12 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .tcard .ar{flex:none;color:var(--muted);font-size:22px}
 .tnotes{margin:14px 16px 4px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px}
 .thead{padding:0 16px 8px}.thead h2{font-family:var(--serif);font-size:30px;line-height:1.05;color:var(--gold-2);overflow-wrap:anywhere}
+/* terms and conditions: must be accepted before the store works */
+.termsov{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px}
+.termsbox{width:100%;max-width:560px;max-height:100%;display:flex;flex-direction:column;gap:12px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:18px}
+.termstext{overflow:auto;white-space:pre-wrap;font-size:14px;line-height:1.55;color:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--ink);max-height:52vh;-webkit-overflow-scrolling:touch}
+.termsagree{display:flex;gap:10px;align-items:center;font-size:14px}.termsagree input{width:22px;height:22px;min-width:22px;flex:none;padding:0;margin:0}
+.termsbox .btn[disabled]{opacity:.45}
 /* plans: story plans (one card per slide), episode packs (small cards), rentals */
 .pl-sec{margin:0 0 14px}.pl-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 16px 8px}.pl-h b{font-size:15px}.pl-h small{color:var(--muted);font-size:12px}
 .pl-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 16px 4px;scroll-padding:0 16px}.pl-row::-webkit-scrollbar{display:none}
@@ -597,7 +603,7 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const AUDIO_BOT_USERNAME = "AJ_FM_Audio_Express_Bot";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
+const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
 const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
 const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
@@ -647,6 +653,7 @@ async function api(path, opts = {}){
       if (!r.ok){
         let data = null; try{ data = await r.json(); }catch(e){ try{ data = {message: await r.text()}; }catch(e2){} }
         const e = new Error((data && data.message) || `Request failed (${r.status})`); e.status = r.status; e.data = data;
+        if (r.status === 403 && data && data.error === 'terms') showTerms();          // the store gives nothing until the terms are accepted
         if (retry && attempt < 1 && [502, 503, 504].includes(r.status)){ await sleep(1500); continue; }
         throw e;
       }
@@ -659,6 +666,24 @@ async function api(path, opts = {}){
       const ne = new Error(e.name === 'AbortError' ? 'The server took too long to answer. Please try again.' : 'No connection to the server. Check your internet.'); ne.network = true; throw ne;
     }
   }
+}
+let TERMS_OPEN = false;
+async function showTerms(readOnly){
+  if (TERMS_OPEN) return; TERMS_OPEN = true;
+  let t; try{ t = await api('/api/terms'); }catch(e){ TERMS_OPEN = false; return; }
+  const ov = document.createElement('div'); ov.className = 'termsov'; ov.id = 'termsov';
+  ov.innerHTML = `<div class="termsbox" role="dialog" aria-modal="true" aria-label="Terms and Conditions"><h2 class="sec" style="margin:0">Terms &amp; Conditions</h2><div class="termstext">${esc(t.text)}</div>`
+    + (readOnly ? '<button class="btn block" id="termsClose">Close</button>'
+      : '<label class="termsagree"><input type="checkbox" id="termsChk"><span>I have read and agree to the Terms &amp; Conditions</span></label><button class="btn block" id="termsOk" disabled>Accept &amp; continue</button>') + '</div>';
+  document.body.appendChild(ov);
+  const done = () => { ov.remove(); TERMS_OPEN = false; };
+  if (readOnly){ $('#termsClose').onclick = done; return; }                    // required mode has no close button: nothing works until accepted
+  $('#termsChk').onchange = e => { $('#termsOk').disabled = !e.target.checked; };
+  $('#termsOk').onclick = async () => {
+    const b = $('#termsOk'); b.disabled = true;
+    try{ await api('/api/terms/accept', {method: 'POST', retry: false, body: JSON.stringify({version: t.version})}); done(); try{ loadHome(); }catch(e){} setTab(S.tab); }
+    catch(e){ toast(errText(e), 4000); b.disabled = false; if (e.data && e.data.error === 'terms_changed'){ done(); showTerms(); } }
+  };
 }
 const errText = e => e.status === 401 ? 'Please open this app from Telegram.' : e.status === 429 ? 'Too many requests. Wait a moment and try again.' : (e.message || 'Something went wrong.');
 
@@ -1010,7 +1035,7 @@ function renderMe(){
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
     <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
-    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="1"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="1"')}${item('\u2B50', tr('pfb'), 'data-pbot="1"')}</div>
+    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="1"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="1"')}${item('\u2B50', tr('pfb'), 'data-pbot="1"')}</div>
     <h3 class="lsub">${tr('pdisp')}</h3>
     <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
     <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
@@ -1754,7 +1779,7 @@ function ownedSummary(a){
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
 const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
-const planSub = o => o.ongoing ? `Ongoing | covers only till episode ${o.to}` : `${o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
+const planSub = o => o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}` : `${o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
 const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
 const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
 function pickPlan(){
@@ -1762,7 +1787,7 @@ function pickPlan(){
   if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
 }
 const isRent = o => Number(o.days) > 0;
-const packName = o => o.from ? `Episode ${o.from} to ${o.to || 'Ongoing'}` : o.label;
+const packName = o => o.from ? `Episode ${o.from} to ${o.ongoing || !o.to ? 'Ongoing' : o.to}` : o.label;
 function planGroups(opts){                                  // 1 story plans, 2 episode packs, 3 rentals
   const pack = opts.filter(o => o.topic || o.auto), rest = opts.filter(o => !(o.topic || o.auto));
   return {show: rest.filter(o => !isRent(o)), pack, rent: rest.filter(isRent)};
@@ -1779,8 +1804,8 @@ function packDetailHtml(){
   const o = visOpts().find(x => (x.topic || x.auto) && String(x.id) === String(V.pack)); if (!o) return '';
   const tn = topicNameOf(V.story, o), owned = planOwned(o), free = Number(o.price) === 0, n = o.from && o.to ? o.to - o.from + 1 : 0;
   const row = (k, v, cls = '') => `<div${cls ? ` class="${cls}"` : ''}><span>${k}</span><span>${v}</span></div>`;
-  return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${tn ? row('Topic', esc(tn)) : ''}${o.from ? row('Episodes', o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : ''}
-    ${row('Access', isRent(o) ? `${o.days} days (rental)` : esc(tr('lkeep')))}${o.ongoing ? row('Note', 'Ongoing: covers only the episodes released so far') : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
+  return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${tn ? row('Topic', esc(tn)) : ''}${o.from ? row('Episodes', o.ongoing ? `${o.from} to Ongoing` : o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : ''}
+    ${row('Access', isRent(o) ? `${o.days} days (rental)` : esc(tr('lkeep')))}${o.ongoing ? row('Note', `Ongoing episodes are added as they are released, but this plan includes only ${n} episodes, till ${o.to}.`) : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
     ${row('Price', owned ? 'Owned' : planPrice(o) + (o.credit && !free ? ` (upgrade credit -${money(o.credit)})` : ''), 'pdp')}
     ${free && !owned ? `<button class="btn block" data-free="${o.from || 1}">Listen free</button>` : ''}</div>`;
 }
@@ -2186,7 +2211,7 @@ function openTopicEditor(tid){
     <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Every plan needs a From episode. Leave To blank for an ongoing plan: it covers every episode from From onwards, new ones included. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
     <div style="padding:0 16px" id="te_opts">${(s.options || []).filter(o => o.topic === tid && !o.auto).map(o => optRow(o)).join('')}</div><div class="actions"><button class="btn ghost small" id="teAddOpt" type="button">Add plan</button></div>
     <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="tg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="tg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="tg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="tg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
-      <button class="btn ghost small" id="teGen" type="button">Add packs</button><label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="tg_auto"> <span>Make the next packs automatically as new episodes arrive (leave Total blank)</span></label><p class="note" style="margin:8px 0 0">Ongoing story and the total is not known? Leave Total blank. One pack is made; tap Add packs again for the next pack when more episodes arrive.</p></div>
+      <button class="btn ghost small" id="teGen" type="button">Add packs</button><label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="tg_auto" style="width:22px;height:22px;min-width:22px;flex:none;padding:0;margin:0"> <span>Make the next packs automatically as new episodes arrive (leave Total blank)</span></label><p class="note" style="margin:8px 0 0">Packs are added by you, one at a time (leave Total blank for one pack). A pack whose last episode is not released yet is shown to buyers as &quot;Episodes 3501 to Ongoing&quot; with a note: new episodes are added as they release, but only up to the last episode of the pack.</p></div>
     <div class="actions"><button class="btn" id="teSave">Save topic</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
   openSheet('topiced');
   if (t.pack){ $('#tg_start').value = t.pack.start; $('#tg_size').value = t.pack.size; $('#tg_price').value = t.pack.price; $('#tg_auto').checked = true; }
@@ -2391,6 +2416,7 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-cpuse]'))){ const code = m.dataset.cpuse; return once('cpuse', async () => { await cpApply(code, CART.map(i => ({sid: i.sid, oid: i.oid}))); setTab('cart'); }); }
   if (c('#cartBrowse')) return setTab('home');
   if ((m = c('[data-pgo]'))){ const k = m.dataset.pgo; if (k === 'cart') return setTab('cart'); L.seg = k; return setTab('library'); }
+  if (c('[data-terms]')){ showTerms(true); return; }
   if (c('[data-pbot]')){ goBot(''); return; }
   if (c('#preqBtn')) return openRequest('new');
   if (c('#presetBtn')) return askConfirm(tr('presetq'), resetAppData);
@@ -2671,6 +2697,7 @@ function splashInit(){
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
   try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
   try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
+  api('/api/terms').then(t => { if (t.user && !t.accepted) showTerms(); }).catch(() => {});
   api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(e => { if (e.network || !navigator.onLine) offlineBoot(); });
   applyTheme(); applyLang(); renderHeader();
   api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
