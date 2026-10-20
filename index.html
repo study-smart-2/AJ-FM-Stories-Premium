@@ -692,6 +692,7 @@ const priceLabel = s => {
 };
 const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
   <b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
+const tierCard = s => card(s).replace(/<span class="pr">.*?<\/span>/, `<span class="pr">${s.deal ? `<s>${money(s.max_price)}</s>` : ''}${money(s.last_price)}</span>`);      // Super deals show the last (highest) plan price only
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
 const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button class="btn" id="${id}">Try again</button></div>`;
 
@@ -816,7 +817,7 @@ function renderHome(){
     offersStrip(),
     secRail(tr('trending'), hero, 'trending', slide),
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
-    tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(tr('under', {p: money(t2.max)}))}</button>`).join('')}</div><div class="rail">${tier.items.map(card).join('')}</div>` : '',
+    tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
     secRail(tr('recent'), h.recent, 'recent'), secRail(tr('ongoing'), h.ongoing, 'ongoing'), secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, '', upCard),
     ...h.genre_rows.map(g => secRail(esc(g.name), g.items, 'g:' + g.name))
   ].join('');
@@ -873,7 +874,7 @@ function homeClick(c){
   if (c('#closeNotif')){ closeSheet('notif'); return true; }
   if (c('#clearRecent')){ store.set('ajrs', '[]'); renderSearch(); return true; }
   if ((m = c('[data-sq]'))){ doSearch(m.dataset.sq); return true; }
-  if ((m = c('[data-tier]'))){ S.tier = +m.dataset.tier; renderHome(); return true; }
+  if ((m = c('[data-tier]'))){ const sc = $('#tierChips'), x = sc ? sc.scrollLeft : 0; S.tier = +m.dataset.tier; renderHome(); const n = $('#tierChips'); if (n) n.scrollLeft = x; return true; }      // the chip row keeps its place
   if ((m = c('[data-wish]'))){ toggleWish(m.dataset.wish); return true; }
   if ((m = c('[data-contx]'))){ removeCont(m.dataset.contx); return true; }
   if (c('#retryFeed')){ S.feed.state = 'idle'; loadFeed(); return true; }
@@ -1217,7 +1218,7 @@ function viewAll(key){                                   // "View all" on Home =
 /* ---------- library ---------- */
 const STATUS = {approved:['Active','free'], pending:['Pending approval','warn'], expired:['Expired',''], rejected:['Rejected','bad'], revoked:['Revoked','bad'], refunded:['Refunded','bad'], cancelled:['Cancelled','']};
 const statusPill = s => { const [t, c] = STATUS[s] || [s, '']; return `<span class="tag ${c === 'free' ? 'live' : c}">${esc(t)}</span>`; };
-const rangeText = r => r.from ? `Episodes ${r.from} to ${r.to}` : 'All episodes';
+const rangeText = r => r.from ? `Episodes ${r.from} to ${r.to || 'Ongoing'}` : 'All episodes';
 const LIB_TABS = [['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
 const lthumb = c => `<span class="lth">${isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="?">` : esc(c || '?')}</span>`;
 const lrow = o => `<div class="lrow"><button class="lmain" ${o.attrs || `data-story="${esc(o.sid)}"`} ${o.avail === false ? 'data-avail="0"' : ''} aria-label="Open ${esc(o.title)}">${lthumb(o.cover)}<span class="lmt"><b>${esc(o.title)}</b>${(o.lines || []).filter(Boolean).map(l => `<small>${l}</small>`).join('')}${o.bar !== undefined ? `<span class="bar"><i style="width:${o.bar}%"></i></span>` : ''}</span></button><div class="lact">${o.actions || ''}</div></div>`;
@@ -1256,7 +1257,7 @@ async function loadLibrary(){
         actions: `<button class="lbtn" data-story="${esc(s.id)}">${tr('lopen')}</button><button class="lbtn rm" data-lwx="${esc(s.id)}">${tr('lrem')}</button>`})).join('') : libEmpty('lew');
     } else {
       const d = await api('/api/account?limit=60', {signal: sig}); if (L.seg !== seg) return;
-      body.innerHTML = d.orders.length ? d.orders.map(o => `<div class="mrow"><h4>${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
+      body.innerHTML = d.orders.length ? d.orders.map(o => `<div class="mrow"><h4>${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to || 'Ongoing'}` : ''}</div>
         <div style="margin:6px 0">${statusPill(o.status)}</div><div class="by">Order ${o.code || o.id} | ${dateStr(o.created)}${o.expires ? ' | ' + (o.status === 'expired' ? 'ended ' : 'until ') + dateStr(o.expires) : ''}</div>
         ${o.available ? '' : '<div class="by" style="color:var(--warn)">This story is no longer in the store.</div>'}
         ${o.status === 'pending' ? '<div class="by">Waiting for approval after your screenshot. If you have not sent one, open the bot and send it.</div>' : ''}</div>`).join('') : libEmpty('leh');
@@ -1753,7 +1754,7 @@ function ownedSummary(a){
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
 const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
-const planSub = o => o.ongoing ? `Ongoing | covers only till episode ${o.to}` : `${o.from ? `Episodes ${o.from} to ${o.to}` : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
+const planSub = o => o.ongoing ? `Ongoing | covers only till episode ${o.to}` : `${o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
 const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
 const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
 function pickPlan(){
@@ -1761,7 +1762,7 @@ function pickPlan(){
   if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
 }
 const isRent = o => Number(o.days) > 0;
-const packName = o => o.from ? `Episode ${o.from} to ${o.to}` : o.label;
+const packName = o => o.from ? `Episode ${o.from} to ${o.to || 'Ongoing'}` : o.label;
 function planGroups(opts){                                  // 1 story plans, 2 episode packs, 3 rentals
   const pack = opts.filter(o => o.topic || o.auto), rest = opts.filter(o => !(o.topic || o.auto));
   return {show: rest.filter(o => !isRent(o)), pack, rent: rest.filter(isRent)};
@@ -1776,10 +1777,10 @@ function planCardHtml(o){
 const packCardHtml = o => { const open = String(o.id) === String(V.pack); return `<button class="pk${open ? ' on' : ''}${planOwned(o) ? ' have' : ''}" data-pack="${esc(o.id)}" aria-pressed="${open}">${esc(packName(o))}</button>`; };
 function packDetailHtml(){
   const o = visOpts().find(x => (x.topic || x.auto) && String(x.id) === String(V.pack)); if (!o) return '';
-  const tn = topicNameOf(V.story, o), owned = planOwned(o), free = Number(o.price) === 0, n = o.from ? o.to - o.from + 1 : 0;
+  const tn = topicNameOf(V.story, o), owned = planOwned(o), free = Number(o.price) === 0, n = o.from && o.to ? o.to - o.from + 1 : 0;
   const row = (k, v, cls = '') => `<div${cls ? ` class="${cls}"` : ''}><span>${k}</span><span>${v}</span></div>`;
-  return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${tn ? row('Topic', esc(tn)) : ''}${o.from ? row('Episodes', `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})`) : ''}
-    ${row('Access', isRent(o) ? `${o.days} days (rental)` : esc(tr('lkeep')))}${o.ongoing ? row('Note', 'Ongoing: covers only the episodes released so far') : ''}
+  return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${tn ? row('Topic', esc(tn)) : ''}${o.from ? row('Episodes', o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : ''}
+    ${row('Access', isRent(o) ? `${o.days} days (rental)` : esc(tr('lkeep')))}${o.ongoing ? row('Note', 'Ongoing: covers only the episodes released so far') : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
     ${row('Price', owned ? 'Owned' : planPrice(o) + (o.credit && !free ? ` (upgrade credit -${money(o.credit)})` : ''), 'pdp')}
     ${free && !owned ? `<button class="btn block" data-free="${o.from || 1}">Listen free</button>` : ''}</div>`;
 }
@@ -1954,7 +1955,7 @@ async function loadAdmin(){
       const qs = new URLSearchParams({limit: 40}); if (A.ostatus) qs.set('status', A.ostatus); if (A.oq) qs.set('q', A.oq);
       const d = await api('/api/admin/orders?' + qs, {signal: sig}); if (A.tab !== tab) return;
       body.innerHTML = `<div class="ctl"><input id="aoq" type="search" placeholder="Order ID, user ID, @username or UTR" value="${esc(A.oq)}" aria-label="Search orders"><select id="aost" aria-label="Status"><option value="">All statuses</option>${Object.keys(STATUS).filter(k => k !== 'expired').map(k => `<option value="${k}">${STATUS[k][0]}</option>`).join('')}</select></div>
-        <div class="by" style="margin:0 16px 8px">${d.total} orders</div>` + (d.orders.map(o => `<div class="mrow"><h4>${esc(o.code || o.id)} ${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to}` : ''}</div>
+        <div class="by" style="margin:0 16px 8px">${d.total} orders</div>` + (d.orders.map(o => `<div class="mrow"><h4>${esc(o.code || o.id)} ${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to || 'Ongoing'}` : ''}</div>
           <div style="margin:6px 0">${statusPill(o.status)}${o.has_proof ? ' <span class="tag">Screenshot</span>' : ''}${o.utr_reused ? ' <span class="tag bad">UTR used on another order</span>' : ''}</div>
           <div class="by">${esc(o.name || '')} ${o.username ? '@' + esc(o.username) : ''} | ID ${o.user_id}</div><div class="by">UTR: ${esc(o.utr || 'not given')} | ${dateStr(o.created)}${o.expires ? ' | until ' + dateStr(o.expires) : ''}</div>
           <div class="actions" style="padding:8px 0 0">${o.status === 'pending' ? `<button class="btn ok small" data-oact="approve" data-oid="${o.id}">Approve</button><button class="btn danger small" data-oact="reject" data-oid="${o.id}">Reject</button><button class="btn ghost small" data-oact="cancel" data-oid="${o.id}">Cancel</button>` : ''}
@@ -2052,7 +2053,7 @@ async function resetFlow(scope){
 function optRow(o = {}, removable = true){
   return `<div class="optrow" data-id="${esc(o.id || '')}"><input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}" aria-label="Plan name">
     <div class="o4"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-days" type="number" min="0" inputmode="numeric" placeholder="Days" value="${o.days ?? ''}" aria-label="Days of access, 0 for lifetime">
-    <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="From ep" value="${o.from ?? ''}" aria-label="From episode"><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep" value="${o.to ?? ''}" aria-label="To episode"></div>
+    <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="From ep" value="${o.from ?? ''}" aria-label="From episode"><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"></div>
     ${removable ? '<button type="button" class="btn danger small o-del">Remove plan</button>' : ''}</div>`;
 }
 async function openEditor(id){
@@ -2112,7 +2113,7 @@ async function saveEditor(){
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: $('#e_genre').value.trim(), language: $('#e_lang').value.trim(),
       status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value),
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts')};
-    const badPlan = story.options.find(o => (o.from || o.to) && !(o.from && o.to && o.from <= o.to)); if (badPlan) return toast(`Plan "${badPlan.label}": fill From and To (From must not be bigger than To), or leave both empty`, 5000);
+    const badPlan = story.options.find(o => (o.to && !o.from) || (o.from && o.to && o.from > o.to)); if (badPlan) return toast(`Plan "${badPlan.label}": From must not be bigger than To (leave To blank for ongoing)`, 5000);
     const btn = $('#saveStory'); btn.disabled = true; btn.textContent = 'Saving...';
     const body = {story, allow_free: false, confirm_affects: false};
     try{
@@ -2182,7 +2183,7 @@ function openTopicEditor(tid){
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Edit topic</strong></div>
     <label class="field"><span>Topic name *</span><input id="te_name" value="${esc(t.name)}" maxlength="60"></label>
     <label class="field"><span>Note shown on the topic card (optional)</span><textarea id="te_note" maxlength="300" style="min-height:70px">${esc(t.note || '')}</textarea></label>
-    <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Every plan needs From and To episode numbers. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
+    <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Every plan needs a From episode. Leave To blank for an ongoing plan: it covers every episode from From onwards, new ones included. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
     <div style="padding:0 16px" id="te_opts">${(s.options || []).filter(o => o.topic === tid && !o.auto).map(o => optRow(o)).join('')}</div><div class="actions"><button class="btn ghost small" id="teAddOpt" type="button">Add plan</button></div>
     <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="tg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="tg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="tg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="tg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
       <button class="btn ghost small" id="teGen" type="button">Add packs</button><label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="tg_auto"> <span>Make the next packs automatically as new episodes arrive (leave Total blank)</span></label><p class="note" style="margin:8px 0 0">Ongoing story and the total is not known? Leave Total blank. One pack is made; tap Add packs again for the next pack when more episodes arrive.</p></div>
@@ -2196,7 +2197,7 @@ function openPlanAdd(tid){
   const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid).map(o => +o.to || 0));      // the new plan carries on after the last one
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Add plan</strong></div>
     <h3 class="h3" style="margin-top:0">${esc(t.name)}</h3>
-    <p class="note">This plan is added to this topic only. Every plan needs From and To episode numbers. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
+    <p class="note">This plan is added to this topic only. Every plan needs a From episode. Leave To blank for an ongoing plan: it covers every episode from From onwards, new ones included. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
     <div style="padding:0 16px" id="pa_opts">${optRow({days: 0, from: last ? last + 1 : null}, false)}</div>
     <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="pg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number" value="${last ? last + 1 : ''}"><input id="pg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="pg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="pg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
       <button class="btn ghost small" id="paGen" type="button">Add packs</button><p class="note" style="margin:8px 0 0">Packs are added above. Leave Total blank for one pack at a time. Everything above is saved together when you tap Save plan.</p></div>
@@ -2208,7 +2209,7 @@ async function savePlanAdd(){
   await once('pasave', async () => {
     const tid = TE.id, nps = readPlans('#pa_opts');
     if (!nps.length) return toast('Give the plan a name, or tap Add packs');
-    const bad = nps.find(p => !p.from || !p.to || p.from > p.to); if (bad) return toast(`Plan "${bad.label}": fill From and To (From must not be greater than To)`);
+    const bad = nps.find(p => !p.from || (p.to && p.from > p.to)); if (bad) return toast(`Plan "${bad.label}": fill From (From must not be greater than To; leave To blank for ongoing)`);
     try{
       const d = await api(`/api/story/${encodeURIComponent(T.sid)}?limit=1`);                              // newest plans, so nothing saved elsewhere is overwritten
       const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto).map(o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to}));
@@ -2223,8 +2224,8 @@ async function saveTopic(){
     const name = $('#te_name').value.trim(); if (!name) return toast('Give the topic a name');
     const auto = $('#tg_auto').checked, pack = auto ? {start: parseInt($('#tg_start').value), size: parseInt($('#tg_size').value), price: Number($('#tg_price').value) || 0, days: 0} : null;
     if (auto && !(pack.start && pack.size)) return toast('For automatic packs fill First ep and Pack size');
-    const options = readPlans('#te_opts'), bad = options.find(o => !o.from || !o.to || o.from > o.to);
-    if (bad) return toast(`Plan "${bad.label}": fill From and To (From must not be greater than To)`);
+    const options = readPlans('#te_opts'), bad = options.find(o => !o.from || (o.to && o.from > o.to));
+    if (bad) return toast(`Plan "${bad.label}": fill From (From must not be greater than To; leave To blank for ongoing)`);
     try{
       const r = await topicCall({action: 'edit', id: TE.id, name, note: $('#te_note').value.trim(), options, pack}); if (!r) return;
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
