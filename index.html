@@ -383,6 +383,24 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .tcard .ar{flex:none;color:var(--muted);font-size:22px}
 .tnotes{margin:14px 16px 4px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px}
 .thead{padding:0 16px 8px}.thead h2{font-family:var(--serif);font-size:30px;line-height:1.05;color:var(--gold-2);overflow-wrap:anywhere}
+/* plans: story plans (one card per slide), episode packs (small cards), rentals */
+.pl-sec{margin:0 0 14px}.pl-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 16px 8px}.pl-h b{font-size:15px}.pl-h small{color:var(--muted);font-size:12px}
+.pl-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 16px 4px;scroll-padding:0 16px}.pl-row::-webkit-scrollbar{display:none}
+.pl-row>*{scroll-snap-align:start;flex:none}
+.pl-row.one>*{flex:0 0 100%;box-sizing:border-box}
+.plc{text-align:left;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:3px;min-height:92px}
+.plc b{font-size:16px;overflow-wrap:anywhere}.plc small{color:var(--muted);font-size:12.5px}.plc .pp{color:var(--gold-2);font-weight:800;font-size:19px;margin-top:auto;padding-top:6px}
+.plc .rtag{align-self:flex-start;padding:1px 8px;border-radius:6px;background:rgba(var(--gold-rgb),.14);color:var(--gold-2);font-size:11px;font-weight:700}
+.plc .cr{color:var(--ok);font-size:12px;font-weight:700;margin-top:4px}
+.plc.on{border:2px solid var(--gold);background:rgba(var(--gold-rgb),.12);padding:13px}
+.plc.free{border-color:var(--ok)}.plc.free .pp{color:var(--ok)}.plc.have{opacity:.7}.plc.have .pp{color:var(--muted)}
+.pl-row.rent>.plc{flex:0 0 74%;min-width:210px}
+.pl-dots{display:flex;justify-content:center;gap:6px;padding:6px 0 0}.pl-dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.pl-dots i.on{background:var(--gold);width:16px;border-radius:4px}
+.pk{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:13.5px;white-space:nowrap;min-height:44px}
+.pk.on{border:2px solid var(--gold);background:rgba(var(--gold-rgb),.12);padding:9px 13px}.pk.have{opacity:.65}
+.pkd{margin:10px 16px 0;padding:12px 14px;border-radius:14px;border:1px solid var(--gold);background:rgba(var(--gold-rgb),.07);display:grid;gap:6px}
+.pkd>div{display:flex;justify-content:space-between;gap:12px;font-size:13.5px}.pkd>div span:first-child{color:var(--muted)}.pkd>div span:last-child{text-align:right;font-weight:700;overflow-wrap:anywhere}
+.pkd .pdp span:last-child{color:var(--gold-2);font-size:17px}
 /* story page v2: banner hero, plan pills, sticky action bar */
 .sh{position:relative;padding:64px 16px 18px;text-align:center;overflow:hidden}
 .sh-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(30px) brightness(.5) saturate(1.25);transform:scale(1.1)}
@@ -579,7 +597,7 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const AUDIO_BOT_USERNAME = "AJ_FM_Audio_Express_Bot";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
+const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
 const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
 const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
@@ -1672,10 +1690,10 @@ window.addEventListener('online', () => { offResumeAll(); const x = $('#dlsheet'
 window.addEventListener('offline', () => { toast('You are offline.', 3000); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
 
 /* ---------- story page ---------- */
-const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null, mode:'overview'};
+const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null, mode:'overview', pack:null, sel:null};
 const storyTag = s => ({id: s.id, title: s.title, cover: s.cover});
 async function openStory(id){
-  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null, mode:'overview'});
+  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null, mode:'overview', pack:null});
   renderStory(); openSheet('story'); $('#story').scrollTop = 0;
   await loadStoryPage(1);
 }
@@ -1694,7 +1712,7 @@ function shareStory(){
   if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
 }
 function storyBack(){                                                              // topic page -> story overview -> close
-  if (V.mode === 'topic'){ V.mode = 'overview'; V.topic = null; V.q = ''; V.filter = 'all'; V.page = 1; renderStory(); $('#story').scrollTop = 0; loadStoryPage(1); }
+  if (V.mode === 'topic'){ V.mode = 'overview'; V.topic = null; V.pack = null; V.q = ''; V.filter = 'all'; V.page = 1; renderStory(); $('#story').scrollTop = 0; loadStoryPage(1); }
   else closeSheet('story');
 }
 function topicCards(){
@@ -1742,22 +1760,54 @@ function pickPlan(){
   const opts = visOpts(), ok = o => +o.price > 0 && !planOwned(o);
   if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
 }
-function planPillsHtml(){
-  if (!visOpts().length) return '<div class="by" style="padding:0 16px">No plans for this topic yet.</div>';
-  return visOpts().map(o => {
-    const sub = esc(planSub(o));
-    if (Number(o.price) === 0) return `<button class="pill2 free" data-free="${o.from || 1}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Listen free</span></button>`;
-    if (planOwned(o)) return `<div class="pill2 have"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">Owned</span></div>`;
-    return `<button class="pill2${String(o.id) === String(V.sel) ? ' on' : ''}" data-plan="${esc(o.id)}" aria-pressed="${String(o.id) === String(V.sel)}"><b>${esc(o.label)}</b><small>${sub}</small><span class="pp">${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}</span></button>`;
-  }).join('');
+const isRent = o => Number(o.days) > 0;
+const packName = o => o.from ? `Episode ${o.from} to ${o.to}` : o.label;
+function planGroups(opts){                                  // 1 story plans, 2 episode packs, 3 rentals
+  const pack = opts.filter(o => o.topic || o.auto), rest = opts.filter(o => !(o.topic || o.auto));
+  return {show: rest.filter(o => !isRent(o)), pack, rent: rest.filter(isRent)};
 }
+const planPrice = o => Number(o.price) === 0 ? 'Listen free' : `${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}`;
+function planCardHtml(o){
+  const owned = planOwned(o), free = Number(o.price) === 0, on = !free && String(o.id) === String(V.sel);
+  const body = `${isRent(o) ? '<span class="rtag">&#9203; Rental</span>' : ''}<b>${esc(o.label)}</b><small>${esc(planSub(o))}</small>${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}<span class="pp">${owned ? 'Owned' : planPrice(o)}</span>`;
+  if (owned) return `<div class="plc have">${body}</div>`;
+  return `<button class="plc${free ? ' free' : ''}${on ? ' on' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
+}
+const packCardHtml = o => { const open = String(o.id) === String(V.pack); return `<button class="pk${open ? ' on' : ''}${planOwned(o) ? ' have' : ''}" data-pack="${esc(o.id)}" aria-pressed="${open}">${esc(packName(o))}</button>`; };
+function packDetailHtml(){
+  const o = visOpts().find(x => (x.topic || x.auto) && String(x.id) === String(V.pack)); if (!o) return '';
+  const tn = topicNameOf(V.story, o), owned = planOwned(o), free = Number(o.price) === 0, n = o.from ? o.to - o.from + 1 : 0;
+  const row = (k, v, cls = '') => `<div${cls ? ` class="${cls}"` : ''}><span>${k}</span><span>${v}</span></div>`;
+  return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${tn ? row('Topic', esc(tn)) : ''}${o.from ? row('Episodes', `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})`) : ''}
+    ${row('Access', isRent(o) ? `${o.days} days (rental)` : esc(tr('lkeep')))}${o.ongoing ? row('Note', 'Ongoing: covers only the episodes released so far') : ''}
+    ${row('Price', owned ? 'Owned' : planPrice(o) + (o.credit && !free ? ` (upgrade credit -${money(o.credit)})` : ''), 'pdp')}
+    ${free && !owned ? `<button class="btn block" data-free="${o.from || 1}">Listen free</button>` : ''}</div>`;
+}
+function plansHtml(){
+  const opts = visOpts(); if (!opts.length) return '<div class="by" style="padding:0 16px">No plans for this topic yet.</div>';
+  const g = planGroups(opts);
+  const sec = (title, hint, inner) => `<div class="pl-sec"><div class="pl-h"><b>${title}</b><small>${hint}</small></div>${inner}</div>`;
+  const dots = n => n > 1 ? `<div class="pl-dots">${Array.from({length: n}, (_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</div>` : '';
+  return (g.show.length ? sec('Story plans', g.show.length > 1 ? 'Swipe for more' : '', `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}`) : '')
+    + (g.pack.length ? sec('Episode packs', 'Tap a range for details', `<div class="pl-row" data-row="pack">${g.pack.map(packCardHtml).join('')}</div>${packDetailHtml()}`) : '')
+    + (g.rent.length ? sec('Rental', g.rent.length > 1 ? 'Swipe for more' : '', `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>`) : '');
+}
+document.addEventListener('scroll', e => {                  // the dots under the one-at-a-time row follow the slide
+  const r = e.target; if (!r || !r.classList || !r.classList.contains('one')) return;
+  const i = Math.round(r.scrollLeft / (r.clientWidth - 22)), d = r.nextElementSibling;
+  if (d && d.classList.contains('pl-dots')) [...d.children].forEach((x, k) => x.classList.toggle('on', k === i));
+}, true);
 function sbarHtml(){
   const o = visOpts().find(x => String(x.id) === String(V.sel)); if (!o) return '';
   const inCart = cartHas(V.id, o.id);
   return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}${o.credit ? ' | upgrade credit -' + money(o.credit) : ''}</small><b>${money(payOf(o))}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
     <div class="sb-btns">${V.totalAll ? '<button class="btn ghost" data-demo="1">Click for Demo</button>' : '<span></span>'}<button class="btn${inCart ? ' ok' : ''}" id="sbCart">${inCart ? '&#10003; In cart' : '&#128722; ADD TO CART'}</button></div>`;
 }
-function paintPlanBar(){ const pp = $('#planPills'), sb = $('#sbar'); if (pp) pp.innerHTML = planPillsHtml(); if (sb) sb.innerHTML = sbarHtml(); }
+function paintPlanBar(){
+  const pp = $('#planPills'), sb = $('#sbar');
+  if (pp){ const keep = {}; pp.querySelectorAll('.pl-row').forEach(r => { keep[r.dataset.row] = r.scrollLeft; }); pp.innerHTML = plansHtml(); pp.querySelectorAll('.pl-row').forEach(r => { r.scrollLeft = keep[r.dataset.row] || 0; }); }   // slides stay where they were
+  if (sb) sb.innerHTML = sbarHtml();
+}
 function renderStory(){
   const el = $('#story');
   const bar = (right = '') => `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button>${right}</div>`;
@@ -1765,7 +1815,7 @@ function renderStory(){
   if (V.state === 'unavailable'){ el.innerHTML = bar() + '<div class="empty"><h3 class="sec">This story is no longer available</h3><p>It may have been removed or hidden. If you bought it, your purchase is kept and you can see it under Library &rarr; Purchases.</p></div>'; return; }
   if (V.state === 'error'){ el.innerHTML = bar() + retryBox(V.err, 'retryStory'); return; }
   if (V.mode === 'topic') return renderTopicPage();
-  const s = V.story, a = V.access;
+  const s = V.story, a = V.access, showPlans = !(a.full || a.admin) && visOpts().length > 0; pickPlan();
   const act = false ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${epn(V.resume)}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
   const wishOn = S.wish && S.wish.has(V.id);
   const range = rangeOf(s.options || []);
@@ -1782,8 +1832,9 @@ function renderStory(){
     <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
       <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}${act}
+    ${showPlans ? `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>` : ''}
     <h3 class="h3">${shownTopics().length ? 'Topics' : 'Listen'}</h3><div id="topicCards">${cards}</div>
-    ${s.notes ? `<h3 class="h3">Notes</h3><div class="tnotes">${esc(s.notes)}</div>` : ''}`;
+    ${s.notes ? `<h3 class="h3">Notes</h3><div class="tnotes">${esc(s.notes)}</div>` : ''}${showPlans ? `<div class="sbar" id="sbar">${sbarHtml()}</div>` : ''}`;
 }
 function renderTopicPage(){
   const el = $('#story'), s = V.story, a = V.access, full = a.full || a.admin; pickPlan();
@@ -1792,7 +1843,7 @@ function renderTopicPage(){
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
     <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(t.note)}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
-    ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div class="pills" id="planPills">${planPillsHtml()}</div>
+    ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
       <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Tap an episode and the audio bot opens and sends it to you. It stays in the chat for 48 hours. Forwarding and saving are switched off.</small></span></div>
@@ -2367,9 +2418,10 @@ document.addEventListener('click', async e => {
   if (c('#storyCopy')) return copyStoryLink();
   if (c('#storySearch')){ const i = $('#epq'); if (i){ i.scrollIntoView({behavior: 'smooth', block: 'center'}); setTimeout(() => i.focus(), 350); } return; }
   if ((m = c('[data-topic]'))){
-    V.topic = m.dataset.topic; V.mode = 'topic'; V.page = 1; V.q = ''; V.filter = 'all'; V.eps = []; V.total = 0; V.epState = 'loading'; pickPlan(); renderStory(); $('#story').scrollTop = 0; return loadStoryPage(1);
+    V.topic = m.dataset.topic; V.pack = null; V.mode = 'topic'; V.page = 1; V.q = ''; V.filter = 'all'; V.eps = []; V.total = 0; V.epState = 'loading'; pickPlan(); renderStory(); $('#story').scrollTop = 0; return loadStoryPage(1);
   }
-  if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; return paintPlanBar(); }
+  if ((m = c('[data-pack]'))){ const id = m.dataset.pack, o = visOpts().find(x => String(x.id) === id); V.pack = String(V.pack) === id ? null : id; if (V.pack && o && +o.price > 0 && !planOwned(o)) V.sel = o.id; return paintPlanBar(); }
+  if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; V.pack = null; return paintPlanBar(); }
   if (c('#sbCart')){ if (V.sel) cartToggle(V.sel); return paintPlanBar(); }
   if (c('#sbBuy')){ const oid = V.sel; if (oid) return once('buy', async () => { goBot(`buy_${V.id}_${oid}`); await sleep(1200); }); return; }
   if (c('[data-demo]')) return once('start', () => playFirst(1));
