@@ -229,24 +229,21 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .thopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-size:13px;font-weight:700;min-height:64px}
 .thopt .sw{display:flex;width:44px;height:16px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}.thopt .sw i{flex:1}
 .thopt.on{border:2px solid var(--gold);color:var(--gold-2);background:rgba(var(--gold-rgb),.1)}
-/* splash screen: fanned cover deck */
-#splash{position:fixed;inset:0;z-index:200;background:var(--ink);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;padding:calc(env(safe-area-inset-top,0px) + 20px) 24px calc(env(safe-area-inset-bottom,0px) + 20px);overflow:hidden;transition:opacity .45s ease}
+/* splash screen: cinematic premium brand reveal */
+#splash{position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at 50% 38%,rgba(var(--gold-rgb),.13),transparent 42%),var(--ink);color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:calc(env(safe-area-inset-top,0px) + 20px) 24px calc(env(safe-area-inset-bottom,0px) + 20px);overflow:hidden;transition:opacity .45s ease}
+#splash:before,#splash:after{content:"";position:absolute;pointer-events:none;border:1px solid rgba(var(--gold-rgb),.15);border-radius:50%;width:min(88vw,440px);aspect-ratio:1;animation:spglow 4s ease-in-out infinite}
+#splash:after{width:min(68vw,340px);animation-delay:-2s;border-color:rgba(var(--gold-rgb),.22)}
 #splash.out{opacity:0;pointer-events:none}
-.sp-deck{position:relative;width:100%;max-width:420px;height:min(46vh,370px)}
-.sp-card{position:absolute;left:50%;top:50%;width:min(36vw,172px);aspect-ratio:2/3;border-radius:22px;overflow:hidden;border:1px solid rgba(var(--gold-rgb),.45);background:linear-gradient(160deg,var(--cv-a),var(--cv-b));box-shadow:0 14px 34px rgba(0,0,0,.45);opacity:0;transform:translate(-50%,-50%) scale(.6);transition:transform .6s cubic-bezier(.3,.8,.3,1),opacity .5s ease,filter .5s ease;will-change:transform}
-.sp-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.sp-card .sp-emo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px}
-.sp-card.p0{opacity:1;z-index:5;transform:translate(-50%,-50%) scale(1.04)}
-.sp-card.p1{opacity:1;z-index:4;filter:brightness(.72);transform:translate(-50%,-50%) translateX(66%) rotate(8deg) scale(.88)}
-.sp-card.p-1{opacity:1;z-index:4;filter:brightness(.72);transform:translate(-50%,-50%) translateX(-66%) rotate(-8deg) scale(.88)}
-.sp-card.p2{opacity:1;z-index:3;filter:brightness(.5);transform:translate(-50%,-50%) translateX(118%) rotate(14deg) scale(.76)}
-.sp-card.p-2{opacity:1;z-index:3;filter:brightness(.5);transform:translate(-50%,-50%) translateX(-118%) rotate(-14deg) scale(.76)}
-.sp-txt{text-align:center;max-width:360px}
-.sp-txt h1{margin:0;font-family:var(--sans);font-weight:800;font-size:clamp(25px,7.4vw,32px);line-height:1.08;letter-spacing:-.02em;text-transform:uppercase;color:var(--gold-2)}
-.sp-txt p{margin:14px 0 0;color:var(--muted);font-size:15.5px;line-height:1.7}
-.sp-spin{width:40px;height:40px;color:var(--muted);background:repeating-conic-gradient(currentColor 0 11deg,transparent 11deg 30deg);-webkit-mask:radial-gradient(circle,transparent 11px,#000 12px,#000 19px,transparent 20px);mask:radial-gradient(circle,transparent 11px,#000 12px,#000 19px,transparent 20px);border-radius:50%}
-@media (prefers-reduced-motion:no-preference){.sp-spin{animation:spspin 1s steps(12) infinite}@keyframes spspin{to{transform:rotate(360deg)}}}
-@media (prefers-reduced-motion:reduce){.sp-card,#splash{transition:none}}
+.sp-deck{position:relative;width:132px;height:132px;flex:none;z-index:1;display:grid;place-items:center;border-radius:34px;border:1px solid rgba(var(--gold-rgb),.75);background:linear-gradient(145deg,rgba(var(--gold-rgb),.22),rgba(var(--gold-rgb),.04) 55%,rgba(0,0,0,.2));box-shadow:0 0 0 8px rgba(var(--gold-rgb),.045),0 18px 55px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.12)}
+.sp-deck:before{content:"AJ";font-family:var(--serif);font-weight:700;font-size:64px;letter-spacing:-.08em;color:var(--gold-2);text-shadow:0 3px 22px rgba(var(--gold-rgb),.3);z-index:2}
+.sp-deck:after{content:"✦";position:absolute;top:10px;right:13px;color:var(--gold-2);font-size:18px}
+.sp-card{display:none}
+.sp-txt{position:relative;z-index:1;text-align:center;max-width:360px}
+.sp-txt h1{margin:0;font-family:var(--serif);font-weight:700;font-size:clamp(28px,8vw,38px);line-height:1.02;letter-spacing:.015em;text-transform:uppercase;color:var(--gold-2);text-shadow:0 3px 22px rgba(var(--gold-rgb),.16)}
+.sp-txt p{margin:14px 0 0;color:var(--muted);font-size:14px;line-height:1.7;max-width:300px;margin-inline:auto}
+.sp-spin{position:relative;z-index:1;width:28px;height:28px;color:var(--gold-2);border:2px solid rgba(var(--gold-rgb),.2);border-top-color:var(--gold-2);border-radius:50%;margin-top:4px}
+@media (prefers-reduced-motion:no-preference){.sp-spin{animation:spspin .8s linear infinite}@keyframes spspin{to{transform:rotate(360deg)}}@keyframes spglow{0%,100%{transform:scale(.96);opacity:.55}50%{transform:scale(1.04);opacity:1}}}
+@media (prefers-reduced-motion:reduce){.sp-card,#splash,#splash:before,#splash:after{transition:none;animation:none}}
 /* discover */
 .dsec{margin:0;padding:16px 16px 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
 .dcard{margin:0 16px 10px;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden;transition:border-color .25s}
@@ -383,6 +380,10 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .tcard .ar{flex:none;color:var(--muted);font-size:22px}
 .tnotes{margin:14px 16px 4px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px}
 .thead{padding:0 16px 8px}.thead h2{font-family:var(--serif);font-size:30px;line-height:1.05;color:var(--gold-2);overflow-wrap:anywhere}
+/* admin away mode */
+.awaybar{margin:10px 16px;padding:12px 14px;border-radius:14px;border:1px solid #e0903a;background:rgba(224,144,58,.12);display:grid;gap:4px;font-size:13.5px}
+.awaybar b{font-size:15px}.awaybar small{color:var(--muted)}
+.awaycard{margin:10px 16px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);display:grid;gap:8px}.awaycard.on{border-color:#e0903a;background:rgba(224,144,58,.12)}
 /* terms and conditions: must be accepted before the store works */
 .termsov{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px}
 .termsbox{width:100%;max-width:560px;max-height:100%;display:flex;flex-direction:column;gap:12px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:18px}
@@ -407,6 +408,15 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .pkd{margin:10px 16px 0;padding:12px 14px;border-radius:14px;border:1px solid var(--gold);background:rgba(var(--gold-rgb),.07);display:grid;gap:6px}
 .pkd>div{display:flex;justify-content:space-between;gap:12px;font-size:13.5px}.pkd>div span:first-child{color:var(--muted)}.pkd>div span:last-child{text-align:right;font-weight:700;overflow-wrap:anywhere}
 .pkd .pdp span:last-child{color:var(--gold-2);font-size:17px}
+.plc .bdg{align-self:flex-start;padding:1px 8px;border-radius:6px;background:var(--gold);color:#1a1405;font-size:11px;font-weight:800}
+.plc .pn{color:var(--soft);font-size:12.5px;overflow-wrap:anywhere}
+.plc.rental{border-style:dashed}
+/* plan editor (admin): three sections */
+.pe{padding:0 16px}.psec{margin:0 0 18px}.ph{display:flex;flex-direction:column;gap:2px;margin:6px 0 8px}.ph b{font-size:15px}.ph small{color:var(--muted);font-size:12.5px}
+.o3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.o3 input{padding:8px 6px;font-size:13px}.o2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.oextra{margin:2px 0 8px}.oextra summary{cursor:pointer;font-size:13px;color:var(--gold-2);font-weight:700;min-height:36px;display:flex;align-items:center}
+.optrow.hid{opacity:.6}.optrow .oauto{font-size:12px;color:var(--muted);margin:2px 0 6px}
+.ppv{margin-top:10px;padding:10px 0;border:1px dashed var(--line);border-radius:12px}.ppv:empty{display:none}
 /* story page v2: banner hero, plan pills, sticky action bar */
 .sh{position:relative;padding:64px 16px 18px;text-align:center;overflow:hidden}
 .sh-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(30px) brightness(.5) saturate(1.25);transform:scale(1.1)}
@@ -831,6 +841,7 @@ const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="
   <div class="bar"><i style="width:${i.episode.duration ? Math.min(100, i.pos / i.episode.duration * 100) : 0}%"></i></div></div></button>`);
 const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
 
+const awayBanner = () => { const a = S.away; return a && a.away ? `<div class="awaybar" role="status"><b>&#128680; Admin is unavailable</b><span>&#128221; ${esc(a.reason)}</span><span>&#9203; Back: ${new Date(a.until * 1000).toLocaleString()}</span><small>&#128179; Payments and messages wait until the admin is back. &#127911; Your stories keep working.</small></div>` : ''; };
 function renderHome(){
   const v = $('#view'); renderHeader();
   if (S.homeState === 'error' && !S.home){ v.innerHTML = retryBox(S.homeErr, 'retryHome'); return; }
@@ -839,6 +850,7 @@ function renderHome(){
   const h = S.home, hero = h.trending.length ? h.trending : h.recent, tier = h.tiers[Math.min(S.tier, h.tiers.length - 1)];
   if (!S.feed.seeded){ S.feed.items = [...h.recommended]; S.feed.seeded = true; }
   const sections = [
+    awayBanner(),
     offersStrip(),
     secRail(tr('trending'), hero, 'trending', slide),
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
@@ -1035,7 +1047,7 @@ function renderMe(){
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
     <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
-    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="1"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="1"')}${item('\u2B50', tr('pfb'), 'data-pbot="1"')}</div>
+    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="guide"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="help"')}${item('\u2B50', tr('pfb'), 'data-pbot="feedback"')}</div>
     <h3 class="lsub">${tr('pdisp')}</h3>
     <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
     <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
@@ -1779,44 +1791,52 @@ function ownedSummary(a){
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
 const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
-const planSub = o => o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}` : `${o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes'} | ${Number(o.days) > 0 ? o.days + ' days' : tr('lkeep')}`;
+const scopeOf = o => o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes';
+const accessOf = o => Number(o.days) > 0 ? o.days + ' days' : tr('lkeep');
+const planSub = o => o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}${isRent(o) ? ' | ' + accessOf(o) : ''}` : `${scopeOf(o)} | ${accessOf(o)}`;
 const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
 const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
 function pickPlan(){
   const opts = visOpts(), ok = o => +o.price > 0 && !planOwned(o);
   if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
 }
-const isRent = o => Number(o.days) > 0;
+const planKind = o => { const k = o && o.kind; return k === 'full' || k === 'pack' || k === 'rental' ? k : (Number(o.days) > 0 ? 'rental' : (o.topic || o.auto) ? 'pack' : 'full'); };      // older plans have no kind yet
+const isRent = o => planKind(o) === 'rental';
+const byOrder = (a, b) => (a.order || 9999) - (b.order || 9999);
 const packName = o => o.from ? `Episode ${o.from} to ${o.ongoing || !o.to ? 'Ongoing' : o.to}` : o.label;
-function planGroups(opts){                                  // 1 story plans, 2 episode packs, 3 rentals
-  const pack = opts.filter(o => o.topic || o.auto), rest = opts.filter(o => !(o.topic || o.auto));
-  return {show: rest.filter(o => !isRent(o)), pack, rent: rest.filter(isRent)};
+function planGroups(opts){                                  // 1 full story plans, 2 episode packs, 3 rentals; hidden plans never show, the admin's position decides the order
+  const live = opts.filter(o => !o.hidden), by = k => live.filter(o => planKind(o) === k).sort(byOrder);
+  return {show: by('full'), pack: by('pack'), rent: by('rental')};
 }
 const planPrice = o => Number(o.price) === 0 ? 'Listen free' : `${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}`;
 function planCardHtml(o){
   const owned = planOwned(o), free = Number(o.price) === 0, on = !free && String(o.id) === String(V.sel);
-  const body = `${isRent(o) ? '<span class="rtag">&#9203; Rental</span>' : ''}<b>${esc(o.label)}</b><small>${esc(planSub(o))}</small>${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}<span class="pp">${owned ? 'Owned' : planPrice(o)}</span>`;
+  const body = `${o.badge ? `<span class="bdg">&#9733; ${esc(o.badge)}</span>` : ''}${isRent(o) ? `<span class="rtag">&#9203; ${o.days}-day rental</span>` : ''}<b>${esc(o.label)}</b><small>${esc(planSub(o))}</small>${isRent(o) ? `<small>Access starts when your payment is approved</small>` : ''}${o.note ? `<span class="pn">${esc(o.note)}</span>` : ''}${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}<span class="pp">${owned ? 'Owned' : planPrice(o)}</span>`;
   if (owned) return `<div class="plc have">${body}</div>`;
-  return `<button class="plc${free ? ' free' : ''}${on ? ' on' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
+  return `<button class="plc${isRent(o) ? ' rental' : ''}${free ? ' free' : ''}${on ? ' on' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
 }
 const packCardHtml = o => { const open = String(o.id) === String(V.pack); return `<button class="pk${open ? ' on' : ''}${planOwned(o) ? ' have' : ''}" data-pack="${esc(o.id)}" aria-pressed="${open}">${esc(packName(o))}</button>`; };
 function packDetailHtml(){
-  const o = visOpts().find(x => (x.topic || x.auto) && String(x.id) === String(V.pack)); if (!o) return '';
+  const o = visOpts().find(x => planKind(x) === 'pack' && !x.hidden && String(x.id) === String(V.pack)); if (!o) return '';
   const tn = topicNameOf(V.story, o), owned = planOwned(o), free = Number(o.price) === 0, n = o.from && o.to ? o.to - o.from + 1 : 0;
   const row = (k, v, cls = '') => `<div${cls ? ` class="${cls}"` : ''}><span>${k}</span><span>${v}</span></div>`;
   return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${tn ? row('Topic', esc(tn)) : ''}${o.from ? row('Episodes', o.ongoing ? `${o.from} to Ongoing` : o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : ''}
-    ${row('Access', isRent(o) ? `${o.days} days (rental)` : esc(tr('lkeep')))}${o.ongoing ? row('Note', `Ongoing episodes are added as they are released, but this plan includes only ${n} episodes, till ${o.to}.`) : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
+    ${o.badge ? row('Highlight', '&#9733; ' + esc(o.badge)) : ''}${o.note ? row('About', esc(o.note)) : ''}
+    ${row('Access', Number(o.days) > 0 ? `${o.days} days` : esc(tr('lkeep')))}${o.ongoing ? row('Note', `Ongoing episodes are added as they are released, but this plan includes only ${n} episodes, till ${o.to}.`) : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
     ${row('Price', owned ? 'Owned' : planPrice(o) + (o.credit && !free ? ` (upgrade credit -${money(o.credit)})` : ''), 'pdp')}
     ${free && !owned ? `<button class="btn block" data-free="${o.from || 1}">Listen free</button>` : ''}</div>`;
 }
 function plansHtml(){
   const opts = visOpts(); if (!opts.length) return '<div class="by" style="padding:0 16px">No plans for this topic yet.</div>';
+  return plansMarkup(opts, true);
+}
+function plansMarkup(opts, detail){                          // shared by the story page and the admin preview
   const g = planGroups(opts);
   const sec = (title, hint, inner) => `<div class="pl-sec"><div class="pl-h"><b>${title}</b><small>${hint}</small></div>${inner}</div>`;
   const dots = n => n > 1 ? `<div class="pl-dots">${Array.from({length: n}, (_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</div>` : '';
-  return (g.show.length ? sec('Story plans', g.show.length > 1 ? 'Swipe for more' : '', `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}`) : '')
-    + (g.pack.length ? sec('Episode packs', 'Tap a range for details', `<div class="pl-row" data-row="pack">${g.pack.map(packCardHtml).join('')}</div>${packDetailHtml()}`) : '')
-    + (g.rent.length ? sec('Rental', g.rent.length > 1 ? 'Swipe for more' : '', `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>`) : '');
+  return (g.show.length ? sec('Full Story plans', g.show.length > 1 ? 'Swipe for more' : '', `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}`) : '')
+    + (g.pack.length ? sec('Episode packs', 'Tap a range for details', `<div class="pl-row" data-row="pack">${g.pack.map(packCardHtml).join('')}</div>${detail ? packDetailHtml() : ''}`) : '')
+    + (g.rent.length ? sec('Rental plans', g.rent.length > 1 ? 'Swipe for more' : '', `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>`) : '');
 }
 document.addEventListener('scroll', e => {                  // the dots under the one-at-a-time row follow the slide
   const r = e.target; if (!r || !r.classList || !r.classList.contains('one')) return;
@@ -1919,13 +1939,22 @@ const E = {id:null, cover:'', photo:''};
 const INFO = {};                                       // remembers cards so a tap can start playback without another request
 const CPA = {list: [], id: null};
 const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
+async function paintAway(){
+  const box = $('#awayCard'); if (!box) return;
+  let a = null; try{ a = await api('/api/away'); S.away = a; }catch(e){}
+  box.innerHTML = a && a.away
+    ? `<div class="awaycard on"><b>&#128680; You are away</b><div class="by">${esc(a.reason)}<br>Back: ${new Date(a.until * 1000).toLocaleString()}</div><button class="btn small" id="awayOff" type="button">I am back</button></div>`
+    : `<div class="awaycard"><b>&#128680; Emergency away mode</b><div class="by">Tells every user you are unavailable, with your reason and return date. Update reports pause meanwhile.</div>
+        <div class="two"><label class="field"><span>Days</span><input id="away_days" type="number" min="1" max="90" inputmode="numeric" placeholder="3"></label><label class="field"><span>Reason (users see it)</span><input id="away_reason" maxlength="200" placeholder="Family emergency"></label></div>
+        <button class="btn small" id="awayOn" type="button">Go away and tell users</button></div>`;
+}
 function renderAdmin(){
   $('#admin').innerHTML = `<header class="admin-head">
       <div class="admin-headrow"><div class="admin-brand"><div class="admin-mark" aria-hidden="true">♛</div><div><div class="admin-title">Control Centre</div><small class="admin-sub">AJ'S FM STORIES · ADMIN WORKSPACE</small></div></div>
       <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
       <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
     </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['updates', '\uD83D\uDCE3 Updates'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
 function openCouponEditor(id){
@@ -2004,6 +2033,17 @@ async function loadAdmin(){
         (d.deliveries.map(r => `<div class="mrow"><b>Delivery #${r.id}</b> <span class="tag ${r.status === 'active' ? 'live' : ''}">${esc(r.status)}</span><div class="by">User ${r.user_id} | ${esc(r.title || r.story_id)} | ${r.episodes} episodes | ${esc(r.window)}</div>
           <div class="by">${r.expires && r.status === 'active' ? 'Removed at ' + new Date(r.expires * 1000).toLocaleTimeString() : esc(r.reason || '')}</div>
           ${r.status === 'active' ? `<div class="actions" style="padding:8px 0 0"><button class="btn danger small" data-rend="${r.id}">Remove now</button></div>` : ''}</div>`).join('') || '<div class="empty">Nothing has been sent yet.</div>');
+    } else if (tab === 'updates'){
+      const d = await api('/api/admin/updates', {signal: sig}); if (A.tab !== tab) return;
+      const when = t => t ? new Date(t * 1000).toLocaleString() : '-';
+      body.innerHTML = `<div id="awayCard"></div>
+        <div class="box"><b>&#128227; Story update reports</b><p class="note" style="margin:6px 0 8px">Every Ongoing story is reported to your bot chat every day at the time below. Change a story's days or time in its row. The bot lists the new episodes added, or warns you when none were.</p>
+          <div class="two"><label class="field"><span>Report time for all stories (${esc(d.tz)})</span><input id="u_time" type="time" value="${esc(d.default_time)}"></label><button class="btn small" id="uTimeSave" type="button" style="align-self:end">Save time</button></div></div>
+        ${d.stories.map(st => `<div class="mrow"><b>${esc(st.title)}</b> <span class="by">${esc(st.status)}</span>
+          <div class="by">${st.days ? `${st.days === 1 ? 'Daily' : 'Every ' + st.days + ' days'} at ${esc(st.time)}${st.custom_days ? '' : ' (default)'} | next: ${when(st.next)}` : 'Reports are off'}</div>
+          <div class="two"><label class="field"><span>Days (blank = daily, 0 = off)</span><input type="number" min="0" max="365" inputmode="numeric" class="u_days" placeholder="daily" value="${st.custom_days ? st.days : ''}"></label><label class="field"><span>Time (blank = default)</span><input type="time" class="u_t" value="${st.custom_time ? esc(st.time) : ''}"></label></div>
+          <div class="actions" style="padding:6px 0 0"><button class="btn small" data-usave="${esc(st.id)}" type="button">Save</button><button class="btn ghost small" data-usend="${esc(st.id)}" type="button">Send report now</button></div></div>`).join('') || '<div class="empty">No ongoing stories yet.</div>'}`;
+      paintAway();
     } else if (tab === 'stats'){
       const d = await api('/api/admin/stats', {signal: sig}); if (A.tab !== tab) return;
       const k = (t, v) => `<div class="kpi"><small>${t}</small><b>${v}</b></div>`;
@@ -2075,11 +2115,52 @@ async function resetFlow(scope){
 }
 
 /* ---- story editor (metadata only) ---- */
-function optRow(o = {}, removable = true){
-  return `<div class="optrow" data-id="${esc(o.id || '')}"><input class="o-label" placeholder="Plan name, e.g. Episodes 1-500" value="${esc(o.label || '')}" aria-label="Plan name">
-    <div class="o4"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-days" type="number" min="0" inputmode="numeric" placeholder="Days" value="${o.days ?? ''}" aria-label="Days of access, 0 for lifetime">
-    <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="From ep" value="${o.from ?? ''}" aria-label="From episode"><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"></div>
-    ${removable ? '<button type="button" class="btn danger small o-del">Remove plan</button>' : ''}</div>`;
+const KINDS = {full: ['&#128081;', 'Full Story plans', 'Members see one plan card at a time and slide for the next.'], pack: ['&#128230;', 'Episode packs', 'Small cards named only "Episode _ to _". Tapping one shows the full details.'], rental: ['&#9203;', 'Rental plans', 'Access ends after the days you set. Rentals get no upgrade credit.']};
+function optRow(o = {}, removable = true, kind){
+  kind = kind || planKind(o);
+  const rent = kind === 'rental', full = kind === 'full', auto = !!o.auto, ro = auto ? ' readonly' : '';
+  const ph = rent ? 'Rental name, e.g. 30-day rental' : full ? 'Plan name, e.g. Full Story' : 'Pack name, e.g. Episodes 1-50';
+  const custom = !!(o.badge || o.note || o.hidden || o.order);
+  return `<div class="optrow${o.hidden ? ' hid' : ''}" data-id="${esc(o.id || '')}" data-kind="${kind}"${auto ? ' data-auto="1"' : ''}><input class="o-label" placeholder="${ph}" value="${esc(o.label || '')}" aria-label="Plan name"${ro}>
+    ${auto ? '<div class="oauto">Made by the pack rule. You can change its price, badge, note, position and visibility.</div>' : ''}
+    <div class="${full ? 'o3' : 'o4'}"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price">
+    ${full ? '<input class="o-days" type="hidden" value="0">' : `<input class="o-days" type="number" min="${rent ? 1 : 0}" inputmode="numeric" placeholder="${rent ? 'Days *' : 'Days (0 = keep)'}" value="${o.days ?? ''}" aria-label="Days of access">`}
+    <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="${rent ? 'From ep (blank = all)' : 'From ep'}" value="${o.from ?? ''}" aria-label="From episode"${ro}><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"${ro}></div>
+    <details class="oextra"${custom ? ' open' : ''}><summary>Customise${custom ? ' &#10003;' : ''}</summary>
+      <div class="o2"><label class="field"><span>Badge (e.g. Best value)</span><input class="o-badge" maxlength="24" value="${esc(o.badge || '')}"></label><label class="field"><span>Position (1 = first)</span><input class="o-order" type="number" min="1" max="9999" inputmode="numeric" value="${o.order || ''}"></label></div>
+      <label class="field"><span>Short note shown on the plan</span><input class="o-note" maxlength="140" value="${esc(o.note || '')}"></label>
+      <label class="field check"><input type="checkbox" class="o-hide"${o.hidden ? ' checked' : ''}><span style="margin:0">Hide from members (stops new sales, existing buyers keep access)</span></label></details>
+    ${removable && !auto ? '<button type="button" class="btn danger small o-del">Remove plan</button>' : ''}</div>`;
+}
+function planEditorHtml(id, opts, pre, o = {}){                 // three sections: full story plans, episode packs, rentals
+  const list = (opts || []).slice().sort((a, b) => (a.order || 9999) - (b.order || 9999));
+  const rows = k => list.filter(x => planKind(x) === k).map(x => optRow(x, true, k)).join('');
+  const head = k => `<div class="ph"><b>${KINDS[k][0]} ${KINDS[k][1]}</b><small>${KINDS[k][2]}</small></div>`;
+  const add = (k, t) => `<button type="button" class="btn ghost small" data-padd="${k}" data-pe="${id}">${t}</button>`;
+  return `<div class="pe" id="${id}">
+    <div class="psec" data-kind="full">${head('full')}<div class="pbody">${rows('full')}</div><div class="actions" style="padding:0">${add('full', '＋ Add full story plan')}</div></div>
+    <div class="psec" data-kind="pack">${head('pack')}<div class="pbody">${rows('pack')}</div><div class="actions" style="padding:0">${add('pack', '＋ Add one pack')}</div>
+      <div class="box" style="margin-top:10px"><b>Make many packs at once</b><div class="o4"><input id="${pre}start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number" value="${o.start || ''}"><input id="${pre}total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="${pre}size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="${pre}price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
+        <button class="btn ghost small" type="button" data-pgen="${id}|${pre}">Add packs</button>${o.auto ? `<label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="${pre}auto" style="width:22px;height:22px;min-width:22px;flex:none;padding:0;margin:0"> <span>Make the next packs automatically as new episodes arrive (leave Total blank)</span></label>` : ''}
+        <p class="note" style="margin:8px 0 0">Leave Total blank for one pack at a time. A pack whose last episode is not out yet shows to members as &quot;Episode 3501 to Ongoing&quot;; new episodes unlock as they release, up to the last episode of the pack.</p></div></div>
+    <div class="psec" data-kind="rental">${head('rental')}<div class="pbody">${rows('rental')}</div>
+      <div class="chips wrap" style="padding:0">${[7, 15, 30, 90].map(d => `<button type="button" class="chip" data-prent="${d}" data-pe="${id}">＋ ${d} days</button>`).join('')}${add('rental', '＋ Custom rental')}</div>
+      <p class="note" style="margin:6px 0 0">Leave From and To blank to rent the whole story${o.auto ? ' (or the whole topic)' : ''}, or fill them to rent only a range of episodes.</p></div>
+    <div class="actions" style="padding:0"><button type="button" class="btn ghost small" data-ppv="${id}">&#128065; Preview as member</button></div><div class="ppv" id="${id}_pv"></div></div>`;
+}
+const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order});
+function planProblem(list, needFrom){
+  for (const p of list){
+    if (p.kind === 'rental' && !(p.days >= 1)) return `Rental "${p.label}": enter the days (1 or more)`;
+    if (p.from && p.to && p.from > p.to) return `Plan "${p.label}": From must not be greater than To (leave To blank for ongoing)`;
+    if (needFrom && p.kind !== 'rental' && !p.from) return `Plan "${p.label}": fill From (leave To blank for ongoing)`;
+  }
+  return '';
+}
+function previewPlans(id){
+  const box = $('#' + id + '_pv'); if (!box) return;
+  const list = readPlans('#' + id).concat(readPlans('#' + id, true)).map((o, i) => ({...o, id: 'pv' + i, price: o.price}));
+  const live = list.filter(o => !o.hidden); box.innerHTML = live.length ? plansMarkup(live, false).replace(/ data-(plan|pack|free)=/g, ' data-pv-$1=') : '<div class="by" style="padding:0 12px">Nothing to show yet. Hidden plans are not shown to members.</div>';
 }
 async function openEditor(id){
   Object.assign(E, {id: id || null, cover: '', photo: ''});
@@ -2104,11 +2185,13 @@ async function openEditor(id){
     <div class="field"><span>Or upload a cover photo (keeps its own shape)</span><input id="e_photo" type="file" accept="image/*"><div id="e_prev" style="margin-top:8px"></div></div>
     <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
     <label class="field"><span>Upgrade credit cut % for this story (0 to 10, blank = default)</span><input id="e_ucut" type="number" min="0" max="10" step="0.5" inputmode="decimal" value="${s.upgrade_cut ?? ''}"></label>
+    <div class="field"><span>Bot update reports for this story: every how many days? (blank = daily, 0 = off)</span><input id="e_udays" type="number" min="0" max="365" inputmode="numeric" placeholder="daily (default)" value="${s.update_days ?? ''}">
+      <div class="chips wrap" style="padding:8px 0 0">${[['', 'Daily (default)'], [0, 'Off'], [7, '7 days'], [8, '8 days'], [10, '10 days'], [20, '20 days'], [30, '30 days']].map(([d, t]) => `<button type="button" class="chip" data-udays="${d}">${t}</button>`).join('')}</div>
+      <label class="field" style="margin:10px 0 0"><span>Time of day for the report (blank = your default time)</span><input id="e_utime" type="time" value="${esc(s.update_time || '')}"></label>
+      <small class="note">Every Ongoing story is reported daily unless you change it here. The bot messages you at that fixed time: the new episodes added, or a warning when none were.${s.update_next ? ' Next report: ' + new Date(s.update_next * 1000).toLocaleString() + '.' : ''} All schedules are also in the Updates section of the admin dashboard.</small></div>
     <label class="field"><span>Notes (shown below the topic cards)</span><textarea id="e_notes" maxlength="2000">${esc(s.notes || '')}</textarea></label>
-    <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Price 0 means free for everyone. Days 0 means keep forever. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
-    <div style="padding:0 16px" id="e_opts">${(s.options || []).filter(o => !o.topic).map(o => optRow(o)).join('')}</div><div class="actions"><button class="btn ghost small" id="eAddOpt" type="button">Add plan</button></div>
-    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="sg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="sg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="sg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="sg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
-      <button class="btn ghost small" id="eGen" type="button">Add packs</button></div>
+    <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Three sections: full story plans, episode packs and rentals. Price 0 means free for everyone. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
+    ${planEditorHtml('e_opts', (s.options || []).filter(o => !o.topic), 'sg_')}
     <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
   $('#e_status').value = s.status || 'Ongoing'; paintPhoto();
@@ -2117,9 +2200,10 @@ function paintPhoto(){
   const src = E.photo || (isImg(E.cover) ? E.cover : '');
   $('#e_prev').innerHTML = src ? `<div class="cv has-img" style="width:90px;display:inline-block"><img src="${esc(src)}" alt="Cover preview" data-fb="📖"></div> <button class="btn danger small" id="photoRemove" type="button">Remove cover image</button>` : '';
 }
-function readPlans(sel = '#e_opts'){
-  return $$(sel + ' .optrow').map(r => ({id: r.dataset.id || '', label: r.querySelector('.o-label').value.trim(), price: r.querySelector('.o-price').value === '' ? 0 : Number(r.querySelector('.o-price').value),
-    days: parseInt(r.querySelector('.o-days').value) || 0, from: parseInt(r.querySelector('.o-from').value) || null, to: parseInt(r.querySelector('.o-to').value) || null})).filter(o => o.label);
+function readPlans(sel = '#e_opts', auto = false){          // auto = true reads the hand edits of rule-made packs instead
+  return $$(sel + ' .optrow').filter(r => !!r.dataset.auto === auto).map(r => { const q = k => r.querySelector(k);
+    return {id: r.dataset.id || '', label: q('.o-label').value.trim(), price: q('.o-price').value === '' ? 0 : Number(q('.o-price').value), days: parseInt(q('.o-days').value) || 0,
+      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: r.dataset.kind, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0}; }).filter(o => o.label);
 }
 function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
   const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
@@ -2128,7 +2212,7 @@ function addPacks(sel, pre){                      // pre = prefix of the four ge
   if (!start) start = Math.max(0, ...$$(sel + ' .o-to').map(i => parseInt(i.value) || 0)) + 1;      // carries on after the last pack
   const end = total ? start + total - 1 : start + size - 1;                                        // total blank (ongoing story): one pack at a time
   if (Math.ceil((end - start + 1) / size) > 100) return toast('That makes more than 100 packs. Use a bigger pack size.');
-  for (let a = start; a <= end; a += size) $(sel).insertAdjacentHTML('beforeend', optRow({label: `Episodes ${a}-${Math.min(a + size - 1, end)}`, price, days: 0, from: a, to: Math.min(a + size - 1, end)}));
+  for (let a = start; a <= end; a += size) $(sel + ' .psec[data-kind="pack"] .pbody').insertAdjacentHTML('beforeend', optRow({label: `Episodes ${a}-${Math.min(a + size - 1, end)}`, price, days: 0, from: a, to: Math.min(a + size - 1, end)}, true, 'pack'));
   if (!total){ g('start').value = ''; toast(`Pack ${start}-${end} added. Total is blank, so tap Add packs again for the next pack.`, 5000); }
 }
 async function saveEditor(){
@@ -2136,9 +2220,10 @@ async function saveEditor(){
     const title = $('#e_title').value.trim();
     if (!title) return toast('Add a title first');
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: $('#e_genre').value.trim(), language: $('#e_lang').value.trim(),
-      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value),
+      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '',
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts')};
     const badPlan = story.options.find(o => (o.to && !o.from) || (o.from && o.to && o.from > o.to)); if (badPlan) return toast(`Plan "${badPlan.label}": From must not be bigger than To (leave To blank for ongoing)`, 5000);
+    const planErr = planProblem(story.options, false); if (planErr) return toast(planErr, 5000);
     const btn = $('#saveStory'); btn.disabled = true; btn.textContent = 'Saving...';
     const body = {story, allow_free: false, confirm_affects: false};
     try{
@@ -2208,10 +2293,8 @@ function openTopicEditor(tid){
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Edit topic</strong></div>
     <label class="field"><span>Topic name *</span><input id="te_name" value="${esc(t.name)}" maxlength="60"></label>
     <label class="field"><span>Note shown on the topic card (optional)</span><textarea id="te_note" maxlength="300" style="min-height:70px">${esc(t.note || '')}</textarea></label>
-    <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Every plan needs a From episode. Leave To blank for an ongoing plan: it covers every episode from From onwards, new ones included. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
-    <div style="padding:0 16px" id="te_opts">${(s.options || []).filter(o => o.topic === tid && !o.auto).map(o => optRow(o)).join('')}</div><div class="actions"><button class="btn ghost small" id="teAddOpt" type="button">Add plan</button></div>
-    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="tg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number"><input id="tg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="tg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="tg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
-      <button class="btn ghost small" id="teGen" type="button">Add packs</button><label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="tg_auto" style="width:22px;height:22px;min-width:22px;flex:none;padding:0;margin:0"> <span>Make the next packs automatically as new episodes arrive (leave Total blank)</span></label><p class="note" style="margin:8px 0 0">Packs are added by you, one at a time (leave Total blank for one pack). A pack whose last episode is not released yet is shown to buyers as &quot;Episodes 3501 to Ongoing&quot; with a note: new episodes are added as they release, but only up to the last episode of the pack.</p></div>
+    <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Full story plans and packs need a From episode (leave To blank for ongoing). A rental can leave From blank to rent the whole topic. Price 0 means free for everyone. Existing purchases are never changed.</p>
+    ${planEditorHtml('te_opts', (s.options || []).filter(o => o.topic === tid), 'tg_', {auto: true})}
     <div class="actions"><button class="btn" id="teSave">Save topic</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
   openSheet('topiced');
   if (t.pack){ $('#tg_start').value = t.pack.start; $('#tg_size').value = t.pack.size; $('#tg_price').value = t.pack.price; $('#tg_auto').checked = true; }
@@ -2222,23 +2305,20 @@ function openPlanAdd(tid){
   const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid).map(o => +o.to || 0));      // the new plan carries on after the last one
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Add plan</strong></div>
     <h3 class="h3" style="margin-top:0">${esc(t.name)}</h3>
-    <p class="note">This plan is added to this topic only. Every plan needs a From episode. Leave To blank for an ongoing plan: it covers every episode from From onwards, new ones included. Price 0 means free for everyone. Days 0 means keep forever. Existing purchases are never changed.</p>
-    <div style="padding:0 16px" id="pa_opts">${optRow({days: 0, from: last ? last + 1 : null}, false)}</div>
-    <div class="box" style="margin-top:12px"><b>Make episode packs automatically</b><div class="o4"><input id="pg_start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number" value="${last ? last + 1 : ''}"><input id="pg_total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="pg_size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="pg_price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
-      <button class="btn ghost small" id="paGen" type="button">Add packs</button><p class="note" style="margin:8px 0 0">Packs are added above. Leave Total blank for one pack at a time. Everything above is saved together when you tap Save plan.</p></div>
+    <p class="note">Plans added here go to this topic only. Pick a section: full story plan, episode packs or rental. Everything is saved together when you tap Save plan. Existing purchases are never changed.</p>
+    ${planEditorHtml('pa_opts', [], 'pg_', {start: last ? last + 1 : ''})}
     <div class="actions"><button class="btn" id="paSave">Save plan</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
   openSheet('topiced');
-  const f = $('#pa_opts .o-label'); if (f) setTimeout(() => f.focus(), 120);
 }
 async function savePlanAdd(){
   await once('pasave', async () => {
     const tid = TE.id, nps = readPlans('#pa_opts');
-    if (!nps.length) return toast('Give the plan a name, or tap Add packs');
-    const bad = nps.find(p => !p.from || (p.to && p.from > p.to)); if (bad) return toast(`Plan "${bad.label}": fill From (From must not be greater than To; leave To blank for ongoing)`);
+    if (!nps.length) return toast('Add a plan, a rental or some packs first');
+    const bad = planProblem(nps, true); if (bad) return toast(bad, 5000);
     try{
       const d = await api(`/api/story/${encodeURIComponent(T.sid)}?limit=1`);                              // newest plans, so nothing saved elsewhere is overwritten
-      const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto).map(o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to}));
-      const r = await topicCall({action: 'edit', id: tid, options: [...mine, ...nps.map(p => ({...p, id: ''}))]}); if (!r) return;
+      const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto).map(planPayload);
+      const r = await topicCall({action: 'edit', id: tid, options: [...mine, ...nps.map(p => ({...planPayload(p), id: ''}))]}); if (!r) return;
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
       toast(nps.length > 1 ? `${nps.length} plans added` : 'Plan added'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
     }catch(e){ toast(adminErr(e), 5000); }
@@ -2249,10 +2329,10 @@ async function saveTopic(){
     const name = $('#te_name').value.trim(); if (!name) return toast('Give the topic a name');
     const auto = $('#tg_auto').checked, pack = auto ? {start: parseInt($('#tg_start').value), size: parseInt($('#tg_size').value), price: Number($('#tg_price').value) || 0, days: 0} : null;
     if (auto && !(pack.start && pack.size)) return toast('For automatic packs fill First ep and Pack size');
-    const options = readPlans('#te_opts'), bad = options.find(o => !o.from || (o.to && o.from > o.to));
-    if (bad) return toast(`Plan "${bad.label}": fill From (From must not be greater than To; leave To blank for ongoing)`);
+    const options = readPlans('#te_opts'), autoEdits = readPlans('#te_opts', true), bad = planProblem(options.concat(autoEdits), true);
+    if (bad) return toast(bad, 5000);
     try{
-      const r = await topicCall({action: 'edit', id: TE.id, name, note: $('#te_note').value.trim(), options, pack}); if (!r) return;
+      const r = await topicCall({action: 'edit', id: TE.id, name, note: $('#te_note').value.trim(), options: options.map(planPayload), auto_edits: autoEdits.map(planPayload), pack}); if (!r) return;
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
       toast('Topic saved'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
     }catch(e){ toast(adminErr(e), 5000); }
@@ -2416,8 +2496,9 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-cpuse]'))){ const code = m.dataset.cpuse; return once('cpuse', async () => { await cpApply(code, CART.map(i => ({sid: i.sid, oid: i.oid}))); setTab('cart'); }); }
   if (c('#cartBrowse')) return setTab('home');
   if ((m = c('[data-pgo]'))){ const k = m.dataset.pgo; if (k === 'cart') return setTab('cart'); L.seg = k; return setTab('library'); }
+  if ((m = c('[data-udays]'))){ $('#e_udays').value = m.dataset.udays; return true; }
   if (c('[data-terms]')){ showTerms(true); return; }
-  if (c('[data-pbot]')){ goBot(''); return; }
+  if ((m = c('[data-pbot]'))){ goBot(m.dataset.pbot === '1' ? '' : m.dataset.pbot); return; }          // 1 = the bot's home, anything else opens that place in the bot (help, guide, feedback)
   if (c('#preqBtn')) return openRequest('new');
   if (c('#presetBtn')) return askConfirm(tr('presetq'), resetAppData);
   if (c('#libRefresh')) return loadLibrary();
@@ -2528,6 +2609,18 @@ document.addEventListener('click', async e => {
   if (c('#mNext')) return goNeighbor('after');
   /* admin */
   if (c('#adminBtn')){ renderAdmin(); return openSheet('admin'); }
+  if (c('#uTimeSave')) return once('upd', async () => { try{ await cpPost('/api/admin/updates', {default_time: $('#u_time').value}); toast('Report time saved'); loadAdmin(); }catch(e){ toast(adminErr(e), 5000); } });
+  if ((m = c('[data-usave]'))) return once('upd', async () => { const row = m.closest('.mrow'); try{ await cpPost('/api/admin/updates', {story: {id: m.dataset.usave, days: row.querySelector('.u_days').value, time: row.querySelector('.u_t').value}}); toast('Saved'); loadAdmin(); }catch(e){ toast(adminErr(e), 5000); } });
+  if ((m = c('[data-usend]'))) return once('upd', async () => { try{ const r = await cpPost('/api/admin/updates/send', {id: m.dataset.usend}); toast(r.note || 'Sent', 4000); }catch(e){ toast(adminErr(e), 5000); } });
+  if (c('#awayOn')) return once('away', async () => {
+    const days = parseInt($('#away_days').value), reason = $('#away_reason').value.trim();
+    if (!(days >= 1 && days <= 90)) return toast('Enter the days (1 to 90)'); if (!reason) return toast('Give a reason, the users will see it');
+    if (!confirm(`Tell all users you are away for ${days} day(s)?\n\nReason: ${reason}`)) return;
+    try{ const r = await api('/api/admin/away', {method: 'POST', retry: false, body: JSON.stringify({days, reason})}); toast(r.note || 'Away mode is on', 5000); paintAway(); }catch(e){ toast(adminErr(e), 5000); }
+  });
+  if (c('#awayOff')) return once('away', async () => {
+    try{ const r = await api('/api/admin/away', {method: 'POST', retry: false, body: JSON.stringify({off: true})}); S.away = null; toast(r.note || 'Away mode ended', 5000); paintAway(); }catch(e){ toast(adminErr(e), 5000); }
+  });
   if (c('#closeAdmin')) return closeSheet('admin');
   if (c('#refreshAdmin')) return loadAdmin();
   if ((m = c('[data-atab]'))){ A.tab = m.dataset.atab; $$('[data-atab]').forEach(b => b.classList.toggle('on', b === m)); return loadAdmin(); }
@@ -2572,11 +2665,10 @@ document.addEventListener('click', async e => {
     if (!confirm(`Delete the topic "${t ? t.name : ''}"?\n\nIts plans are removed. Its episodes stay in the app without a topic. Existing purchases keep working.`)) return;
     return once('tpdel', async () => { try{ await topicCall({action: 'delete', id: m.dataset.tdel}); toast('Topic deleted'); }catch(e){ toast(adminErr(e)); } loadTopics(); loadAdmin(); loadHome(); });
   }
-  if (c('#teAddOpt')){ $('#te_opts').insertAdjacentHTML('beforeend', optRow()); return; }
-  if (c('#teGen')) return addPacks('#te_opts', 'tg_');
-  if (c('#paGen')) return addPacks('#pa_opts', 'pg_');
-  if (c('#eAddOpt')){ $('#e_opts').insertAdjacentHTML('beforeend', optRow()); return; }
-  if (c('#eGen')) return addPacks('#e_opts', 'sg_');
+  if ((m = c('[data-padd]'))){ const k = m.dataset.padd, box = $('#' + m.dataset.pe + ' .psec[data-kind="' + k + '"] .pbody'); box.insertAdjacentHTML('beforeend', optRow(k === 'rental' ? {days: 30} : {}, true, k)); const f = box.lastElementChild.querySelector('.o-label'); if (f) f.focus(); return; }
+  if ((m = c('[data-prent]'))){ const d = +m.dataset.prent; $('#' + m.dataset.pe + ' .psec[data-kind="rental"] .pbody').insertAdjacentHTML('beforeend', optRow({label: `${d}-day rental`, days: d}, true, 'rental')); return; }
+  if ((m = c('[data-pgen]'))){ const [sel, pre] = m.dataset.pgen.split('|'); return addPacks('#' + sel, pre); }
+  if ((m = c('[data-ppv]'))) return previewPlans(m.dataset.ppv);
   if (c('#teSave')) return saveTopic();
   if ((m = c('[data-apub]'))) return adminPublish(m.dataset.apub, +m.dataset.to);
   if ((m = c('[data-adel]'))) return adminDelete(m.dataset.adel, m.dataset.title);
@@ -2697,6 +2789,7 @@ function splashInit(){
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
   try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
   try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
+  api('/api/away').then(a => { S.away = a; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/terms').then(t => { if (t.user && !t.accepted) showTerms(); }).catch(() => {});
   api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(e => { if (e.network || !navigator.onLine) offlineBoot(); });
   applyTheme(); applyLang(); renderHeader();
