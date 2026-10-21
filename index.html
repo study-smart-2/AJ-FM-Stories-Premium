@@ -717,6 +717,9 @@ function goBot(payload){
 }
 
 /* ---------- shared pieces ---------- */
+const genreList = s => String((s && s.genre) || '').split(',').map(x => x.trim().replace(/^[\s.;]+|[\s.;]+$/g, '')).filter(Boolean);
+const mainGenre = s => genreList(s)[0] || '';   // first genre = the main genre
+const subGenres = s => genreList(s).slice(1);   // the rest = sub genres (story page only)
 const priceMax = s => { if (s.max_price != null) return +s.max_price; if (s.options && s.options.length) return Math.max(...s.options.map(o => +o.price)); return null; };
 const priceLabel = s => {
   if (s.plans === 0) return 'Price soon';
@@ -726,7 +729,7 @@ const priceLabel = s => {
   return lo === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(lo));
 };
 const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
-  <b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
+  <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? s.episodes + ' eps' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
 const tierCard = s => card(s).replace(/<span class="pr">.*?<\/span>/, `<span class="pr">${s.deal ? `<s>${money(s.max_price)}</s>` : ''}${money(s.last_price)}</span>`);      // Super deals show the last (highest) plan price only
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
 const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button class="btn" id="${id}">Try again</button></div>`;
@@ -741,20 +744,23 @@ Object.assign(S, {wish:new Set(), tier:0, notices:[], io:null, feed:{items:[], o
 /* ---------- language, theme, header ---------- */
 const store = {get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }};
 const TR = {
-  en: {poff:'Available Coupons & Offers', otitle:'Coupons & Offers', cpph:'Promo code', cpapply:'Apply', cpremove:'Remove', cpapplied:'Coupon {c} applied', cpsave:'You save {a}', cpnone:'No coupons are running right now. Check back soon.', cpcopy:'Copy', cpcopied:'Code copied', cpuse:'Use in cart', cpmin:'Min order {m}', cpexp:'Valid till {d}', cpavail:'{n} coupons available', cdisc:'Discount',
+  en: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Hours', splan:'Choose a plan', smore:'Read more', sless:'Show less', ssub:'Sub genres:', stopics:'Topics', slisten:'Listen', snotes:'Notes', stransl:'Translated', sorig:'Show original',
+    poff:'Available Coupons & Offers', otitle:'Coupons & Offers', cpph:'Promo code', cpapply:'Apply', cpremove:'Remove', cpapplied:'Coupon {c} applied', cpsave:'You save {a}', cpnone:'No coupons are running right now. Check back soon.', cpcopy:'Copy', cpcopied:'Code copied', cpuse:'Use in cart', cpmin:'Min order {m}', cpexp:'Valid till {d}', cpavail:'{n} coupons available', cdisc:'Discount',
     rqtitle:'Request a Story', rqnew:'New Request', rqmine:'Already Requested Stories', rqname:'Story name', rqnameph:'Title of the story you want', rqplat:'Platform', rqplatph:'Pocket FM, Kuku FM, YouTube...', rqlang:'Language', rqstat:'Story status', rqlink:'Story link (web page only)', rqlinkph:'https://...', rqcover:'Story cover image (optional)', rqpick:'Choose image', rqsubmit:'Submit Your Request', rqsending:'Sending...', rqstore:'Already in the store:', rqdone:'Request sent. Track it under Already Requested Stories.', rqempty:'No requests yet', rqemptynote:'Stories you request show up here with their progress.', rqrej:'Rejected', rqrejnote:'The owner could not take this story up.', rqs1:'Pending', rqs2:'Searching', rqs3:'Posting', rqs4:'Completed', rqd1:'We search for it, check availability, and update you if we can take it up.', rqd2:'The team is checking where the story is available.', rqd3:'Approved stories are published episode by episode.', rqd4:'Everything is live on the platform. The request is marked completed.', rqbadlink:'Only a web page link is allowed. It must start with http:// or https://', rqneed:'Fill in the story name, platform, language and status.', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
     recent:'Recently added', ongoing:'Ongoing stories', completed:'Completed stories', upcoming:'Upcoming stories', viewall:'View all', listen:'Listen now', searchph:'Search title, author, genre or language',
     recents:'Recent searches', tops:'Top searches', clear:'Clear', notif:'Notifications', nonotif:'No notifications yet.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
     cartnote:'Cart and checkout arrive in the next update. For now, open a story and tap Rent or Buy.', melib:'My library', lang:'Language', theme:'Theme', soon:'Soon',
     wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', sptitle:"Welcome to AJ's FM Stories Premium", spsub:'Your premium audio story store inside Telegram, delivered instantly to your chat.', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'Everything in your cart is paid together in one checkout in the bot. One payment, one screenshot.', ctopic:'Topic', cplanl:'Plan', cskip:'{n} item(s) are not sold any more and were left out', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
-  hi: {gm:'सुप्रभात', ga:'नमस्कार', ge:'शुभ संध्या', cont:'जहाँ छोड़ा था वहीं से सुनें', trending:'ट्रेंडिंग कहानियाँ', flash:'फ्लैश ऑफ़र', deals:'सुपर डील्स', under:'{p} से कम',
+  hi: {sby:'लेखक', splat:'प्लेटफ़ॉर्म', seps:'एपिसोड', shrs:'घंटे', splan:'प्लान चुनें', smore:'और पढ़ें', sless:'कम दिखाएँ', ssub:'उप-शैलियाँ:', stopics:'विषय', slisten:'सुनें', snotes:'नोट्स', stransl:'अनुवादित', sorig:'मूल दिखाएँ',
+    gm:'सुप्रभात', ga:'नमस्कार', ge:'शुभ संध्या', cont:'जहाँ छोड़ा था वहीं से सुनें', trending:'ट्रेंडिंग कहानियाँ', flash:'फ्लैश ऑफ़र', deals:'सुपर डील्स', under:'{p} से कम',
     recent:'हाल ही में जोड़ी गईं', ongoing:'चल रही कहानियाँ', completed:'पूरी हो चुकी कहानियाँ', upcoming:'आने वाली कहानियाँ', viewall:'सभी देखें', listen:'अभी सुनें', searchph:'नाम, लेखक, जॉनर या भाषा खोजें',
     recents:'हाल की खोजें', tops:'टॉप सर्च', clear:'हटाएँ', notif:'सूचनाएँ', nonotif:'अभी कोई सूचना नहीं।', home:'होम', discover:'खोजें', library:'लाइब्रेरी', cart:'कार्ट', me:'मैं',
     ends:'खत्म होने में', ended:'खत्म', caught:'आप सब देख चुके हैं। हर हफ्ते नई कहानियाँ आती हैं।', removed:'हिस्ट्री से हटा दिया', cartempty:'आपका कार्ट खाली है',
     cartnote:'कार्ट और चेकआउट अगले अपडेट में आएगा। अभी कहानी खोलकर Rent या Buy दबाएँ।', melib:'मेरी लाइब्रेरी', lang:'भाषा', theme:'थीम', soon:'जल्द',
     wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', sptitle:"AJ's FM Stories Premium में आपका स्वागत है", spsub:'टेलीग्राम के अंदर आपका प्रीमियम ऑडियो स्टोरी स्टोर, सीधे आपकी चैट में।', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'आपके कार्ट की सभी चीज़ें बॉट में एक ही चेकआउट में खरीदी जाती हैं। एक भुगतान, एक स्क्रीनशॉट।', ctopic:'टॉपिक', cplanl:'प्लान', cskip:'{n} आइटम अब उपलब्ध नहीं हैं, उन्हें छोड़ दिया', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
-  hing: {gm:'Good morning', ga:'Namaste', ge:'Shubh sandhya', cont:'Jahan chhoda wahin se suno', trending:'Trending kahaniyan', flash:'Flash offers', deals:'Super deals', under:'{p} se kam',
+  hing: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Ghante', splan:'Plan chuno', smore:'Aur padho', sless:'Kam dikhao', ssub:'Sub genres:', stopics:'Topics', slisten:'Suno', snotes:'Notes', stransl:'Translate kiya gaya', sorig:'Original dikhao',
+    gm:'Good morning', ga:'Namaste', ge:'Shubh sandhya', cont:'Jahan chhoda wahin se suno', trending:'Trending kahaniyan', flash:'Flash offers', deals:'Super deals', under:'{p} se kam',
     recent:'Naye add hue', ongoing:'Chal rahi kahaniyan', completed:'Poori ho chuki kahaniyan', upcoming:'Aane wali kahaniyan', viewall:'Sab dekho', listen:'Abhi suno', searchph:'Naam, author, genre ya language search karo',
     recents:'Recent searches', tops:'Top searches', clear:'Hatao', notif:'Notifications', nonotif:'Abhi koi notification nahi.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Khatam hone mein', ended:'Khatam', caught:'Aap sab dekh chuke ho. Har hafte nayi kahaniyan aati hain.', removed:'History se hata diya', cartempty:'Aapka cart khali hai',
@@ -765,6 +771,16 @@ const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi
 let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
 let THEME = store.get('ajt', 'dark'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'dark';
 const tr = (k, v) => { let s = (TR[LANG] && TR[LANG][k]) || TR.en[k] || k; if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]); return s; };
+// ---- auto-translate story text (description, notes) into the app language; the server caches every translation
+const TC = {}, TQ = new Set(); let TT = 0;
+const txKey = x => LANG + '|' + x;
+const tx = x => { x = String(x || ''); if (!x.trim()) return x; const v = TC[txKey(x)]; if (v !== undefined) return v; TQ.add(x); clearTimeout(TT); TT = setTimeout(txFlush, 40); return x; };
+async function txFlush(){
+  const lang = LANG, list = [...TQ].filter(x => TC[lang + '|' + x] === undefined).slice(0, 12); TQ.clear(); if (!list.length) return;
+  try{ const d = await api('/api/translate', {method:'POST', retry:false, timeout:20000, body: JSON.stringify({lang, texts: list})}); Object.entries(d.items || {}).forEach(([k, v]) => { TC[lang + '|' + k] = v; }); }catch(e){ return; }
+  if (lang === LANG) txScan();
+}
+function txScan(){ $$('[data-tx]').forEach(e => { const o = e.dataset.tx, v = TC[txKey(o)]; if (v !== undefined) e.textContent = v; else tx(o); }); }
 const TGU = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
 const NAME = TGU.first_name || 'Friend';
 const THEME_ICON = {dark:'\u263E', light:'\u2600', warm:'\uD83D\uDD25'}, THEME_BG = {dark:'#0b101c', light:'#F7F8FC', warm:'#fbf5e9'}, THEME_SW = {dark:['#0b101c','#141b2b','#d6ab4f'], light:['#F7F8FC','#FFFFFF','#C99A2E'], warm:['#fbf5e9','#fffaf0','#b9821f']};
@@ -781,7 +797,7 @@ function setTheme(t){
   clearTimeout(window._tt); window._tt = setTimeout(() => el.classList.remove('tt'), 400);
 }
 function cycleTheme(){ setTheme({dark:'light', light:'warm', warm:'dark'}[THEME]); toast(tr('theme') + ': ' + tr({dark:'tdark', light:'tlight', warm:'twarm'}[THEME])); }
-function cycleLang(){ LANG = LANGS[(LANGS.indexOf(LANG) + 1) % LANGS.length]; store.set('ajl', LANG); applyLang(); renderHeader(); setTab(S.tab); toast(LANG_NAME[LANG]); }
+function cycleLang(){ LANG = LANGS[(LANGS.indexOf(LANG) + 1) % LANGS.length]; store.set('ajl', LANG); applyLang(); renderHeader(); setTab(S.tab); try{ if (typeof V !== 'undefined' && V && V.story && $('#story') && $('#story').querySelector('.sh')) renderStory(); }catch(e){} toast(LANG_NAME[LANG]); }
 function applyLang(){ $$('[data-i]').forEach(e => { e.textContent = tr(e.dataset.i); }); document.documentElement.lang = LANG === 'hi' ? 'hi' : 'en'; }
 const avatarStyle = () => TGU.photo_url ? `style="background-image:url('${esc(TGU.photo_url)}')"` : '';
 const avatarInit = () => TGU.photo_url ? '' : esc(NAME.charAt(0).toUpperCase());
@@ -832,9 +848,9 @@ const secRail = (title, items, key, render = card) => items && items.length ? `<
 const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
 const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
 const big = u => typeof u === 'string' ? u.replace('size=thumb', 'size=full') : u;      // the large home cards use the full-size picture
-const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([s.genre, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
+const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
 const dealCard = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>`;
-const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(s.genre || '')}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
+const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(mainGenre(s))}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
 const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data-contx="${esc(i.story.id)}" aria-label="Remove ${esc(i.story.title)} from continue listening">&times;</button></div>`;
 const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}" aria-label="Continue ${esc(i.story.title)}, episode ${i.episode.no}">${cover(i.story.cover)}
   <div style="min-width:0;flex:1"><b>${esc(i.story.title)}</b><small>Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}</small>
@@ -1164,7 +1180,7 @@ function discoverRows(){
   mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
   mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
   (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
-  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => (s.genre || '').split(',').map(x => x.trim()).includes(g.name)).sort(byUpd), {genre:g.name, sort:'updated'}); });
+  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => mainGenre(s) === g.name).sort(byUpd), {genre:g.name, sort:'updated'}); });
   if ((f.languages || []).length > 1) f.languages.forEach(l => mk('dlang', 'l:' + l, '\uD83C\uDF10', l, all.filter(s => s.language === l).sort(byUpd), {language:l, sort:'updated'}));
   return rows.filter(r => r.items.length);
 }
@@ -1182,7 +1198,7 @@ function paintDiscover(){
     setTimeout(() => { const c = $$('#bbody .dcard').find(x => x.dataset.dkey === key); if (c) c.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 60);
   }
 }
-const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([s.genre, s.status, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
+const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.status, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
 const dPreview = r => `<div class="dpv">${r.items.slice(0, 3).map(dMini).join('')}<button class="btn ghost block" data-dsee="${esc(r.key)}">${tr('dsee', {n: r.items.length})} &rarr;</button></div>`;
 function toggleRow(key){
   const card = $$('#bbody .dcard').find(c => c.dataset.dkey === key), r = (B.rows || []).find(x => x.key === key); if (!card || !r) return;
@@ -1290,7 +1306,7 @@ async function loadLibrary(){
       const [w, cat] = await Promise.all([api('/api/wishlist', {signal: sig}), B.all ? Promise.resolve({stories: B.all}) : api('/api/catalog?limit=500&sort=updated', {signal: sig})]); if (L.seg !== seg) return;
       const by = new Map((cat.stories || []).map(s => [s.id, s])); S.wish = new Set(w.ids);
       const list = w.ids.map(id => by.get(id)).filter(Boolean);
-      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([s.genre, s.status, s.episodes ? s.episodes + ' eps' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
+      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([mainGenre(s), s.status, s.episodes ? s.episodes + ' eps' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
         actions: `<button class="lbtn" data-story="${esc(s.id)}">${tr('lopen')}</button><button class="lbtn rm" data-lwx="${esc(s.id)}">${tr('lrem')}</button>`})).join('') : libEmpty('lew');
     } else {
       const d = await api('/api/account?limit=60', {signal: sig}); if (L.seg !== seg) return;
@@ -1867,27 +1883,27 @@ function renderStory(){
   const range = rangeOf(s.options || []);
   const cards = topicCards().map((t, i) => {
     const opts = optsFor(t.id);
-    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${t.n} episodes</small><span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote">${esc(t.note)}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
+    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${t.n} episodes</small><span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
   }).join('');
   el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
-      ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">by ${esc(s.author || "AJ's FM")}</div>
-      <div class="tags">${(s.genre || '').split(',').map(x => x.trim()).filter(Boolean).map(g => `<span class="tag">${esc(g)}</span>`).join('')}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
+      ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
+      <div class="tags">${mainGenre(s) ? `<span class="tag gold">${esc(mainGenre(s))}</span>` : ''}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
-    ${s.preview ? `<div class="desc clamp" id="desc">${esc(s.preview)}</div><div class="pad"><button class="link" id="more">Read more</button></div>` : ''}
-    <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
-      <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
+    ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
+    <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
+      <div class="stat"><small>${tr('shrs')}</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}${act}
-    ${showPlans ? `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>` : (a.admin ? adminPlansHtml() : '')}
-    <h3 class="h3">${shownTopics().length ? 'Topics' : 'Listen'}</h3><div id="topicCards">${cards}</div>
-    ${s.notes ? `<h3 class="h3">Notes</h3><div class="tnotes">${esc(s.notes)}</div>` : ''}${showPlans ? `<div class="sbar" id="sbar">${sbarHtml()}</div>` : ''}`;
+    ${showPlans ? `<h3 class="h3" id="plans">${tr('splan')}</h3><div id="planPills">${plansHtml()}</div>` : (a.admin ? adminPlansHtml() : '')}
+    <h3 class="h3">${shownTopics().length ? tr('stopics') : tr('slisten')}</h3><div id="topicCards">${cards}</div>
+    ${s.notes ? `<h3 class="h3">${tr('snotes')}</h3><div class="tnotes" data-tx="${esc(s.notes)}">${esc(tx(s.notes))}</div>` : ''}${showPlans ? `<div class="sbar" id="sbar">${sbarHtml()}</div>` : ''}`;
 }
 function renderTopicPage(){
   const el = $('#story'), s = V.story, a = V.access, full = a.full || a.admin; pickPlan();
   const t = topicCards().find(x => x.id === V.topic) || {name: 'Episodes', n: V.total, note: ''};
   const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
-    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(t.note)}</div>` : ''}</div>
+    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
     ${full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
@@ -2189,7 +2205,7 @@ async function openEditor(id){
     <div class="actions" style="margin-bottom:14px"><button class="btn ghost small" id="autofill" type="button">Auto-fill details</button></div>
     <label class="field"><span>Title *</span><input id="e_title" value="${esc(s.title || '')}" maxlength="120"></label>
     <label class="field"><span>Platform or author</span><input id="e_author" value="${esc(s.author || '')}" placeholder="Pocket FM"></label>
-    <div class="two"><label class="field"><span>Genre</span><input id="e_genre" value="${esc(s.genre || '')}" placeholder="Fantasy, Thriller"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
+    <div class="two"><label class="field"><span>Genre</span><input id="e_genre" value="${esc(s.genre || '')}" placeholder="Main genre first, then sub genres: Fantasy, Thriller"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
     <div class="two"><label class="field"><span>Status</span><input id="e_status" list="e_status_l" maxlength="30" placeholder="Ongoing"><datalist id="e_status_l"><option value="Ongoing"><option value="Completed"><option value="Upcoming"></datalist></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
     <label class="field"><span>Episodes label (optional, e.g. 1101 To 1150)</span><input id="e_epstext" value="${esc(s.episodes_text || '')}"></label>
     <label class="field check"><input type="checkbox" id="e_pub" ${s.published === false ? '' : 'checked'}><span style="margin:0">Published (visible in the store)</span></label>
@@ -2554,7 +2570,7 @@ document.addEventListener('click', async e => {
   if (c('#storyWish')){ const b = c('#storyWish'), id = V.id, on = !S.wish.has(id); on ? S.wish.add(id) : S.wish.delete(id); b.innerHTML = on ? '&#9829;' : '&#9825;'; b.setAttribute('aria-pressed', on);
     try{ await api('/api/wishlist', {method:'POST', retry:false, body: JSON.stringify({story_id: id, on})}); toast(tr(on ? 'wishon' : 'wishoff')); }
     catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
-  if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? 'Read more' : 'Show less'; return; }
+  if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? tr('smore') : tr('sless'); return; }
   if (c('#startListen')) return once('start', () => playFirst(1));
   if (c('#openChatBtn')) return openChat();
   if ((m = c('[data-sendn]'))){ store.set('ajsendn', m.dataset.sendn); return renderEps(); }
