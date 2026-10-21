@@ -613,7 +613,7 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-vbxn.onrender.com";   // your bot server address
-const AUDIO_BOT_USERNAME = "AJ_FM_Audio_Express_Bot";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
+const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
 const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
 const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
@@ -1800,7 +1800,7 @@ function pickPlan(){
   const opts = visOpts(), ok = o => +o.price > 0 && !planOwned(o);
   if (!opts.some(o => String(o.id) === String(V.sel) && ok(o))) V.sel = (opts.find(ok) || {}).id;
 }
-const planKind = o => { const k = o && o.kind; return k === 'full' || k === 'pack' || k === 'rental' ? k : (Number(o.days) > 0 ? 'rental' : (o.topic || o.auto) ? 'pack' : 'full'); };      // older plans have no kind yet
+const planKind = o => { const k = o && o.kind; return k === 'full' || k === 'pack' || k === 'rental' ? k : (Number(o.days) > 0 ? 'rental' : o.auto ? 'pack' : o.topic ? (/^\s*(episodes?\s*)?\d+\s*(-|\u2013|to)\s*(\d+|ongoing)\s*$/i.test(o.label || '') ? 'pack' : 'full') : 'full'); };      // older plans have no kind yet: a topic plan named like a range is a pack
 const isRent = o => planKind(o) === 'rental';
 const byOrder = (a, b) => (a.order || 9999) - (b.order || 9999);
 const packName = o => o.from ? `Episode ${o.from} to ${o.ongoing || !o.to ? 'Ongoing' : o.to}` : o.label;
@@ -1827,16 +1827,16 @@ function packDetailHtml(){
     ${free && !owned ? `<button class="btn block" data-free="${o.from || 1}">Listen free</button>` : ''}</div>`;
 }
 function plansHtml(){
-  const opts = visOpts(); if (!opts.length) return '<div class="by" style="padding:0 16px">No plans for this topic yet.</div>';
-  return plansMarkup(opts, true);
+  return plansMarkup(visOpts(), true);
 }
 function plansMarkup(opts, detail){                          // shared by the story page and the admin preview
   const g = planGroups(opts);
   const sec = (title, hint, inner) => `<div class="pl-sec"><div class="pl-h"><b>${title}</b><small>${hint}</small></div>${inner}</div>`;
   const dots = n => n > 1 ? `<div class="pl-dots">${Array.from({length: n}, (_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</div>` : '';
-  return (g.show.length ? sec('Full Story plans', g.show.length > 1 ? 'Swipe for more' : '', `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}`) : '')
-    + (g.pack.length ? sec('Episode packs', 'Tap a range for details', `<div class="pl-row" data-row="pack">${g.pack.map(packCardHtml).join('')}</div>${detail ? packDetailHtml() : ''}`) : '')
-    + (g.rent.length ? sec('Rental plans', g.rent.length > 1 ? 'Swipe for more' : '', `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>`) : '');
+  const none = t => `<div class="by" style="padding:0 16px 8px">${t}</div>`;
+  return sec('&#128081; Full Story plans', g.show.length > 1 ? 'Swipe for more' : '', g.show.length ? `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}` : none('No full story plan yet'))
+    + sec('&#128230; Episode packs', g.pack.length ? 'Tap a range for details' : '', g.pack.length ? `<div class="pl-row" data-row="pack">${g.pack.map(packCardHtml).join('')}</div>${detail ? packDetailHtml() : ''}` : none('No episode packs yet'))
+    + sec('&#9203; Rental plans', g.rent.length > 1 ? 'Swipe for more' : '', g.rent.length ? `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>` : none('No rental plans yet'));
 }
 document.addEventListener('scroll', e => {                  // the dots under the one-at-a-time row follow the slide
   const r = e.target; if (!r || !r.classList || !r.classList.contains('one')) return;
@@ -1878,7 +1878,7 @@ function renderStory(){
     <div class="stats"><div class="stat"><small>Platform</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>Episodes</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
       <div class="stat"><small>Hours</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}${act}
-    ${showPlans ? `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>` : ''}
+    ${showPlans ? `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>` : (a.admin ? adminPlansHtml() : '')}
     <h3 class="h3">${shownTopics().length ? 'Topics' : 'Listen'}</h3><div id="topicCards">${cards}</div>
     ${s.notes ? `<h3 class="h3">Notes</h3><div class="tnotes">${esc(s.notes)}</div>` : ''}${showPlans ? `<div class="sbar" id="sbar">${sbarHtml()}</div>` : ''}`;
 }
@@ -1889,7 +1889,7 @@ function renderTopicPage(){
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
     <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(t.note)}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
-    ${full ? '' : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
+    ${full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
       <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Tap an episode and the audio bot opens and sends it to you. It stays in the chat for 48 hours. Forwarding and saving are switched off.</small></span></div>
@@ -2001,7 +2001,7 @@ async function loadAdmin(){
       body.innerHTML = `<div class="ctl"><input id="asq" type="search" placeholder="Search stories" value="${esc(A.sq)}" aria-label="Search stories"><select id="apub" aria-label="Visibility"><option value="">All</option><option value="1">Published</option><option value="0">Hidden</option></select></div>
         <div class="actions" style="margin-bottom:12px"><button class="btn" id="newStory">Add a story</button></div>` +
         (d.stories.map(s => `<div class="mrow"><h4>${esc(s.title)}</h4><div style="margin:4px 0">${s.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${s.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${s.episodes} eps</span></div>
-          <div class="by">${s.options.map(o => esc(o.label) + ' ' + money(o.price)).join(' | ') || 'No plans yet (add them under Topics)'}</div><div class="by">ID: <b>${esc(s.id)}</b></div>
+          <div class="by">${planSummary(s.options)}</div><div class="by">ID: <b>${esc(s.id)}</b></div>
           <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-atop="${esc(s.id)}" data-title="${esc(s.title)}">Topics</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
           <button class="btn ghost small" data-apub="${esc(s.id)}" data-to="${s.published ? 0 : 1}">${s.published ? 'Unpublish' : 'Publish'}</button><button class="btn danger small" data-adel="${esc(s.id)}" data-title="${esc(s.title)}">Delete</button></div></div>`).join('') || '<div class="empty">No stories found.</div>');
       $('#apub').value = A.pub;
@@ -2129,6 +2129,7 @@ function optRow(o = {}, removable = true, kind){
     <details class="oextra"${custom ? ' open' : ''}><summary>Customise${custom ? ' &#10003;' : ''}</summary>
       <div class="o2"><label class="field"><span>Badge (e.g. Best value)</span><input class="o-badge" maxlength="24" value="${esc(o.badge || '')}"></label><label class="field"><span>Position (1 = first)</span><input class="o-order" type="number" min="1" max="9999" inputmode="numeric" value="${o.order || ''}"></label></div>
       <label class="field"><span>Short note shown on the plan</span><input class="o-note" maxlength="140" value="${esc(o.note || '')}"></label>
+      <label class="field"><span>Section (moves after you save)</span><select class="o-kind">${['full', 'pack', 'rental'].map(k => `<option value="${k}"${k === kind ? ' selected' : ''}>${KINDS[k][1]}</option>`).join('')}</select></label>
       <label class="field check"><input type="checkbox" class="o-hide"${o.hidden ? ' checked' : ''}><span style="margin:0">Hide from members (stops new sales, existing buyers keep access)</span></label></details>
     ${removable && !auto ? '<button type="button" class="btn danger small o-del">Remove plan</button>' : ''}</div>`;
 }
@@ -2147,6 +2148,18 @@ function planEditorHtml(id, opts, pre, o = {}){                 // three section
       <div class="chips wrap" style="padding:0">${[7, 15, 30, 90].map(d => `<button type="button" class="chip" data-prent="${d}" data-pe="${id}">＋ ${d} days</button>`).join('')}${add('rental', '＋ Custom rental')}</div>
       <p class="note" style="margin:6px 0 0">Leave From and To blank to rent the whole story${o.auto ? ' (or the whole topic)' : ''}, or fill them to rent only a range of episodes.</p></div>
     <div class="actions" style="padding:0"><button type="button" class="btn ghost small" data-ppv="${id}">&#128065; Preview as member</button></div><div class="ppv" id="${id}_pv"></div></div>`;
+}
+function adminPlansHtml(){                                       // the admin sees the three sections too, read-only
+  const live = visOpts(), hid = live.filter(o => o.hidden).length;
+  return `<h3 class="h3">Plans (as members see them)</h3><div class="by" style="padding:0 16px 8px">Admin view. Edit plans under Admin &rarr; Edit story or Topics.${hid ? ` ${hid} hidden plan${hid > 1 ? 's are' : ' is'} not shown.` : ''}</div><div class="ppv" style="border:0">${plansMarkup(live, false).replace(/ data-(plan|pack|free)=/g, ' data-pv-$1=')}</div>`;
+}
+function planSummary(opts){
+  if (!opts || !opts.length) return 'No plans yet (add them under Edit or Topics)';
+  const by = k => opts.filter(o => planKind(o) === k), none = '<span style="opacity:.6">none</span>', tag = o => o.hidden ? ' (hidden)' : '';
+  const full = by('full'), pack = by('pack'), rent = by('rental'), pp = pack.map(o => +o.price);
+  return `<div>&#128081; <b>Full story:</b> ${full.length ? full.map(o => esc(o.label) + ' ' + money(o.price) + tag(o)).join(' | ') : none}</div>
+    <div>&#128230; <b>Episode packs:</b> ${pack.length ? `${pack.length} pack${pack.length > 1 ? 's' : ''}, ${money(Math.min(...pp))}${Math.max(...pp) > Math.min(...pp) ? ' - ' + money(Math.max(...pp)) : ''}${pack.filter(o => o.hidden).length ? ' (' + pack.filter(o => o.hidden).length + ' hidden)' : ''}` : none}</div>
+    <div>&#9203; <b>Rentals:</b> ${rent.length ? rent.map(o => o.days + ' days ' + money(o.price) + tag(o)).join(' | ') : none}</div>`;
 }
 const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order});
 function planProblem(list, needFrom){
@@ -2203,7 +2216,7 @@ function paintPhoto(){
 function readPlans(sel = '#e_opts', auto = false){          // auto = true reads the hand edits of rule-made packs instead
   return $$(sel + ' .optrow').filter(r => !!r.dataset.auto === auto).map(r => { const q = k => r.querySelector(k);
     return {id: r.dataset.id || '', label: q('.o-label').value.trim(), price: q('.o-price').value === '' ? 0 : Number(q('.o-price').value), days: parseInt(q('.o-days').value) || 0,
-      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: r.dataset.kind, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0}; }).filter(o => o.label);
+      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0}; }).filter(o => o.label);
 }
 function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
   const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
