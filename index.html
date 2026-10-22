@@ -556,6 +556,86 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 .obn:not(.has-img) b{font-size:14px}.obn:not(.has-img) small{-webkit-line-clamp:1}
 .ocard img{aspect-ratio:auto;max-height:none;height:auto;object-fit:contain}
 .bnform{margin:0 0 12px}.bnform textarea{min-height:92px}.bnform img{max-width:100%;border-radius:10px;margin-top:8px;display:block}
+
+/* ---------- polish layer: one radius scale, clearer plans, calmer lists, steadier nav ---------- */
+:root{--r-ctl:12px;--r-card:18px;--ring:0 0 0 3px rgba(var(--gold-rgb),.28)}
+html{color-scheme:dark light;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h2.title,.sec,.h3,.feat h3,.fp h2{text-wrap:balance;letter-spacing:-.012em}
+.sec{font-size:26px}
+.plc .pp,.pkd .pdp,.sb-plan b,.card .pr,.cr{font-variant-numeric:tabular-nums lining-nums}
+/* plans are what members pay for: selection must be obvious and must not shift the layout */
+.plc,.pk{transition:box-shadow .18s,background .18s,border-color .18s;position:relative}
+.plc{border-radius:var(--r-card);padding:15px 16px;gap:4px}
+.plc.on{border:1px solid var(--gold);padding:15px 16px;box-shadow:var(--ring),inset 4px 0 0 var(--gold)}
+.plc.on::after{content:"";position:absolute;top:14px;right:14px;width:18px;height:18px;border-radius:50%;background:var(--gold) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.6 2.6L12 5.6' fill='none' stroke='%231a1405' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
+.plc .pp{font-size:22px;letter-spacing:-.01em}
+.plc.have::after{content:"Owned";position:absolute;top:12px;right:12px;font-size:11px;font-weight:800;color:var(--ok)}
+.pk{border-radius:var(--r-ctl)}
+.pk.on{border:1px solid var(--gold);padding:10px 14px;box-shadow:var(--ring)}
+.pk.have{opacity:1;color:var(--muted)}.pk.have::after{content:" \2713";color:var(--ok);font-weight:800}
+.pkd{border-radius:var(--r-card)}
+.pl-h b{font-size:16px}
+/* episode lists: quieter rows, a clear pressed state */
+.ep{border-radius:14px;transition:background .15s,border-color .15s}
+.ep:active{background:rgba(var(--gold-rgb),.1)}
+.ep.lock{opacity:1}.ep.lock>*{opacity:.62}
+.ep b{font-variant-numeric:tabular-nums}
+.pager{padding-block:8px 12px}
+/* controls */
+.btn,.chip,.ib,.pk,.plc{touch-action:manipulation}
+.btn{border-radius:var(--r-ctl)}
+.btn:active{transform:translateY(1px) scale(.992);box-shadow:none}
+.btn:disabled{box-shadow:none;filter:saturate(.6)}
+.search,input,select,textarea{border-radius:var(--r-ctl);transition:border-color .15s,box-shadow .15s}
+.search:focus,input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:var(--ring)}
+.chip{min-height:40px}
+.chip.on{font-weight:700}
+/* bottom nav: a bar above the active tab says where you are, translucent so content flows beneath */
+.bnav{background:color-mix(in srgb,var(--nav-bg) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
+.bnav button{position:relative;font-weight:600;transition:color .18s}
+.bnav button.on{font-weight:800}
+.bnav button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
+/* appbar and empty states */
+.appbar{padding:16px 16px 8px}
+.empty{padding:44px 24px;line-height:1.6}
+.msg{border-radius:var(--r-ctl)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* ---------- colours: Wine + Champagne (dark), Lavender + Violet (light), Sand + Teal (warm) ---------- */
+:root{
+  --ink:#150810; --panel:#210f19; --panel2:#2c1824; --line:#482a3a;
+  --gold:#f2cf9a; --gold-2:#fbe6c4; --gold-rgb:242,207,154; --on-gold:#2a1209;
+  --text:#fbf1f3; --muted:#c3a9b3; --soft:#e8d6dc;
+  --cv-a:#4a2236; --cv-b:#160812; --surf:#1b0c14; --nav-bg:#180a12;
+  --sk-a:#210f19; --sk-b:#331c2b; --feat-a:#381a2b; --wish-bg:rgba(18,6,12,.82);
+  --ok:#7fd9ae; --bad:#ff9a8a; --warn:#f2cf9a; color-scheme:dark;
+}
+html[data-theme=light]{
+  --ink:#f7f4fd; --panel:#ffffff; --panel2:#efeafa; --line:#ddd3f0;
+  --gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; --on-gold:#ffffff;
+  --text:#1c1530; --muted:#62597a; --soft:#3b3354;
+  --cv-a:#ece5fb; --cv-b:#d9cdf4; --surf:#ffffff; --nav-bg:#ffffff;
+  --sk-a:#eee8fa; --sk-b:#f8f5fd; --feat-a:#efe9fc; --wish-bg:rgba(255,255,255,.92);
+  --ok:#1b8a5a; --bad:#c13d3d; --warn:#a15c00; color-scheme:light;
+}
+html[data-theme=warm]{
+  --ink:#f6f1e7; --panel:#fffdf8; --panel2:#efe7d6; --line:#ddd1b8;
+  --gold:#0f766e; --gold-2:#0a5a54; --gold-rgb:15,118,110; --on-gold:#ffffff;
+  --text:#1d2a28; --muted:#5d6e69; --soft:#34453f;
+  --cv-a:#e6efe9; --cv-b:#d3e2da; --surf:#fffdf8; --nav-bg:#fffdf8;
+  --sk-a:#eee8d9; --sk-b:#faf6ec; --feat-a:#e3efe8; --wish-bg:rgba(255,253,248,.92);
+  --ok:#1b8a5a; --bad:#b83c3c; --warn:#9a5b00; color-scheme:light;
+}
+/* text that sits on the accent colour, and surfaces that had fixed blue or brown colours */
+.badge,.btn,.mini button#mPlay,.fp #fPlay,.wish.on,.bnav button.on svg,.plc .bdg{color:var(--on-gold)}
+.btn.ghost{color:var(--gold-2)}.btn.danger{color:var(--bad)}
+.hero{background:linear-gradient(var(--feat-a),var(--ink))}
+html[data-theme] .promo{background:linear-gradient(120deg,var(--feat-a),var(--surf));color:var(--gold-2);border-color:var(--gold)}
+html[data-theme] .promo small{color:var(--text)}
+html[data-theme] .feat,html[data-theme] .cv{border-color:color-mix(in srgb,var(--gold) 50%,var(--line))}
+html[data-theme] .btn{box-shadow:0 4px 12px rgba(var(--gold-rgb),.22)}
+html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.6 2.6L12 5.6' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -1408,12 +1488,13 @@ function openChat(){
   const url = `https://t.me/${AUDIO_BOT_USERNAME || BOT_USERNAME}`;
   if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank');
 }
-async function playEpisode(ep){
+const playEpisode = ep => sendEpisode(ep, false);      // other callers pass a story as the 2nd argument, so the demo flag lives in its own function
+async function sendEpisode(ep, demo){
   if (!ep) return;
   if (ep.locked) return toast('Locked. Choose a plan to unlock it.');
   return once('send' + ep.id, async () => {
     try{
-      const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN()})});
+      const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN(), ...(demo ? {demo: true} : {})})});
       toast('Opening the audio bot...', 2500);
       const url = `https://t.me/${r.bot || AUDIO_BOT_USERNAME || BOT_USERNAME}?start=d_${r.token}`;      // the bot gets /start and sends the episodes into the chat
       if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank');
@@ -1941,10 +2022,10 @@ function renderEps(){
   if (keep){ const i = $('#epq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   box.dataset.page = V.page;
 }
-async function playFirst(from){
+async function playFirst(from, demo){
   try{
     const d = await api(`/api/story/${encodeURIComponent(V.id)}?${from > 1 ? 'after=' + (from - 1) : 'offset=0'}&limit=1${V.mode === 'topic' && V.topic ? '&topic=' + encodeURIComponent(V.topic) : ''}`);
-    if (d.eps[0]) playEpisode(d.eps[0], storyTag(V.story)); else toast('Episodes are not ready yet');
+    if (d.eps[0]) sendEpisode(d.eps[0], !!demo); else toast('Episodes are not ready yet');
   }catch(e){ toast(errText(e)); }
 }
 
@@ -2572,12 +2653,12 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; V.pack = null; return paintPlanBar(); }
   if (c('#sbCart')){ if (V.sel) cartToggle(V.sel); return paintPlanBar(); }
   if (c('#sbBuy')){ const oid = V.sel; if (oid) return once('buy', async () => { goBot(`buy_${V.id}_${oid}`); await sleep(1200); }); return; }
-  if (c('[data-demo]')) return once('start', () => playFirst(1));
+  if (c('[data-demo]')) return once('start', () => playFirst(1, true));
   if (c('#storyWish')){ const b = c('#storyWish'), id = V.id, on = !S.wish.has(id); on ? S.wish.add(id) : S.wish.delete(id); b.innerHTML = on ? '&#9829;' : '&#9825;'; b.setAttribute('aria-pressed', on);
     try{ await api('/api/wishlist', {method:'POST', retry:false, body: JSON.stringify({story_id: id, on})}); toast(tr(on ? 'wishon' : 'wishoff')); }
     catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? tr('smore') : tr('sless'); return; }
-  if (c('#startListen')) return once('start', () => playFirst(1));
+  if (c('#startListen')) return once('start', () => playFirst(1, !(V.access && (V.access.owned || V.access.admin))));
   if (c('#openChatBtn')) return openChat();
   if ((m = c('[data-sendn]'))){ store.set('ajsendn', m.dataset.sendn); return renderEps(); }
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
