@@ -2158,7 +2158,7 @@ function planEditorHtml(id, opts, pre, o = {}){                 // three section
     <div class="psec" data-kind="full">${head('full')}<div class="pbody">${rows('full')}</div><div class="actions" style="padding:0">${add('full', '＋ Add full story plan')}</div></div>
     <div class="psec" data-kind="pack">${head('pack')}<div class="pbody">${rows('pack')}</div><div class="actions" style="padding:0">${add('pack', '＋ Add one pack')}</div>
       <div class="box" style="margin-top:10px"><b>Make many packs at once</b><div class="o4"><input id="${pre}start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number" value="${o.start || ''}"><input id="${pre}total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="${pre}size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="${pre}price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
-        <button class="btn ghost small" type="button" data-pgen="${id}|${pre}">Add packs</button>${o.auto ? `<label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="${pre}auto" checked style="width:22px;height:22px;min-width:22px;flex:none;padding:0;margin:0"> <span>Make packs automatically from my episodes. The last pack stays "Ongoing" and a new one starts as episodes arrive (Total is not needed).</span></label>` : ''}
+        <button class="btn ghost small" type="button" data-pgen="${id}|${pre}">Add packs</button>${o.auto ? `<label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="${pre}auto" style="width:22px;height:22px;min-width:22px;flex:none;padding:0;margin:0"> <span>Make packs automatically from my episodes. The last pack stays "Ongoing" and a new one starts as episodes arrive (Total is not needed).</span></label>` : ''}
         <p class="note" style="margin:8px 0 0">Example: 2,200 episodes with pack size 500 gives 1-500 ... 1501-2000 and a last pack &quot;Episode 2001 to Ongoing&quot; covering till 2500. Members see a note that only these episodes are covered.</p></div></div>
     <div class="psec" data-kind="rental">${head('rental')}<div class="pbody">${rows('rental')}</div>
       <div class="chips wrap" style="padding:0">${[7, 15, 30, 90].map(d => `<button type="button" class="chip" data-prent="${d}" data-pe="${id}">＋ ${d} days</button>`).join('')}${add('rental', '＋ Custom rental')}</div>
@@ -2220,11 +2220,11 @@ async function openEditor(id){
       <small class="note">Every Ongoing story is reported daily unless you change it here. The bot messages you at that fixed time: the new episodes added, or a warning when none were.${s.update_next ? ' Next report: ' + new Date(s.update_next * 1000).toLocaleString() + '.' : ''} All schedules are also in the Updates section of the admin dashboard.</small></div>
     <label class="field"><span>Notes (shown below the topic cards)</span><textarea id="e_notes" maxlength="2000">${esc(s.notes || '')}</textarea></label>
     <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Three sections: full story plans, episode packs and rentals. Price 0 means free for everyone. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
-    ${planEditorHtml('e_opts', (s.options || []).filter(o => !o.topic), 'sg_', {auto: !(s.topics || []).length})}
+    ${planEditorHtml('e_opts', (s.options || []).filter(o => !o.topic), 'sg_', {auto: true})}
     <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
   $('#e_status').value = s.status || 'Ongoing'; paintPhoto();
-  { const a = $('#sg_auto'); if (a){ const pk = s.pack; if (pk){ $('#sg_start').value = pk.start; $('#sg_size').value = pk.size; $('#sg_price').value = pk.price; } } }
+  { const a = $('#sg_auto'); if (a){ const pk = s.pack; if (pk){ $('#sg_start').value = pk.start; $('#sg_size').value = pk.size; $('#sg_price').value = pk.price; a.checked = true; } } }
 }
 function paintPhoto(){
   const src = E.photo || (isImg(E.cover) ? E.cover : '');
@@ -2254,6 +2254,7 @@ async function saveEditor(){
       status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '',
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts')};
     const sBox = $('#sg_auto'), sAuto = !!sBox && sBox.checked && !!($('#sg_start').value || $('#sg_size').value), sPack = sAuto ? {start: parseInt($('#sg_start').value), size: parseInt($('#sg_size').value), price: Number($('#sg_price').value) || 0, days: 0} : null;
+    if (sBox && sBox.checked && !(parseInt($('#sg_start').value) && parseInt($('#sg_size').value))) return toast('For automatic packs fill First ep and Pack size, or untick the box', 5000);
     if (sAuto && !(sPack.start && sPack.size)) return toast('For automatic packs fill First ep and Pack size');
     if (sBox) story.pack = sPack; const sAutoEdits = readPlans('#e_opts', true);
     const badPlan = story.options.find(o => (o.to && !o.from) || (o.from && o.to && o.from > o.to)); if (badPlan) return toast(`Plan "${badPlan.label}": From must not be bigger than To (leave To blank for ongoing)`, 5000);
@@ -2362,6 +2363,7 @@ async function saveTopic(){
   await once('tesave', async () => {
     const name = $('#te_name').value.trim(); if (!name) return toast('Give the topic a name');
     const auto = $('#tg_auto').checked && !!($('#tg_start').value || $('#tg_size').value), pack = auto ? {start: parseInt($('#tg_start').value), size: parseInt($('#tg_size').value), price: Number($('#tg_price').value) || 0, days: 0} : null;
+    if ($('#tg_auto').checked && !(parseInt($('#tg_start').value) && parseInt($('#tg_size').value))) return toast('For automatic packs fill First ep and Pack size, or untick the box', 5000);
     if (auto && !(pack.start && pack.size)) return toast('For automatic packs fill First ep and Pack size');
     const options = readPlans('#te_opts'), autoEdits = readPlans('#te_opts', true), bad = planProblem(options.concat(autoEdits), true);
     if (bad) return toast(bad, 5000);
