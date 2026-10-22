@@ -2337,25 +2337,29 @@ function openTopicEditor(tid){
 function openPlanAdd(tid){
   const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
   TE.id = tid;
-  const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid).map(o => +o.to || 0));      // the new plan carries on after the last one
+  const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid && !o.auto).map(o => +o.to || 0));      // the new plan carries on after the last one
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Add plan</strong></div>
     <h3 class="h3" style="margin-top:0">${esc(t.name)}</h3>
     <p class="note">Plans added here go to this topic only. Pick a section: full story plan, episode packs or rental. Everything is saved together when you tap Save plan. Existing purchases are never changed.</p>
-    ${planEditorHtml('pa_opts', [], 'pg_', {start: last ? last + 1 : ''})}
+    ${planEditorHtml('pa_opts', [], 'pg_', {start: last ? last + 1 : '', auto: true})}
     <div class="actions"><button class="btn" id="paSave">Save plan</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
   openSheet('topiced');
+  if (t.pack){ $('#pg_start').value = t.pack.start; $('#pg_size').value = t.pack.size; $('#pg_price').value = t.pack.price; $('#pg_auto').checked = true; }
 }
 async function savePlanAdd(){
   await once('pasave', async () => {
     const tid = TE.id, nps = readPlans('#pa_opts');
-    if (!nps.length) return toast('Add a plan, a rental or some packs first');
+    const gv = k => parseInt($('#pg_' + k).value) || 0, tick = $('#pg_auto') && $('#pg_auto').checked;
+    if (tick && !(gv('start') && gv('size'))) return toast('For automatic packs fill First ep and Pack size, or untick the box', 5000);
+    const pack = tick ? {start: gv('start'), size: gv('size'), price: Number($('#pg_price').value) || 0, days: 0} : null;
+    if (!nps.length && !pack) return toast('Add a plan, a rental or some packs first');
     const bad = planProblem(nps, true); if (bad) return toast(bad, 5000);
     try{
       const d = await api(`/api/story/${encodeURIComponent(T.sid)}?limit=1`);                              // newest plans, so nothing saved elsewhere is overwritten
       const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto).map(planPayload);
-      const r = await topicCall({action: 'edit', id: tid, options: [...mine, ...nps.map(p => ({...planPayload(p), id: ''}))]}); if (!r) return;
+      const r = await topicCall({action: 'edit', id: tid, options: [...mine, ...nps.map(p => ({...planPayload(p), id: ''}))], ...(pack ? {pack} : {})}); if (!r) return;
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
-      toast(nps.length > 1 ? `${nps.length} plans added` : 'Plan added'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
+      toast(pack ? 'Automatic packs saved' : nps.length > 1 ? `${nps.length} plans added` : 'Plan added'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
     }catch(e){ toast(adminErr(e), 5000); }
   });
 }
