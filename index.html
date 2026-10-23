@@ -409,6 +409,8 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .pkd>div{display:flex;justify-content:space-between;gap:12px;font-size:13.5px}.pkd>div span:first-child{color:var(--muted)}.pkd>div span:last-child{text-align:right;font-weight:700;overflow-wrap:anywhere}
 .pkd .pdp span:last-child{color:var(--gold-2);font-size:17px}
 .plc .bdg{align-self:flex-start;padding:1px 8px;border-radius:6px;background:var(--gold);color:#1a1405;font-size:11px;font-weight:800}
+.plc .pn.warn{color:#ffb74d;border-left:3px solid #ffb74d;padding-left:8px;line-height:1.45}
+.plc .fwdb{color:#7ddc9a;font-size:11.5px}.plc .fwdb.off{color:var(--muted)}
 .plc .pn{color:var(--soft);font-size:12.5px;overflow-wrap:anywhere}
 .plc.rental{border-style:dashed}
 /* plan editor (admin): three sections */
@@ -1890,7 +1892,8 @@ function ownedSummary(a){
 const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
 const scopeOf = o => o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes';
 const accessOf = o => Number(o.days) > 0 ? o.days + ' days' : tr('lkeep');
-const planSub = o => o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}${isRent(o) ? ' | ' + accessOf(o) : ''}` : `${scopeOf(o)} | ${accessOf(o)}`;
+const isSnap = o => o && o.scope === 'snapshot' && planKind(o) === 'full';
+const planSub = o => isSnap(o) ? `\u{1F4DA} Episodes available till the date you get access | ${accessOf(o)}` : o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}${isRent(o) ? ' | ' + accessOf(o) : ''}` : `${scopeOf(o)} | ${accessOf(o)}`;
 const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
 const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
 function pickPlan(){
@@ -1906,9 +1909,12 @@ function planGroups(opts){                                  // 1 full story plan
   return {show: by('full'), pack: by('pack'), rent: by('rental')};
 }
 const planPrice = o => Number(o.price) === 0 ? 'Listen free' : `${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}`;
+const fullNoteHtml = o => isSnap(o)
+  ? '<span class="pn warn">\u{1F4CC} Includes every episode available on the day your access starts. Episodes uploaded later are not included.</span>'
+  : '<span class="pn warn">\u26A0\uFE0F Note: we don\'t guarantee to supply all upcoming episodes.<br>\u{1F6D1} Uploading of episodes can stop any day for this story.</span>';
 function planCardHtml(o){
   const owned = planOwned(o), free = Number(o.price) === 0, on = !free && String(o.id) === String(V.sel);
-  const body = `${o.badge ? `<span class="bdg">&#9733; ${esc(o.badge)}</span>` : ''}${isRent(o) ? `<span class="rtag">&#9203; ${o.days}-day rental</span>` : ''}<b>${esc(o.label)}</b><small>${esc(planSub(o))}</small>${isRent(o) ? `<small>Access starts when your payment is approved</small>` : ''}${o.note ? `<span class="pn">${esc(o.note)}</span>` : ''}${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}<span class="pp">${owned ? 'Owned' : planPrice(o)}</span>`;
+  const body = `${o.badge ? `<span class="bdg">&#9733; ${esc(o.badge)}</span>` : ''}${isRent(o) ? `<span class="rtag">&#9203; ${o.days}-day rental</span>` : ''}<b>${esc(o.label)}</b><small>${esc(planSub(o))}</small>${planKind(o) === 'full' ? fullNoteHtml(o) : ''}${o.fwd ? '<small class="fwdb">\u{1F4E4} Forwarding &amp; saving allowed</small>' : (Number(o.price) > 0 ? '<small class="fwdb off">\u{1F512} Protected: no forwarding</small>' : '')}${isRent(o) ? `<small>Access starts when your payment is approved</small>` : ''}${o.note ? `<span class="pn">${esc(o.note)}</span>` : ''}${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}<span class="pp">${owned ? 'Owned' : planPrice(o)}</span>`;
   if (owned) return `<div class="plc have">${body}</div>`;
   return `<button class="plc${isRent(o) ? ' rental' : ''}${free ? ' free' : ''}${on ? ' on' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
 }
@@ -2216,8 +2222,9 @@ const KINDS = {full: ['&#128081;', 'Full Story plans', 'Members see one plan car
 function optRow(o = {}, removable = true, kind){
   kind = kind || planKind(o);
   const rent = kind === 'rental', full = kind === 'full', auto = !!o.auto, ro = auto ? ' readonly' : '';
+  const flags = (full ? `<label class="field check"><input type="checkbox" class="o-snap"${o.scope === 'snapshot' ? ' checked' : ''}><span style="margin:0">Till date: only the episodes available when access is granted (no future episodes)</span></label>` : '') + `<label class="field check"><input type="checkbox" class="o-fwd"${o.fwd ? ' checked' : ''}><span style="margin:0">Forwarding allowed: episodes sent to chat can be forwarded and saved</span></label>`;
   const ph = rent ? 'Rental name, e.g. 30-day rental' : full ? 'Plan name, e.g. Full Story' : 'Pack name, e.g. Episodes 1-50';
-  const custom = !!(o.badge || o.note || o.hidden || o.order);
+  const custom = !!(o.badge || o.note || o.hidden || o.order || o.fwd || o.scope);
   return `<div class="optrow${o.hidden ? ' hid' : ''}" data-id="${esc(o.id || '')}" data-kind="${kind}"${auto ? ' data-auto="1"' : ''}><input class="o-label" placeholder="${ph}" value="${esc(o.label || '')}" aria-label="Plan name"${ro}>
     ${auto ? '<div class="oauto">Made by the pack rule. You can change its price, badge, note, position and visibility.</div>' : ''}
     <div class="${full ? 'o3' : 'o4'}"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price">
@@ -2227,6 +2234,7 @@ function optRow(o = {}, removable = true, kind){
       <div class="o2"><label class="field"><span>Badge (e.g. Best value)</span><input class="o-badge" maxlength="24" value="${esc(o.badge || '')}"></label><label class="field"><span>Position (1 = first)</span><input class="o-order" type="number" min="1" max="9999" inputmode="numeric" value="${o.order || ''}"></label></div>
       <label class="field"><span>Short note shown on the plan</span><input class="o-note" maxlength="140" value="${esc(o.note || '')}"></label>
       <label class="field"><span>Section (moves after you save)</span><select class="o-kind">${['full', 'pack', 'rental'].map(k => `<option value="${k}"${k === kind ? ' selected' : ''}>${KINDS[k][1]}</option>`).join('')}</select></label>
+      ${flags}
       <label class="field check"><input type="checkbox" class="o-hide"${o.hidden ? ' checked' : ''}><span style="margin:0">Hide from members (stops new sales, existing buyers keep access)</span></label></details>
     ${removable && !auto ? '<button type="button" class="btn danger small o-del">Remove plan</button>' : ''}</div>`;
 }
@@ -2236,7 +2244,7 @@ function planEditorHtml(id, opts, pre, o = {}){                 // three section
   const head = k => `<div class="ph"><b>${KINDS[k][0]} ${KINDS[k][1]}</b><small>${KINDS[k][2]}</small></div>`;
   const add = (k, t) => `<button type="button" class="btn ghost small" data-padd="${k}" data-pe="${id}">${t}</button>`;
   return `<div class="pe" id="${id}">
-    <div class="psec" data-kind="full">${head('full')}<div class="pbody">${rows('full')}</div><div class="actions" style="padding:0">${add('full', '＋ Add full story plan')}</div></div>
+    <div class="psec" data-kind="full">${head('full')}<div class="pbody">${rows('full')}</div><div class="actions" style="padding:0">${add('full', '＋ Add full story plan')}<button type="button" class="btn ghost small" data-psnap="${id}">＋ Add "till date" plan</button><button type="button" class="btn ghost small" data-pall4="${id}">＋ Create all 4 plans (protected + forward allowed)</button><button type="button" class="btn ghost small" data-pfwdcopy="${id}">＋ Copy full plans with forwarding allowed</button></div></div>
     <div class="psec" data-kind="pack">${head('pack')}<div class="pbody">${rows('pack')}</div><div class="actions" style="padding:0">${add('pack', '＋ Add one pack')}</div>
       <div class="box" style="margin-top:10px"><b>Make many packs at once</b><div class="o4"><input id="${pre}start" type="number" min="1" inputmode="numeric" placeholder="First ep" aria-label="First episode number" value="${o.start || ''}"><input id="${pre}total" type="number" min="1" inputmode="numeric" placeholder="Total (blank if ongoing)" aria-label="Total episodes"><input id="${pre}size" type="number" min="1" inputmode="numeric" placeholder="Pack size" aria-label="Pack size"><input id="${pre}price" type="number" min="0" inputmode="decimal" placeholder="Price each" aria-label="Price each"></div>
         <button class="btn ghost small" type="button" data-pgen="${id}|${pre}">Add packs</button>${o.auto ? `<label style="display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" id="${pre}auto" style="width:22px;height:22px;min-width:22px;flex:none;padding:0;margin:0"> <span>Make packs automatically from my episodes. The last pack stays "Ongoing" and a new one starts as episodes arrive (Total is not needed).</span></label>` : ''}
@@ -2258,7 +2266,7 @@ function planSummary(opts){
     <div>&#128230; <b>Episode packs:</b> ${pack.length ? `${pack.length} pack${pack.length > 1 ? 's' : ''}, ${money(Math.min(...pp))}${Math.max(...pp) > Math.min(...pp) ? ' - ' + money(Math.max(...pp)) : ''}${pack.filter(o => o.hidden).length ? ' (' + pack.filter(o => o.hidden).length + ' hidden)' : ''}` : none}</div>
     <div>&#9203; <b>Rentals:</b> ${rent.length ? rent.map(o => o.days + ' days ' + money(o.price) + tag(o)).join(' | ') : none}</div>`;
 }
-const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order});
+const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order, scope: o.scope, fwd: o.fwd});
 function planProblem(list, needFrom){
   for (const p of list){
     if (p.kind === 'rental' && !(p.days >= 1)) return `Rental "${p.label}": enter the days (1 or more)`;
@@ -2314,7 +2322,7 @@ function paintPhoto(){
 function readPlans(sel = '#e_opts', auto = false){          // auto = true reads the hand edits of rule-made packs instead
   return $$(sel + ' .optrow').filter(r => !!r.dataset.auto === auto).map(r => { const q = k => r.querySelector(k);
     return {id: r.dataset.id || '', label: q('.o-label').value.trim(), price: q('.o-price').value === '' ? 0 : Number(q('.o-price').value), days: parseInt(q('.o-days').value) || 0,
-      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0}; }).filter(o => o.label);
+      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: !!(q('.o-fwd') && q('.o-fwd').checked)}; }).filter(o => o.label);
 }
 function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
   const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
@@ -2786,6 +2794,19 @@ document.addEventListener('click', async e => {
     if (!confirm(`Delete the topic "${t ? t.name : ''}"?\n\nIts plans are removed. Its episodes stay in the app without a topic. Existing purchases keep working.`)) return;
     return once('tpdel', async () => { try{ await topicCall({action: 'delete', id: m.dataset.tdel}); toast('Topic deleted'); }catch(e){ toast(adminErr(e)); } loadTopics(); loadAdmin(); loadHome(); });
   }
+  if ((m = c('[data-pall4]'))){ const sel = '#' + m.dataset.pall4, box = $(sel + ' .psec[data-kind="full"] .pbody'), rows = $$(sel + ' .psec[data-kind="full"] .optrow');
+    const has = (snap, fwd) => rows.some(r => !!(r.querySelector('.o-snap') && r.querySelector('.o-snap').checked) === snap && !!r.querySelector('.o-fwd').checked === fwd);
+    const base = rows.find(r => !r.querySelector('.o-snap').checked && !r.querySelector('.o-fwd').checked), bp = base ? base.querySelector('.o-price').value : '';
+    let n = 0; [[false, false, 'Full Story'], [true, false, 'Full Story (till date)'], [false, true, 'Full Story (Forward allowed)'], [true, true, 'Full Story (till date) (Forward allowed)']].forEach(([snap, fwd, label]) => {
+      if (has(snap, fwd)) return; n++; box.insertAdjacentHTML('beforeend', optRow({label, price: bp === '' ? '' : Number(bp), days: 0, scope: snap ? 'snapshot' : '', fwd}, true, 'full')); });
+    toast(n ? `${n} plan${n > 1 ? 's' : ''} added. Set the prices, then Save.` : 'All 4 plans already exist', 5000); return; }
+  if ((m = c('[data-psnap]'))){ const box = $('#' + m.dataset.psnap + ' .psec[data-kind="full"] .pbody'); box.insertAdjacentHTML('beforeend', optRow({label: 'Full Story (till date)', scope: 'snapshot', note: '', price: ''}, true, 'full')); const f = box.lastElementChild.querySelector('.o-price'); if (f) f.focus(); return; }
+  if ((m = c('[data-pfwdcopy]'))){ const sel = '#' + m.dataset.pfwdcopy, box = $(sel + ' .psec[data-kind="full"] .pbody');
+    const rows = $$(sel + ' .psec[data-kind="full"] .optrow').filter(r => !r.querySelector('.o-fwd').checked && !r.dataset.auto);
+    if (!rows.length) return toast('Add the full story plans first, then copy them');
+    rows.forEach(r => { const q = k => r.querySelector(k), lbl = q('.o-label').value.trim(); if (!lbl) return;
+      box.insertAdjacentHTML('beforeend', optRow({label: lbl + ' (Forward allowed)', price: q('.o-price').value === '' ? '' : Number(q('.o-price').value), days: 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: true, note: q('.o-note').value.trim()}, true, 'full')); });
+    toast('Copies added. Set their prices, then Save.', 5000); return; }
   if ((m = c('[data-padd]'))){ const k = m.dataset.padd, box = $('#' + m.dataset.pe + ' .psec[data-kind="' + k + '"] .pbody'); box.insertAdjacentHTML('beforeend', optRow(k === 'rental' ? {days: 30} : {}, true, k)); const f = box.lastElementChild.querySelector('.o-label'); if (f) f.focus(); return; }
   if ((m = c('[data-prent]'))){ const d = +m.dataset.prent; $('#' + m.dataset.pe + ' .psec[data-kind="rental"] .pbody').insertAdjacentHTML('beforeend', optRow({label: `${d}-day rental`, days: d}, true, 'rental')); return; }
   if ((m = c('[data-pgen]'))){ const [sel, pre] = m.dataset.pgen.split('|'); return addPacks('#' + sel, pre); }
