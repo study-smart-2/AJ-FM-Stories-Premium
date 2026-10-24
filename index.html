@@ -1143,16 +1143,17 @@ async function copyText(t, msg){
   toast(msg);
 }
 
-/* ---------- story combinations (2 to 5 full stories at a discount; the admin only sets the discount tiers) ---------- */
-const CB = {data: null, size: 0, sel: [], quote: null, custom: false, q: '', io: null, checking: false};
+/* ---------- Section 1 combinations: Full Story or Topic-Specific plans; episode packs and rentals are excluded ---------- */
+const CB = {data: null, size: 0, sel: [], quote: null, custom: false, q: '', io: null, checking: false, comboType: 'full'};
 const CD = {data: null, io: null};
 async function loadDailyCombos(){
   try{ CD.data = await api('/api/combos/daily'); }catch(e){ CD.data = null; }
   if (S.tab === 'home' && S.home) renderHome();
 }
 const nfmt = n => money(Math.round(Number(n) * 100) / 100);
-async function loadCombos(){
-  try{ CB.data = await api('/api/combos'); }catch(e){ return; }
+async function loadCombos(type = CB.comboType){
+  CB.comboType = type === 'topic' ? 'topic' : 'full';
+  try{ CB.data = await api('/api/combos?type=' + encodeURIComponent(CB.comboType)); }catch(e){ return; }
   if (S.tab === 'home' && S.home) renderHome();
 }
 const cbStory = id => { const d = CB.data || {}; return (d.pool || []).find(x => x.id === id) || ((d.combos || []).flatMap(c => c.stories).find(x => x.id === id)) || null; };
@@ -1196,6 +1197,7 @@ async function openDailyCombo(id){
     const c = await api('/api/combos/daily/' + encodeURIComponent(id));
     const ids = (c.stories || []).map(x => x.id);
     if (ids.length < 2 || ids.length > 5) throw new Error('This combo is no longer available.');
+    if (CB.comboType !== 'full') await loadCombos('full');
     openCombo(ids, false);
   }catch(e){ toast(errText(e) || 'This combo is no longer available.'); loadDailyCombos(); }
 }
@@ -1205,7 +1207,7 @@ function combosSection(){
   const chips = [0, ...d.sizes].map(n => `<button class="chip${CB.size === n ? ' on' : ''}" data-cbsize="${n}">${esc(n ? tr('cmbn', {n}) : tr('cmball'))}</button>`).join('');
   const rules = (d.tiers || []).map(t => esc(tr('cmbrule', {m: money(t.min), t: t.text}))).join(' &middot; ');
   return `<section class="cmb-sec" id="cmbSec"><div class="sechead"><h2 class="sec">&#128293; ${esc(tr('cmbtitle'))}</h2><button class="link" data-cbown="1">${esc(tr('cmbown'))} &rarr;</button></div>` +
-    `<div class="chips" id="cmbChips">${chips}</div><div class="cmb-rules"><b>${esc(tr('cmbmore'))}</b> ${rules}</div>` +
+    `<div class="chips" id="cmbTypeChips"><button class="chip${CB.comboType === 'full' ? ' on' : ''}" data-cbtype="full">Full Story</button><button class="chip${CB.comboType === 'topic' ? ' on' : ''}" data-cbtype="topic">Topic-Specific</button></div><div class="chips" id="cmbChips">${chips}</div><div class="cmb-rules"><b>${esc(tr('cmbmore'))}</b> ${rules}</div>` +
     `<div class="rail cmb-rail">${list.map(cmbCard).join('') || `<div class="empty"><small>${esc(tr('cmbnosize'))}</small></div>`}</div></section>`;
 }
 function watchCombos(){                      // the card glows every time it scrolls into view (the class is removed when it leaves, so the animation replays)
@@ -1227,7 +1229,7 @@ function paintCombo(){
   $('#cbTitle').textContent = CB.custom ? tr('cmbown') : tr('cmbtitle');
   const n = CB.sel.length, q = cbQuoteNow();
   $('#cbHero').innerHTML = n >= 2 ? `<span class="cmb-best" style="position:static;display:inline-block;margin-bottom:8px">&#128293; ${esc(tr('cmbbest'))}</span><img src="${esc(q && q.banner ? q.banner : cbBannerUrl(CB.sel))}" alt="" decoding="async">` : `<div class="empty"><small>${esc(tr('cmbpick'))}</small></div>`;
-  $('#cbPick').innerHTML = CB.custom ? `<div class="pad"><input id="cbq" type="search" placeholder="${esc(tr('searchph'))}" value="${esc(CB.q)}" autocomplete="off" aria-label="${esc(tr('searchph'))}"></div><div class="by" style="margin:0 16px 8px">${esc(tr('cmbfull'))}</div>` : '';
+  $('#cbPick').innerHTML = CB.custom ? `<div class="pad"><input id="cbq" type="search" placeholder="${esc(tr('searchph'))}" value="${esc(CB.q)}" autocomplete="off" aria-label="${esc(tr('searchph'))}"></div><div class="by" style="margin:0 16px 8px">${CB.comboType === 'topic' ? 'Section 1 · Topic-specific plans only' : esc(tr('cmbfull'))}</div>` : '';
   paintComboList(); paintComboBar();
 }
 function paintComboList(){
@@ -1255,7 +1257,7 @@ async function cbCheck(){
   const ids = CB.sel.slice(); if (ids.length < 2) return toast(tr('cmbmin'));
   return once('cbq', async () => {
     CB.checking = true; paintComboBar();
-    try{ const r = await api('/api/combos/quote', {method: 'POST', retry: false, body: JSON.stringify({story_ids: ids})}); r.key = ids.join(','); if (CB.sel.join(',') === r.key) CB.quote = r; }
+    try{ const r = await api('/api/combos/quote', {method: 'POST', retry: false, body: JSON.stringify({story_ids: ids, combo_type: CB.comboType})}); r.key = ids.join(','); if (CB.sel.join(',') === r.key) CB.quote = r; }
     catch(e){ CB.quote = null; toast(errText(e), 4500); }
     CB.checking = false; paintCombo();
   });
@@ -1263,12 +1265,13 @@ async function cbCheck(){
 function cbBuy(){
   const q = cbQuoteNow(); if (!q) return cbCheck();
   return once('buy', async () => {
-    try{ const r = await api('/api/cart/checkout', {method: 'POST', retry: false, body: JSON.stringify({combo: true, items: q.items.map(i => ({story_id: i.id, option_id: i.plan_id}))})}); goBot('cart_' + r.token); await sleep(1200); }
+    try{ const r = await api('/api/cart/checkout', {method: 'POST', retry: false, body: JSON.stringify({combo_type: CB.comboType, items: q.items.map(i => ({story_id: i.id, option_id: i.plan_id}))})}); goBot('cart_' + r.token); await sleep(1200); }
     catch(e){ toast(errText(e), 4500); }
   });
 }
 function comboClick(c){
   let m;
+  if ((m = c('[data-cbtype]'))){ const type = m.dataset.cbtype; if (type !== CB.comboType) { CB.sel = []; CB.quote = null; CB.size = 0; CB.custom = false; CB.q = ''; loadCombos(type); } return true; }
   if ((m = c('[data-cbsize]'))){ const sc = $('#cmbChips'), x = sc ? sc.scrollLeft : 0; CB.size = +m.dataset.cbsize; renderHome(); const n = $('#cmbChips'); if (n) n.scrollLeft = x; return true; }
   if ((m = c('[data-combo]'))){ const k = m.dataset.combo; openCombo(k.split(','), false); return true; }
   if ((m = c('[data-dailycombo]'))){ openDailyCombo(m.dataset.dailycombo); return true; }
