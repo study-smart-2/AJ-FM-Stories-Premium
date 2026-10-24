@@ -2303,13 +2303,13 @@ function cbaOpenForm(id){
 function cbaHtml(d){
   CBA.list = d.rules; CBA.cur = d.currency || CURRENCY;
   const none = !d.rules.some(r => r.is_active);
-  return `<div class="box"><b>🔥 Story Combinations</b><div class="by">Members can buy ${d.sizes.join(', ')} full stories together. You only set the discount tiers: the higher the total price, the bigger the discount, and the best tier the total reaches is used. Only full-story plans can be combined (no topic plans, episode packs, rentals or free plans). Coupon codes are not added on top of a combo.</div></div>` +
+  return `<div class="box"><b>🔥 Story Combinations</b><div class="by">Members can combine Section 1 plans: Full Story plans in Full Story mode, or Topic Plans in Topic-Specific mode (different topics may be mixed). Episode packs, rentals, hidden plans and free plans are excluded. Discount tiers are shared by both modes; coupon codes are not added on top.</div></div>` +
     `<label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cbaSwitch"${d.enabled ? ' checked' : ''}> <span>Show Combinations to members</span></label>` +
     `<div class="actions" style="margin-bottom:12px"><button class="btn" id="cbaNew">＋ Add discount rule</button></div><div class="box" id="cbaForm" hidden></div>` +
     (none ? `<div class="msg bad" style="margin:0 16px 12px">No active rule yet, so members do not see Combinations. Add one, for example: total ${esc(CBA.cur)}500 or more → ${esc(CBA.cur)}50 off.</div>` : '') +
     (d.rules.map(r => `<div class="mrow"><h4>${esc(CBA.cur)}${esc(r.min_total)} or more → ${esc(r.text)} <span class="tag ${r.is_active ? 'live' : ''}">${r.is_active ? 'live' : 'hidden'}</span></h4>` +
       `<div class="actions" style="padding:8px 0 0"><button class="btn small" data-cbaedit="${r.id}">Edit</button><button class="btn ghost small" data-cbatog="${r.id}">${r.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-cbadel="${r.id}">Delete</button></div></div>`).join('') || '<div class="empty">No rules yet. Tap Add discount rule.</div>') +
-    `<div class="by" style="padding:8px 16px">Stories that can be combined right now: <b>${d.eligible}</b>${d.eligible < 2 ? ' (at least 2 are needed)' : ''}</div>`;
+    `<div class="by" style="padding:8px 16px">Eligible Full Story plans: <b>${d.eligible}</b> · Eligible Topic Plans: <b>${Number(d.eligible_topic || 0)}</b></div>`;
 }
 async function cbaSave(){
   await once('cbasave', async () => {
