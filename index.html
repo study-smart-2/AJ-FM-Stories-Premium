@@ -1197,7 +1197,8 @@ async function openDailyCombo(id){
     const c = await api('/api/combos/daily/' + encodeURIComponent(id));
     const ids = (c.stories || []).map(x => x.id);
     if (ids.length < 2 || ids.length > 5) throw new Error('This combo is no longer available.');
-    if (CB.comboType !== 'full') await loadCombos('full');
+    const ct = c.combo_type === 'topic' ? 'topic' : 'full';
+    if (CB.comboType !== ct || !CB.data || CB.data.combo_type !== ct) await loadCombos(ct);
     openCombo(ids, false);
   }catch(e){ toast(errText(e) || 'This combo is no longer available.'); loadDailyCombos(); }
 }
