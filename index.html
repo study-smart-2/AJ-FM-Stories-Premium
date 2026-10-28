@@ -2290,7 +2290,7 @@ function renderAdmin(){
       <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
       <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
     </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['combos', '🔥 Combinations'], ['updates', '\uD83D\uDCE3 Updates'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['combos', '🔥 Combinations'], ['updates', '\uD83D\uDCE3 Updates'], ['index', '🗂 Index Bot'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
 function openCouponEditor(id){
@@ -2408,6 +2408,88 @@ const fillBn = () => {
 };
 const bnPrompt = c => `Create an image of a coupon with the text: "Use code - ${c.code} & get ${c.text}${c.title ? ' ' + c.title : ''}". Wide thin strip banner, ultra-wide 21:9 shape, premium dark and gold look, big clear readable text, no other text.`;
 const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JSON.stringify(body)});
+/* ---------------- Admin → Index Bot (added section; talks only to /api/admin/index/*) ---------------- */
+const IX = {view: 'overview', edit: null, maps: null};
+const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
+const ixPost = body => api('/api/admin/index/action', {method: 'POST', retry: false, body: JSON.stringify(body)});
+const ixWhen = t => t ? new Date(t * 1000).toLocaleString() : '-';
+const ixSize = n => { n = +n || 0; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; };
+async function indexAdmin(body, sig, tab){
+  if (!body.dataset.ixbound){ body.dataset.ixbound = '1'; body.addEventListener('click', ixClick); }
+  const d = await api('/api/admin/index/state?view=' + IX.view, {signal: sig}); if (A.tab !== tab) return;
+  const nav = `<div class="seg" role="tablist" aria-label="Index Bot sections">${IX_VIEWS.map(([k, t]) => `<button class="chip${IX.view === k ? ' on' : ''}" data-ixv="${k}" type="button">${t}</button>`).join('')}</div>`;
+  let h = '';
+  if (IX.view === 'overview'){
+    const o = d.overview, card = (t, v) => `<div class="mrow" style="margin:0"><div class="by">${t}</div><b style="font-size:22px">${v}</b></div>`;
+    h = `<div class="box"><b>🗂 Index Bot</b><p class="note" style="margin:6px 0 0">Topic mapping decides which story a file belongs to. Story authorization decides whether it may be processed. Only an Index command (or Index Now) starts indexing. Times: ${esc(o.tz)}. Counting since ${esc(o.since)}.</p></div>
+      <div class="two" style="margin:0 16px 10px;gap:10px">${card('Mapped topics', o.mapped_topics)}${card('Authorized stories', o.authorized_stories)}</div>
+      <div class="two" style="margin:0 16px 10px;gap:10px">${card('Files detected today', o.files_today)}${card('Pending files', o.pending)}</div>
+      <div class="two" style="margin:0 16px 10px;gap:10px">${card('Successfully indexed', o.indexed)}${card('Failed index jobs', o.failed)}</div>`;
+  } else if (IX.view === 'mappings'){
+    IX.maps = d; const e = IX.edit || {}, st = d.stories.find(s => s.id === e.story_id);
+    h = `<div class="box"><b>${e.id ? 'Edit mapping #' + e.id : 'Add mapping'}</b>
+      <div class="two"><label class="field"><span>Supergroup ID *</span><input id="ix_sg" inputmode="numeric" placeholder="-1001234567890" value="${esc(e.supergroup_id || '')}"></label><label class="field"><span>Supergroup Topic ID *</span><input id="ix_tp" inputmode="numeric" placeholder="e.g. 12 (General = 1)" value="${esc(e.topic_id ?? '')}" list="ix_seen"></label></div>
+      <datalist id="ix_seen">${d.seen_topics.map(t => `<option value="${t.topic_id}">${esc(t.supergroup_name)} / ${esc(t.name)}</option>`).join('')}</datalist>
+      <div class="two"><label class="field"><span>Supergroup name (for reports)</span><input id="ix_sgn" maxlength="100" value="${esc(e.supergroup_name || '')}"></label><label class="field"><span>Topic name (for reports)</span><input id="ix_tpn" maxlength="100" value="${esc(e.topic_name || '')}"></label></div>
+      <label class="field"><span>Story *</span><select id="ix_story"><option value="">Choose a story</option>${d.stories.map(s => `<option value="${esc(s.id)}"${s.id === e.story_id ? ' selected' : ''}>${esc(s.title)} (${esc(s.id)})</option>`).join('')}</select></label>
+      <label class="field"><span>Story Topic</span><select id="ix_stopic">${ixTopicOpts(d.stories, e.story_id, e.story_topic_id)}</select></label>
+      <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="mapsave" type="button">Save mapping</button>${e.id ? '<button class="btn ghost small" data-ixa="mapcancel" type="button">Cancel edit</button>' : ''}</div>
+      <small class="note">Telegram does not let a bot list a group's topics. Easiest: send <b>/mapthis &lt;story_id&gt;</b> inside the topic to the Index Bot. Topics the bot has seen (when created or posted in) appear as suggestions above.</small></div>
+      ${d.mappings.map(m => `<div class="mrow"><b>${esc(m.story_title)}</b>${m.story_topic_name ? ' / ' + esc(m.story_topic_name) : ''} <span class="by">${m.status === 'active' ? '● Active' : '○ Disabled'} · ${m.authorized ? 'Authorized' : 'Not authorized'}</span>
+        <div class="by">${esc(m.supergroup_name || m.supergroup_id)} (${m.supergroup_id}) · topic ${esc(m.topic_name || '')} #${m.topic_id} · waiting: ${m.waiting}</div><div class="by">Created ${ixWhen(m.created)} · Updated ${ixWhen(m.updated)}</div>
+        <div class="actions" style="padding:8px 0 0"><button class="btn small" data-ixa="mapedit" data-id="${m.id}" type="button">Edit</button><button class="btn ghost small" data-ixa="${m.status === 'active' ? 'mapoff' : 'mapon'}" data-id="${m.id}" type="button">${m.status === 'active' ? 'Disable' : 'Enable'}</button><button class="btn danger small" data-ixa="mapdel" data-id="${m.id}" type="button">Delete</button></div></div>`).join('') || '<div class="empty">No mappings yet.</div>'}`;
+  } else if (IX.view === 'stories'){
+    h = `<p class="note" style="margin:0 16px 10px">Only authorized stories are ever processed. Revoking stops pending work at once.</p><div class="actions" style="padding:0 16px 10px"><button class="btn small" data-ixa="indexall" type="button">Index all authorized</button><button class="btn ghost small" data-ixa="retryall" type="button">Retry all failed</button></div>` + d.stories.map(s => `<div class="mrow"><b>${esc(s.title)}</b> <span class="by">${esc(s.id)}${s.topics.length ? ' · topics: ' + s.topics.map(t => esc(t.name) + '=' + esc(t.id)).join(', ') : ''} · ${s.authorized ? '✅ Authorized' + (s.authorized_at ? ' ' + ixWhen(s.authorized_at) : '') : '⛔ Not authorized'} · waiting: ${s.waiting}</span>
+      <div class="actions" style="padding:8px 0 0">${s.authorized ? `<button class="btn ghost small" data-ixa="revoke" data-sid="${esc(s.id)}" type="button">Revoke</button><button class="btn small" data-ixa="index" data-sid="${esc(s.id)}" type="button">Index Now</button><button class="btn ghost small" data-ixa="retry" data-sid="${esc(s.id)}" type="button">Retry failed</button>` : `<button class="btn small" data-ixa="authorize" data-sid="${esc(s.id)}" type="button">Authorize</button>`}</div></div>`).join('');
+  } else if (['live', 'pending', 'history', 'failed'].includes(IX.view)){
+    h = d.files.map(f => `<div class="mrow"><b>${esc(f.file_name || '(not stored: ' + f.authorization + ')')}</b> <span class="by">${esc(f.qstatus || f.result || '')}${f.ep_no ? ' · ep ' + f.ep_no : ''}</span>
+      <div class="by">${esc(f.story_title)} · ${esc(f.supergroup_name || f.supergroup_id)} / ${esc(f.topic_name || f.topic_id)} · ${esc(f.mime || '')} ${f.size ? ixSize(f.size) : ''}</div><div class="by">Received ${ixWhen(f.received_at)} · Auth: ${esc(f.authorization)}${f.error || f.reason ? ' · ' + esc(f.error || f.reason) : ''}</div></div>`).join('') || '<div class="empty">Nothing here.</div>';
+    if (IX.view === 'failed') h = '<p class="note" style="margin:0 16px 10px">Use Retry failed on the Authorized Stories tab. Files already indexed are never published again.</p>' + h;
+  } else if (IX.view === 'reports'){
+    h = `<div class="actions" style="padding:0 16px 10px"><button class="btn small" data-ixa="reportnow" type="button">Summary so far</button></div>` + d.reports.map(r => { const x = r.data; return `<div class="mrow"><b>${esc(x.label)}</b> <span class="by">${esc(x.tz)}</span>
+      <div class="by">Eligible ${x.eligible} · Indexed ${x.indexed} · Pending ${x.pending} · Failed ${x.failed} · Skipped ${x.skipped + x.unauthorized_files} · Unauthorized attempts ${x.unauthorized_attempts}</div>
+      <div class="by">${Object.entries(x.by_story).map(([k, v]) => esc(k) + ': ' + v).join(' · ') || 'No files'}</div>
+      <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-ixa="export" data-ps="${r.period_start}" type="button">Export CSV</button></div></div>`; }).join('') || '<div class="empty">The first summary is made at 02:00.</div>';
+    h += '<h4 style="margin:12px 16px 6px">Recent index jobs</h4>' + d.jobs.map(j => `<div class="mrow"><b>#${j.id} ${esc(j.story_id)}</b> <span class="by">${esc(j.status)} · ${esc(j.trigger)}</span><div class="by">${j.indexed} indexed · ${j.skipped} skipped · ${j.failed} failed of ${j.total} · ${ixWhen(j.started)} ${esc(j.note || '')}</div></div>`).join('');
+  } else if (IX.view === 'settings'){
+    const s = d.settings;
+    h = `<div class="box"><b>Bot settings</b>
+      <label class="field"><span>Order of files when indexing</span><select id="ix_order"><option value="date"${s.order_by === 'date' ? ' selected' : ''}>Telegram message time (then message id)</option><option value="episode"${s.order_by === 'episode' ? ' selected' : ''}>Episode number from the file name</option></select></label>
+      <label class="field" style="flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="ix_live"${s.live_reports ? ' checked' : ''}> <span>Send a live “new file detected” message for each file</span></label>
+      <label class="field" style="flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="ix_auto"${s.auto_index_2am ? ' checked' : ''}> <span>Also index authorized stories automatically at 02:00 (default OFF)</span></label>
+      <label class="field"><span>Report chat id (blank = admin)</span><input id="ix_rc" inputmode="numeric" value="${s.report_chat || ''}"></label>
+      <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="savesettings" type="button">Save settings</button></div><small class="note">Timezone: ${esc(d.tz)}. At 02:00 the bot makes the daily summary and tidies the queue; it indexes only if the box above is ticked.</small></div>`;
+  }
+  $('#abody').innerHTML = nav + h;
+}
+function ixTopicOpts(stories, sid, cur){
+  const s = stories.find(x => x.id === sid);
+  if (!s) return '<option value="">Choose a story first</option>';
+  return s.topics.length ? s.topics.map(t => `<option value="${esc(t.id)}"${t.id === cur ? ' selected' : ''}>${esc(t.name)}</option>`).join('') : '<option value="">This story has no topics</option>';
+}
+async function ixClick(ev){
+  const v = ev.target.closest('[data-ixv]');
+  if (v){ IX.view = v.dataset.ixv; IX.edit = null; return loadAdmin(); }
+  const b = ev.target.closest('[data-ixa]'); if (!b) return;
+  const a = b.dataset.ixa, id = +b.dataset.id || null, sid = b.dataset.sid;
+  const run = async (body, ok) => once('ix' + a + (id || sid || ''), async () => { try{ const r = await ixPost(body); toast(ok ? ok(r) : 'Done'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+  if (a === 'mapsave') return run({op: 'map_save', id: IX.edit && IX.edit.id, supergroup_id: $('#ix_sg').value.trim(), topic_id: $('#ix_tp').value.trim(), supergroup_name: $('#ix_sgn').value, topic_name: $('#ix_tpn').value, story_id: $('#ix_story').value, story_topic_id: $('#ix_stopic').value}, () => { IX.edit = null; return 'Mapping saved'; });
+  if (a === 'mapcancel'){ IX.edit = null; return loadAdmin(); }
+  if (a === 'mapedit'){ IX.edit = IX.maps.mappings.find(m => m.id === id); return loadAdmin(); }
+  if (a === 'mapon') return run({op: 'map_enable', id}); if (a === 'mapoff') return run({op: 'map_disable', id});
+  if (a === 'mapdel') return askConfirm('Delete this mapping? Files waiting for it are put on hold.', () => run({op: 'map_delete', id}));
+  if (a === 'authorize') return run({op: 'authorize', story_id: sid}, () => 'Story authorized');
+  if (a === 'revoke') return askConfirm('Revoke? Pending indexing for this story stops immediately.', () => run({op: 'revoke', story_id: sid}, () => 'Authorization removed'));
+  if (a === 'index' || a === 'retry') return askConfirm(a === 'index' ? 'Index all pending files of this story now?' : 'Retry the failed files of this story?',
+    () => run({op: a === 'index' ? 'index_now' : 'retry', story_id: sid}, r => r.ok ? `${r.indexed} indexed, ${r.skipped} skipped, ${r.failed} failed` : r.note));
+  if (a === 'indexall' || a === 'retryall') return askConfirm(a === 'indexall' ? 'Index the pending files of ALL authorized stories now? Each story runs as its own job.' : 'Retry failed files of all authorized stories?',
+    () => run({op: a === 'indexall' ? 'index_all' : 'retry_all'}, r => `${r.jobs} stories: ${r.indexed} indexed, ${r.skipped} skipped, ${r.failed} failed`));
+  if (a === 'reportnow') return run({op: 'report_now'}, () => 'Summary updated');
+  if (a === 'export') return once('ixexp', async () => { try{ const r = await ixPost({op: 'export', period_start: +b.dataset.ps}); const u = URL.createObjectURL(new Blob([r.csv], {type: 'text/csv'})); const l = document.createElement('a'); l.href = u; l.download = 'index-report-' + b.dataset.ps + '.csv'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 3000); }catch(e){ toast(adminErr(e)); } });
+  if (a === 'savesettings') return run({op: 'settings', settings: {order_by: $('#ix_order').value, live_reports: $('#ix_live').checked, auto_index_2am: $('#ix_auto').checked, report_chat: $('#ix_rc').value.trim()}}, () => 'Settings saved');
+}
+document.addEventListener('change', e => { if (e.target && e.target.id === 'ix_story' && IX.maps){ const s = $('#ix_stopic'); if (s) s.innerHTML = ixTopicOpts(IX.maps.stories, e.target.value, ''); } });
+
 async function loadAdmin(){
   const body = $('#abody'); if (!body) return;
   const tab = A.tab, sig = fresh('admin');
@@ -2465,6 +2547,8 @@ async function loadAdmin(){
           <div class="two"><label class="field"><span>Days (blank = daily, 0 = off)</span><input type="number" min="0" max="365" inputmode="numeric" class="u_days" placeholder="daily" value="${st.custom_days ? st.days : ''}"></label><label class="field"><span>Time (blank = default)</span><input type="time" class="u_t" value="${st.custom_time ? esc(st.time) : ''}"></label></div>
           <div class="actions" style="padding:6px 0 0"><button class="btn small" data-usave="${esc(st.id)}" type="button">Save</button><button class="btn ghost small" data-usend="${esc(st.id)}" type="button">Send report now</button></div></div>`).join('') || '<div class="empty">No ongoing stories yet.</div>'}`;
       paintAway();
+    } else if (tab === 'index'){
+      await indexAdmin(body, sig, tab);
     } else if (tab === 'stats'){
       const d = await api('/api/admin/stats', {signal: sig}); if (A.tab !== tab) return;
       const k = (t, v) => `<div class="kpi"><small>${t}</small><b>${v}</b></div>`;
