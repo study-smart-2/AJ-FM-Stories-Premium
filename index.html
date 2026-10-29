@@ -665,6 +665,15 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .cmb-hero img{border-radius:14px;border:1px solid var(--gold)}
 .cmb-plan{color:var(--gold-2)!important;white-space:normal;overflow-wrap:anywhere}
 .cmb-chg{flex:none;white-space:nowrap}
+.crow.cmb-item{flex-wrap:wrap;align-items:flex-start}
+.cmb-item .lmain{align-items:flex-start;min-height:0}
+.cmb-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.crow .cmt.cmb-info b.cmb-ttl{font-size:15px;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.25}
+.cmb-kv{display:flex;gap:8px;align-items:baseline;font-size:12.5px;line-height:1.3}
+.cmb-kv i{flex:none;width:48px;font-style:normal;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.cmb-kv em{font-style:normal;color:var(--text,#fff);overflow-wrap:anywhere}
+.cmb-kv em.ok{color:var(--ok)}.cmb-kv em.lock{color:var(--gold-2)}.cmb-kv em.pr{font-weight:800;color:var(--gold-2);font-size:14px}
+.cmb-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
 .cmb-pov{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:flex-end}
 .cmb-psheet{width:100%;max-height:80vh;overflow:auto;background:var(--surf);border-top:1px solid var(--gold);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .cmb-popt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:8px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
@@ -1184,6 +1193,14 @@ async function loadCombos(type = CB.comboType){
 /* the plan each story is bought with: the member's choice, else the default plan of the combo (Section 1 plans only) */
 const cbOpt = s => { const pid = String(CB.plans[s.id] || s.plan_id || ''), o = (s.options || []).find(x => String(x.id) === pid); return o || {id: pid, label: s.plan || '', topic: '', kind: 'full', price: s.price}; };
 const cbPlanText = o => (o.topic ? o.topic + ' \u00B7 ' : '') + (o.label || (o.kind === 'topic' ? 'Topic plan' : 'Full story'));
+const cbFwd = o => /forward(ing)?\s+allowed/i.test(o.label || '');
+const cbPlanName = o => (o.label || '').replace(/\s*\(\s*forward(ing)?\s+allowed\s*\)\s*/ig, ' ').replace(/\s+/g, ' ').trim() || (o.kind === 'topic' ? 'Topic plan' : 'Full Story');
+/* the full picture of one combo line: story, topic, plan, forwarding and price (nothing is cut short) */
+const cbInfo = (s, o) => `<span class="cmt cmb-info"><b class="cmb-ttl">${esc(s.title)}</b>` +
+  `<span class="cmb-kv"><i>Topic</i><em>${esc(o.topic || 'Whole story (all episodes)')}</em></span>` +
+  `<span class="cmb-kv"><i>Plan</i><em>${esc(cbPlanName(o))}</em></span>` +
+  `<span class="cmb-kv"><i>Access</i><em class="${cbFwd(o) ? 'ok' : 'lock'}">${cbFwd(o) ? '&#128228; Forwarding allowed' : '&#128274; Protected: no forwarding'}</em></span>` +
+  `<span class="cmb-kv"><i>Price</i><em class="pr">${esc(nfmt(o.price))}</em></span></span>`;
 const cbStory = id => { const d = CB.data || {}; return (d.pool || []).find(x => x.id === id) || ((d.combos || []).flatMap(c => c.stories).find(x => x.id === id)) || (CB.extra || {})[id] || null; };
 function cbEstimate(){                       // instant estimate from the tiers; the exact bill comes from the server when the member taps Check
   const items = CB.sel.map(cbStory).filter(Boolean), total = items.reduce((a, s) => a + Number(cbOpt(s).price), 0), tiers = (CB.data && CB.data.tiers) || [];
@@ -1268,7 +1285,7 @@ function paintComboList(){
   const rows = CB.custom ? (d.pool || []).filter(s => !term || s.title.toLowerCase().includes(term)) : CB.sel.map(cbStory).filter(Boolean);
   box.innerHTML = rows.map(s => { const on = CB.sel.includes(s.id);
     const o = cbOpt(s), more = (s.options || []).length > 1;
-    return `<div class="crow"><button class="lmain" data-cbpick="${esc(s.id)}" aria-pressed="${on}" aria-label="${esc(s.title)}">${lthumb(s.cover)}<span class="cmt"><b>${esc(s.title)}</b><small class="cmb-plan">${esc(o.kind === 'topic' ? 'Topic plan' : 'Full story plan')}: ${esc(cbPlanText(o))}</small><small>${esc(nfmt(o.price))}</small></span></button>` +
+    return `<div class="crow"><button class="lmain" data-cbpick="${esc(s.id)}" aria-pressed="${on}" aria-label="${esc(s.title)}">${lthumb(s.cover)}${cbInfo(s, o)}</button>` +
       (on && more ? `<button class="btn ghost small cmb-chg" data-cbplan="${esc(s.id)}">Change plan</button>` : '') +
       (CB.custom ? `<span class="cmb-tick${on ? ' on' : ''}" aria-hidden="true">${on ? '&#10003;' : ''}</span>` : '') + `</div>`; }).join('') || `<div class="empty"><small>${esc(tr('cmbnolist'))}</small></div>`;
 }
@@ -1305,7 +1322,7 @@ function cbPlanPicker(id){
   const s = cbStory(id); if (!s) return; const cur = String(cbOpt(s).id);
   const ov = document.createElement('div'); ov.className = 'cmb-pov'; ov.id = 'cbPov';
   ov.innerHTML = `<div class="cmb-psheet" role="dialog" aria-label="Change plan"><b>${esc(s.title)}</b><div class="by" style="margin:2px 0 10px">Section 1 plans only: topic-specific or full story. Episode packs and rentals are not in combos.</div>` +
-    (s.options || []).map(o => `<button class="cmb-popt${String(o.id) === cur ? ' on' : ''}" data-cbsetplan="${esc(o.id)}" data-cbsetstory="${esc(id)}"><span><b>${esc(cbPlanText(o))}</b><small>${esc(o.kind === 'topic' ? 'Topic plan' : 'Full story plan')}</small></span><strong>${esc(nfmt(o.price))}</strong><i>${String(o.id) === cur ? '&#10003;' : ''}</i></button>`).join('') +
+    (s.options || []).map(o => `<button class="cmb-popt${String(o.id) === cur ? ' on' : ''}" data-cbsetplan="${esc(o.id)}" data-cbsetstory="${esc(id)}"><span><b>${esc(cbPlanText(o))}</b><small>${esc(o.topic ? 'Topic: ' + o.topic : 'Whole story')} &middot; ${cbFwd(o) ? 'Forwarding allowed' : 'No forwarding'}</small></span><strong>${esc(nfmt(o.price))}</strong><i>${String(o.id) === cur ? '&#10003;' : ''}</i></button>`).join('') +
     `<button class="btn ghost block" data-cbpclose="1" style="margin-top:8px">Cancel</button></div>`;
   $('#combopage').appendChild(ov);
 }
@@ -1364,7 +1381,7 @@ function paintHub(){
 function paintHubMine(){
   const d = CD.data, daily = (d && d.enabled && d.combos) || [], ready = (CB.data && CB.data.combos) || [];
   const tagOf = st => `<span class="tag ${st === 'created' ? 'gold' : 'live'}">${st === 'ordered' ? 'Ordered' : st === 'purchased' ? 'Purchased' : 'Created'}</span>`;
-  const mine = CH.saved.map((c, i) => `<div class="crow"><div class="cmt" style="flex:1;padding:8px 0"><b>${esc(c.name)}</b> ${tagOf(c.status)}<small>${c.ids.length} stories: ${esc(c.ids.map(id => (cbStory(id) || {}).title || 'Story').join(' + '))}</small><small>${nfmt(c.final)}${c.discount ? ' &middot; saved ' + nfmt(c.discount) : ''}</small></div><div style="display:grid;gap:6px;padding:8px 0"><button class="btn small" data-chbuy="${i}">${c.status === 'created' ? 'Buy' : 'Buy again'}</button><button class="btn ghost small" data-chdel="${i}">Remove</button></div></div>`).join('');
+  const mine = CH.saved.map((c, i) => `<div class="crow"><div class="cmt" style="flex:1;padding:8px 0"><b>${esc(c.name)}</b> ${tagOf(c.status)}${c.ids.map(id => { const st = cbStory(id); if (!st) return ''; const pid = String((c.plans || {})[id] || st.plan_id || ''), o = (st.options || []).find(x => String(x.id) === pid) || cbOpt(st); return `<small><b>${esc(st.title)}</b><br>${esc(o.topic || 'Whole story')} &middot; ${esc(cbPlanName(o))} &middot; ${cbFwd(o) ? 'Forwarding allowed' : 'No forwarding'} &middot; ${esc(nfmt(o.price))}</small>`; }).join('')}<small>${c.ids.length} stories in this combo</small><small>${nfmt(c.final)}${c.discount ? ' &middot; saved ' + nfmt(c.discount) : ''}</small></div><div style="display:grid;gap:6px;padding:8px 0"><button class="btn small" data-chbuy="${i}">${c.status === 'created' ? 'Buy' : 'Buy again'}</button><button class="btn ghost small" data-chdel="${i}">Remove</button></div></div>`).join('');
   $('#chBody').innerHTML = `<div class="sechead"><h2 class="sec">Your combos</h2></div>` +
     (mine || `<div class="empty"><small>No combos yet. Open the Build tab to make one.</small><div style="margin-top:10px"><button class="btn small" data-chtab="build">Build a combo</button></div></div>`) +
     ((daily.length || ready.length) ? `<div class="sechead"><h2 class="sec">Ready-made combos</h2></div>` : '') +
@@ -1379,9 +1396,9 @@ function paintHubList(){
   const box = $('#cbList'); if (!box) return;
   const rows = CB.sel.map(cbStory).filter(Boolean);
   box.innerHTML = rows.map(s => { const o = cbOpt(s), more = (s.options || []).length > 1;
-    return `<div class="crow"><div class="lmain">${lthumb(s.cover)}<span class="cmt"><b>${esc(s.title)}</b><small class="cmb-plan">${esc(cbPlanText(o))}</small><small>${esc(nfmt(o.price))}</small></span></div>` +
-      (more ? `<button class="btn ghost small cmb-chg" data-cbplan="${esc(s.id)}">Change plan</button>` : '') +
-      `<button class="btn ghost small cmb-chg" data-cbrm="${esc(s.id)}" aria-label="Remove ${esc(s.title)}">Remove</button></div>`; }).join('') ||
+    return `<div class="crow cmb-item"><div class="lmain">${lthumb(s.cover)}${cbInfo(s, o)}</div>` +
+      `<div class="cmb-acts">` + (more ? `<button class="btn ghost small cmb-chg" data-cbplan="${esc(s.id)}">Change plan</button>` : '<span></span>') +
+      `<button class="btn ghost small cmb-chg" data-cbrm="${esc(s.id)}" aria-label="Remove ${esc(s.title)}">Remove</button></div></div>`; }).join('') ||
     `<div class="empty"><small>No stories yet.<br>Open a story, pick a plan and tap &ldquo;Add to combo&rdquo;.</small></div>`;
 }
 function paintHubBar(){
@@ -1393,7 +1410,7 @@ function paintHubPreview(){
   const name = CH.name || `My ${items.length}-story combo`;
   $('#chBody').innerHTML = `<div class="cmb-hero"><span class="cmb-best" style="position:static;display:inline-block;margin-bottom:8px">&#128293; ${esc(tr('cmbbest'))}</span><img src="${esc(cbBannerUrl(CB.sel))}" alt="" decoding="async"></div>` +
     `<div class="pad"><label class="field"><span>Combo name</span><input id="chName" maxlength="40" value="${esc(name)}" autocomplete="off"></label></div>` +
-    items.map(s => { const o = cbOpt(s); return `<div class="crow"><div class="lmain">${lthumb(s.cover)}<span class="cmt"><b>${esc(s.title)}</b><small class="cmb-plan">${esc(cbPlanText(o))}</small><small>${esc(nfmt(o.price))}</small></span></div></div>`; }).join('') +
+    items.map(s => { const o = cbOpt(s); return `<div class="crow cmb-item"><div class="lmain">${lthumb(s.cover)}${cbInfo(s, o)}</div></div>`; }).join('') +
     `<div class="cmb-bar"><div class="cmb-sum"><div><span>${esc(tr('cmbtotal'))} (${items.length})</span><span>${nfmt(e.total)}</span></div>` +
     `<div style="color:var(--ok)"><span>${esc(tr('cmbdisc'))}${e.rule && e.rule.text ? ' (' + esc(e.rule.text) + ')' : ''}</span><span>${e.discount ? '-' + nfmt(e.discount) : esc(tr('cmbnodisc'))}</span></div><div class="tot"><span>${esc(tr('cmbpay'))}</span><span>${nfmt(e.final)}</span></div>` +
     (e.next ? `<small class="by" style="color:var(--gold-2)">${esc(tr('cmbadd', {a: nfmt(e.next.need), t: e.next.text}))}</small>` : '') + `</div>` +
@@ -1407,6 +1424,7 @@ function comboCreatedPopup(name){
 }
 const comboEligible = o => !!o && planKind(o) === 'full' && !o.hidden && Number(o.price) > 0;
 function comboBarBtn(o){
+  if (!comboEligible(o)) return '';                  // combos take Section 1 (Full Story) plans only: no button while an episode pack (Section 2) or rental (Section 3) is selected
   const inIt = CB.sel.includes(V.id) || lsGet('ajComboDraft', []).includes(V.id), n = lsGet('ajComboDraft', []).length;
   return `<button class="btn ghost block${inIt ? ' ok' : ''}" id="sbCombo" style="min-height:42px;padding:8px">${inIt ? '&#10003; In your combo (' + n + ') &middot; Open' : '&#129513; + Add to combo'}</button>`;
 }
