@@ -441,14 +441,16 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .irow{display:flex;gap:12px;align-items:flex-start;margin:0 16px 8px;padding:12px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
 .irow .ic{flex:none;width:34px;height:34px;border-radius:10px;background:rgba(var(--gold-rgb),.14);display:flex;align-items:center;justify-content:center;font-size:17px}
 .irow b{display:block;font-size:13.5px}.irow small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}
-.sbar{position:sticky;bottom:0;z-index:5;margin-top:14px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--nav-bg);border-top:1px solid var(--gold);box-shadow:0 -8px 24px rgba(0,0,0,.25);display:grid;gap:8px}
+.sbar{position:fixed;left:0;right:0;bottom:0;z-index:5;box-sizing:border-box;width:100%;max-width:100vw;overflow:hidden;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--nav-bg);border-top:1px solid var(--gold);box-shadow:0 -8px 24px rgba(0,0,0,.25);display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+#story:has(.sbar:not(:empty)){padding-bottom:calc(230px + env(safe-area-inset-bottom,0px))}
 .sbar:empty{display:none}
 body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
-.sb-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+body.hasplayer #story:has(.sbar:not(:empty)){padding-bottom:calc(230px + var(--mini) + env(safe-area-inset-bottom,0px))}
+.sb-row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;min-width:0}.sb-row .link{flex:none;white-space:nowrap}
 #sbBuy{white-space:nowrap;flex:none}
-.sb-plan{min-width:0}.sb-plan small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sb-plan b{font-size:20px;color:var(--gold-2)}
-.sb-btns{display:grid;grid-template-columns:1fr 1.3fr;gap:8px}
-.sb-btns .btn{min-height:46px;padding:10px 8px;font-size:14px}
+.sb-plan{min-width:0}.sb-plan small{display:block;color:var(--muted);font-size:12px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}.sb-plan b{font-size:20px;color:var(--gold-2)}
+.sb-btns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px;min-width:0}
+.sb-btns .btn{min-height:46px;padding:10px 6px;font-size:14px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* coupons and offers */
 #couponed{z-index:9}
 .cpbox{margin:0 16px 12px;padding:12px;border-radius:14px;border:1px dashed var(--gold);background:var(--panel);display:grid;gap:8px}
@@ -677,23 +679,6 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .cmb-bar .actions{display:grid;gap:8px}
 .cmb-bar .btn[disabled]{opacity:.55}
 
-
-/* Build Your Own Combo screen refinement */
-.cb-builder-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 16px 10px;padding:16px;border:1px solid var(--gold);border-radius:16px;background:linear-gradient(135deg,var(--feat-a),var(--surf))}
-.cb-builder-head>div:first-child{min-width:0}
-.cb-eyebrow{display:block;color:var(--gold-2);font-size:10px;font-weight:800;letter-spacing:.13em;margin-bottom:4px}
-.cb-builder-head h3{font-family:var(--serif);font-size:25px;line-height:1.05;color:var(--gold-2)}
-.cb-builder-head p{font-size:12.5px;color:var(--muted);margin:6px 0 0}
-.cb-count{flex:none;min-width:62px;min-height:62px;border-radius:14px;border:1px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(var(--gold-rgb),.1)}
-.cb-count strong{font-size:21px;line-height:1.1;color:var(--gold-2)}
-.cb-count small{font-size:10px;color:var(--muted)}
-.cb-progress{height:4px;margin:0 16px 12px;background:var(--line);border-radius:99px;overflow:hidden}
-.cb-progress i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold-2));transition:width .2s ease}
-.cb-builder-note{display:flex;flex-direction:column;gap:3px;margin:0 16px 10px;padding:10px 12px;border-radius:10px;background:rgba(var(--gold-rgb),.07);border:1px dashed rgba(var(--gold-rgb),.45)}
-.cb-builder-note span{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--gold-2)}
-.cb-builder-note small{font-size:12px;color:var(--muted)}
-@media(max-width:360px){.cb-builder-head{padding:12px}.cb-builder-head h3{font-size:22px}}
-
 /* Daily Story Combos: one full-width featured card per row, lower in the home feed */
 .cmb-daily-list{display:grid;gap:12px;padding:0 16px 16px}
 .cmb-daily-card{display:grid;grid-template-columns:minmax(104px,30%) minmax(0,1fr);gap:12px;align-items:center;position:relative;width:100%;min-width:0;padding:10px;text-align:left;border:1px solid var(--gold);border-radius:16px;background:linear-gradient(125deg,var(--feat-a),var(--surf));overflow:hidden;scroll-margin:16px}
@@ -704,6 +689,12 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .cmb-daily-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .cmb-daily-meta strong{font-size:19px;color:var(--gold-2)}
 .cmb-daily-meta s{opacity:.8}
+.cmb-own{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:stretch;margin:0 16px 18px}
+.cmb-own button{min-height:56px;border-radius:14px;border:1px solid var(--gold);color:var(--gold-2);font-weight:700}
+.cmb-own-main{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px;background:rgba(var(--gold-rgb),.12);border-style:dashed!important}
+.cmb-own-ic{font-size:22px}.cmb-own-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.cmb-own-tx b{font-size:15px}.cmb-own-tx small{color:var(--muted);font-weight:500;font-size:11.5px}
+.cmb-own-ar{font-size:18px}.cmb-own-mine{padding:0 14px;background:transparent;font-size:13px}
 .cmb-daily-action{font-size:12px;font-weight:800;color:var(--gold-2);margin-top:2px}
 .cmb-daily-card.hl{box-shadow:0 0 0 2px rgba(var(--gold-rgb),.75),0 8px 22px rgba(var(--gold-rgb),.2);animation:cmbPulse 1.25s ease-out 1}
 @media(max-width:380px){.cmb-daily-card{grid-template-columns:100px minmax(0,1fr);gap:9px;padding:8px}.cmb-daily-info b{font-size:18px}.cmb-daily-meta strong{font-size:17px}}
@@ -1217,11 +1208,12 @@ function dailyComboCard(c){
     `<b>${esc(c.title || (c.size + '-Story Combo'))}</b><small>${esc(names)}</small><span class="cmb-daily-meta">${price}<strong>${nfmt(c.final)}</strong>${save}</span>`+
     `<span class="cmb-daily-action">View Combo &#8594;</span></span></button>`;
 }
+const ownComboBlock = () => `<div class="cmb-own"><button class="cmb-own-main" data-cbown="1"><span class="cmb-own-ic">&#129513;</span><span class="cmb-own-tx"><b>${esc(tr('cmbown'))} combo</b><small>Pick any stories and see your deal</small></span><span class="cmb-own-ar">&rarr;</span></button><button class="cmb-own-mine" data-cbmine="1">My Combos</button></div>`;
 function dailyCombosSection(){
   const d = CD.data; if (!d || !d.enabled || !Array.isArray(d.combos) || !d.combos.length) return '';
   return `<section class="cmb-sec" id="cmbDailySec"><div class="sechead"><h2 class="sec">&#128293; ${esc(d.heading || 'Daily Story Combos')}</h2><span class="tag gold">${esc(d.badge || 'DAILY PICKS')}</span></div>`+
     `<div class="by" style="margin:0 16px 10px">${esc(d.subtitle || 'New combinations every day')}</div><div class="cmb-daily-list">${d.combos.map(dailyComboCard).join('')}</div>`+
-    `<div class="sechead" style="margin-top:0"><button class="link" data-cbown="1">${esc(tr('cmbown'))} &#8594;</button></div></section>`;
+    `</section>`;
 }
 function watchDailyCombos(){
   if (CD.io){ CD.io.disconnect(); CD.io = null; }
@@ -1267,7 +1259,7 @@ function paintCombo(){
   $('#cbTitle').textContent = CB.custom ? tr('cmbown') : tr('cmbtitle');
   const n = CB.sel.length, q = cbQuoteNow();
   $('#cbHero').innerHTML = n >= 2 ? `<span class="cmb-best" style="position:static;display:inline-block;margin-bottom:8px">&#128293; ${esc(tr('cmbbest'))}</span><img src="${esc(q && q.banner ? q.banner : cbBannerUrl(CB.sel))}" alt="" decoding="async">` : `<div class="empty"><small>${esc(tr('cmbpick'))}</small></div>`;
-  $('#cbPick').innerHTML = CB.custom ? `<div class="cb-builder-head"><div><span class="cb-eyebrow">CUSTOM COMBINATION</span><h3>Build Your Own Combo</h3><p>Pick 2–5 stories and unlock combo savings.</p></div><div class="cb-count"><strong>${n}/5</strong><small>selected</small></div></div><div class="cb-progress"><i style="width:${Math.min(100, n / 5 * 100)}%"></i></div><div class="pad"><input id="cbq" type="search" placeholder="${esc(tr('searchph'))}" value="${esc(CB.q)}" autocomplete="off" aria-label="${esc(tr('searchph'))}"></div><div class="cb-builder-note"><span>${CB.comboType === 'topic' ? 'SECTION 1 · TOPIC-SPECIFIC PLANS' : 'SECTION 1 · FULL STORY PLANS'}</span><small>Episode packs and rentals are not included.</small></div>` : '';
+  $('#cbPick').innerHTML = CB.custom ? `<div class="pad"><input id="cbq" type="search" placeholder="${esc(tr('searchph'))}" value="${esc(CB.q)}" autocomplete="off" aria-label="${esc(tr('searchph'))}"></div><div class="by" style="margin:0 16px 8px">${CB.comboType === 'topic' ? 'Section 1 · Topic-specific plans only' : esc(tr('cmbfull'))}</div>` : '';
   paintComboList(); paintComboBar();
 }
 function paintComboList(){
@@ -1305,7 +1297,7 @@ async function cbCheck(){
 function cbBuy(){
   const q = cbQuoteNow(); if (!q) return cbCheck();
   return once('buy', async () => {
-    try{ const r = await api('/api/cart/checkout', {method: 'POST', retry: false, body: JSON.stringify({combo_type: CB.comboType, items: q.items.map(i => ({story_id: i.id, option_id: i.plan_id}))})}); goBot('cart_' + r.token); await sleep(1200); }
+    try{ const r = await api('/api/cart/checkout', {method: 'POST', retry: false, body: JSON.stringify({combo_type: CB.comboType, items: q.items.map(i => ({story_id: i.id, option_id: i.plan_id}))})}); cbMarkOrdered(); goBot('cart_' + r.token); await sleep(1200); }
     catch(e){ toast(errText(e), 4500); }
   });
 }
@@ -1319,6 +1311,7 @@ function cbPlanPicker(id){
 }
 function comboClick(c){
   let m;
+  if (comboHubClick(c)) return true;
   if (c('[data-cbpclose]') || (c('#cbPov') && !c('.cmb-psheet'))){ const p = $('#cbPov'); if (p) p.remove(); return true; }
   if ((m = c('[data-cbsetplan]'))){
     const sid = m.dataset.cbsetstory, oid = m.dataset.cbsetplan, p = $('#cbPov'); if (p) p.remove();
@@ -1330,20 +1323,109 @@ function comboClick(c){
   if ((m = c('[data-cbsize]'))){ const sc = $('#cmbChips'), x = sc ? sc.scrollLeft : 0; CB.size = +m.dataset.cbsize; renderHome(); const n = $('#cmbChips'); if (n) n.scrollLeft = x; return true; }
   if ((m = c('[data-combo]'))){ const k = m.dataset.combo; openCombo(k.split(','), false); return true; }
   if ((m = c('[data-dailycombo]'))){ openDailyCombo(m.dataset.dailycombo); return true; }
-  if (c('[data-cbown]')){ openCombo([], true); return true; }
+  if (c('[data-cbown]')){ openComboHub('build'); return true; }
+  if (c('[data-cbmine]')){ openComboHub('mine'); return true; }
   if (c('#cbBack')){ closeSheet('combopage'); return true; }
   if ((m = c('[data-cbpick]'))){
     const id = m.dataset.cbpick, i = CB.sel.indexOf(id);
     if (!CB.custom){ return true; }
-    if (i >= 0) CB.sel.splice(i, 1); else if (CB.sel.length >= 5){ toast(tr('cmbmax')); return true; } else CB.sel.push(id);
-    CB.quote = null; paintCombo(); return true;
+    if (i >= 0) CB.sel.splice(i, 1); else CB.sel.push(id);
+    CB.quote = null; saveDraft(); if ($('#chBar')){ paintComboList(); paintHubBar(); } else paintCombo(); return true;
   }
   if (c('#cbCheck')){ cbCheck(); return true; }
   if (c('#cbBuy')){ cbBuy(); return true; }
   if (c('#cbCustomize')){ CB.custom = true; CB.quote = null; paintCombo(); return true; }
   return false;
 }
-document.addEventListener('input', e => { if (e.target && e.target.id === 'cbq'){ CB.q = e.target.value; paintComboList(); } });
+
+/* ===== Combo hub: tab 1 "My Combos", tab 2 "Build" (pick -> preview -> Edit this / Add this) ===== */
+const CH = {tab: 'mine', step: 'pick', name: '', buyIdx: null};
+const lsGet = (k, d) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+const lsSet = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+CH.saved = lsGet('ajMyCombos', []);
+const saveDraft = () => lsSet('ajComboDraft', CB.sel);
+const saveMine = () => lsSet('ajMyCombos', CH.saved);
+function cbMarkOrdered(){ const c = CH.saved[CH.buyIdx]; if (c){ c.status = 'ordered'; saveMine(); } CH.buyIdx = null; }
+function openComboHub(tab){
+  CB.custom = true; CB.quote = null; CB.q = ''; CB.plans = {};
+  if (!CB.sel.length) CB.sel = lsGet('ajComboDraft', []).filter(id => cbStory(id));
+  CH.tab = tab || 'mine'; CH.step = 'pick';
+  $('#combopage').innerHTML = `<div class="top"><button class="btn ghost small" id="cbBack">${esc(tr('close'))}</button><strong>Combos</strong><span style="width:60px"></span></div>` +
+    `<div class="rq-tabs" role="tablist"><button class="rq-tab" data-chtab="mine" role="tab">My Combos</button><button class="rq-tab" data-chtab="build" role="tab">Building</button></div><div id="chBody"></div>`;
+  paintHub(); openSheet('combopage'); $('#combopage').scrollTop = 0;
+}
+function paintHub(){
+  $$('#combopage [data-chtab]').forEach(b => { const on = b.dataset.chtab === CH.tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  if (CH.tab === 'mine') paintHubMine(); else if (CH.step === 'preview') paintHubPreview(); else paintHubPick();
+}
+function paintHubMine(){
+  const d = CD.data, daily = (d && d.enabled && d.combos) || [], ready = (CB.data && CB.data.combos) || [];
+  const tagOf = st => `<span class="tag ${st === 'created' ? 'gold' : 'live'}">${st === 'ordered' ? 'Ordered' : st === 'purchased' ? 'Purchased' : 'Created'}</span>`;
+  const mine = CH.saved.map((c, i) => `<div class="crow"><div class="cmt" style="flex:1;padding:8px 0"><b>${esc(c.name)}</b> ${tagOf(c.status)}<small>${c.ids.length} stories: ${esc(c.ids.map(id => (cbStory(id) || {}).title || 'Story').join(' + '))}</small><small>${nfmt(c.final)}${c.discount ? ' &middot; saved ' + nfmt(c.discount) : ''}</small></div><div style="display:grid;gap:6px;padding:8px 0"><button class="btn small" data-chbuy="${i}">${c.status === 'created' ? 'Buy' : 'Buy again'}</button><button class="btn ghost small" data-chdel="${i}">Remove</button></div></div>`).join('');
+  $('#chBody').innerHTML = `<div class="sechead"><h2 class="sec">Your combos</h2></div>` +
+    (mine || `<div class="empty"><small>No combos yet. Open the Build tab to make one.</small><div style="margin-top:10px"><button class="btn small" data-chtab="build">Build a combo</button></div></div>`) +
+    ((daily.length || ready.length) ? `<div class="sechead"><h2 class="sec">Ready-made combos</h2></div>` : '') +
+    (daily.length ? `<div class="cmb-daily-list">${daily.map(dailyComboCard).join('')}</div>` : '') +
+    (ready.length ? `<div class="rail cmb-rail">${ready.map(cmbCard).join('')}</div>` : '');
+}
+function paintHubPick(){
+  $('#chBody').innerHTML = `<div class="pad"><input id="cbq" type="search" placeholder="${esc(tr('searchph'))}" value="${esc(CB.q)}" autocomplete="off" aria-label="${esc(tr('searchph'))}"></div><div class="by" style="margin:0 16px 8px">Tap stories to add them. You can add as many as you like.</div><div id="cbList"></div><div class="cmb-bar" id="chBar"></div>`;
+  paintComboList(); paintHubBar();
+}
+function paintHubBar(){
+  const bar = $('#chBar'); if (!bar) return; const n = CB.sel.length;
+  bar.innerHTML = `<small class="by">${n} ${n === 1 ? 'story' : 'stories'} selected${n < 2 ? ' &middot; ' + esc(tr('cmbmin')) : ''}</small><div class="actions" style="padding:0"><button class="btn block" id="chBuild"${n < 2 ? ' disabled' : ''}>Build this</button></div>`;
+}
+function paintHubPreview(){
+  const e = cbEstimate(), items = CB.sel.map(cbStory).filter(Boolean), tiers = (CB.data && CB.data.tiers) || [];
+  const name = CH.name || `My ${items.length}-story combo`;
+  $('#chBody').innerHTML = `<div class="cmb-hero"><span class="cmb-best" style="position:static;display:inline-block;margin-bottom:8px">&#128293; ${esc(tr('cmbbest'))}</span><img src="${esc(cbBannerUrl(CB.sel))}" alt="" decoding="async"></div>` +
+    `<div class="pad"><label class="field"><span>Combo name</span><input id="chName" maxlength="40" value="${esc(name)}" autocomplete="off"></label></div>` +
+    items.map(s => { const o = cbOpt(s); return `<div class="crow"><div class="lmain">${lthumb(s.cover)}<span class="cmt"><b>${esc(s.title)}</b><small class="cmb-plan">${esc(cbPlanText(o))}</small><small>${esc(nfmt(o.price))}</small></span></div></div>`; }).join('') +
+    `<div class="cmb-bar"><div class="cmb-sum"><div><span>${esc(tr('cmbtotal'))} (${items.length})</span><span>${nfmt(e.total)}</span></div>` +
+    `<div style="color:var(--ok)"><span>${esc(tr('cmbdisc'))}${e.rule && e.rule.text ? ' (' + esc(e.rule.text) + ')' : ''}</span><span>${e.discount ? '-' + nfmt(e.discount) : esc(tr('cmbnodisc'))}</span></div><div class="tot"><span>${esc(tr('cmbpay'))}</span><span>${nfmt(e.final)}</span></div>` +
+    (e.next ? `<small class="by" style="color:var(--gold-2)">${esc(tr('cmbadd', {a: nfmt(e.next.need), t: e.next.text}))}</small>` : '') + `</div>` +
+    (tiers.length ? `<small class="by"><b>${esc(tr('cmbmore'))}</b> ${tiers.map(t => esc(tr('cmbrule', {m: money(t.min), t: t.text}))).join(' &middot; ')}</small>` : '') +
+    `<div class="actions" style="padding:0"><button class="btn ghost block" id="chEdit">Edit this</button><button class="btn block" id="chAdd">Add this</button></div></div>`;
+}
+function comboCreatedPopup(name){
+  const ov = document.createElement('div'); ov.className = 'cmb-pov'; ov.id = 'cbPov';
+  ov.innerHTML = `<div class="cmb-psheet" role="dialog" aria-label="Combo created"><b>&#127881; Your combo is created</b><div class="by" style="margin:6px 0 12px">&ldquo;${esc(name)}&rdquo; is created and added to the My Combos tab. You can purchase it from here.</div><button class="btn block" data-cbpclose="1">OK</button></div>`;
+  $('#combopage').appendChild(ov);
+}
+async function addToCombo(id){
+  if (!CB.data) await loadCombos();
+  if (!CB.sel.length) CB.sel = lsGet('ajComboDraft', []);
+  if (CB.sel.includes(id)) return openComboHub('build');
+  if (!cbStory(id)) return toast("This story can't be added to a combo.");
+  CB.sel.push(id); CB.quote = null; saveDraft();
+  toast(`Added to your combo (${CB.sel.length} ${CB.sel.length === 1 ? 'story' : 'stories'})`);
+  const b = $('#addToCombo'); if (b) b.textContent = `In your combo (${CB.sel.length}) \u00b7 Open`;
+}
+function comboBtnHtml(s){
+  const d = lsGet('ajComboDraft', []), on = d.includes(s.id);
+  return `<div class="pad" style="margin-bottom:6px"><button class="btn ghost block" id="addToCombo" data-addcombo="${esc(s.id)}">${on ? 'In your combo (' + d.length + ') \u00b7 Open' : '+ Add to your combo'}</button></div>`;
+}
+function comboHubClick(c){
+  let m;
+  if ((m = c('[data-chtab]'))){ if (CH.name = $('#chName') ? $('#chName').value : CH.name, true){ CH.tab = m.dataset.chtab; CH.step = 'pick'; paintHub(); } return true; }
+  if (c('#chBuild')){ if (CB.sel.length < 2){ toast(tr('cmbmin')); return true; } CH.step = 'preview'; paintHub(); $('#combopage').scrollTop = 0; return true; }
+  if (c('#chEdit')){ CH.name = $('#chName') ? $('#chName').value.trim() : CH.name; CH.step = 'pick'; paintHub(); return true; }
+  if (c('#chAdd')){
+    const e = cbEstimate(), name = (($('#chName') || {}).value || '').trim() || `My ${CB.sel.length}-story combo`;
+    CH.saved.unshift({id: Date.now(), name: name.slice(0, 40), ids: CB.sel.slice(), plans: Object.assign({}, CB.plans), total: e.total, discount: e.discount, final: e.final, status: 'created'});
+    saveMine(); CB.sel = []; CB.quote = null; saveDraft(); CH.name = ''; CH.tab = 'mine'; CH.step = 'pick'; paintHub(); $('#combopage').scrollTop = 0; comboCreatedPopup(name); return true;
+  }
+  if ((m = c('[data-chdel]'))){ const i = +m.dataset.chdel; if (CH.saved[i] && confirm('Remove this combo?')){ CH.saved.splice(i, 1); saveMine(); paintHub(); } return true; }
+  if ((m = c('[data-chbuy]'))){
+    const i = +m.dataset.chbuy, k = CH.saved[i]; if (!k) return true;
+    CB.sel = k.ids.slice(); CB.plans = Object.assign({}, k.plans || {}); CB.quote = null; CH.buyIdx = i;
+    cbCheck().then(() => { if (cbQuoteNow()) cbBuy(); else CH.buyIdx = null; }); return true;
+  }
+  if ((m = c('[data-addcombo]'))){ addToCombo(m.dataset.addcombo); return true; }
+  return false;
+}
+document.addEventListener('input', e => { if (e.target && e.target.id === 'cbq'){ CB.q = e.target.value; paintComboList(); } if (e.target && e.target.id === 'chName') CH.name = e.target.value; });
 
 /* ---------- cart (kept on this device; the bot takes the whole cart in one checkout) ---------- */
 let CART = (() => { try{ const v = JSON.parse(store.get('ajcart', '[]')); return Array.isArray(v) ? v : []; }catch(e){ return []; } })();
@@ -1404,6 +1486,7 @@ function renderMe(){
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
     <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
+    <div style="margin-top:14px">${ownComboBlock()}</div>
     <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="guide"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="help"')}${item('\u2B50', tr('pfb'), 'id="pfbBtn"')}</div>
     <h3 class="lsub">${tr('pdisp')}</h3>
     <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
@@ -2311,7 +2394,7 @@ function renderStory(){
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
     <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
       <div class="stat"><small>${tr('shrs')}</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
-    ${ownedSummary(a)}${act}
+    ${ownedSummary(a)}${act}${comboBtnHtml(s)}
     ${showPlans ? `<h3 class="h3" id="plans">${tr('splan')}</h3><div id="planPills">${plansHtml()}</div>` : (a.admin ? adminPlansHtml() : '')}
     <h3 class="h3">${shownTopics().length ? tr('stopics') : tr('slisten')}</h3><div id="topicCards">${cards}</div>
     ${s.notes ? `<h3 class="h3">${tr('snotes')}</h3><div class="tnotes" data-tx="${esc(s.notes)}">${esc(tx(s.notes))}</div>` : ''}${showPlans ? `<div class="sbar" id="sbar">${sbarHtml()}</div>` : ''}`;
@@ -2322,7 +2405,7 @@ function renderTopicPage(){
   const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
     <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
-    ${ownedSummary(a)}${act}
+    ${ownedSummary(a)}${act}${comboBtnHtml(s)}
     ${full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
