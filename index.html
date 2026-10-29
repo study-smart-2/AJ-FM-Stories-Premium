@@ -691,6 +691,15 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .cmb-daily-card.hl{box-shadow:0 0 0 2px rgba(var(--gold-rgb),.75),0 8px 22px rgba(var(--gold-rgb),.2);animation:cmbPulse 1.25s ease-out 1}
 @media(max-width:380px){.cmb-daily-card{grid-template-columns:100px minmax(0,1fr);gap:9px;padding:8px}.cmb-daily-info b{font-size:18px}.cmb-daily-meta strong{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.cmb-daily-card.hl{animation:none}}
+
+/* Story banners */
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin:8px 0}
+.btile{display:flex;flex-direction:column;gap:6px;min-width:0}.btile img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:10px;border:1px solid var(--line,rgba(232,190,92,.35));background:var(--card)}
+.btile small{font-size:11px;color:var(--muted);text-align:center}.btile .btn{min-height:36px;padding:0 6px;font-size:12px}.btile.main img{outline:2px solid var(--gold)}
+/* Feedback & Suggestions */
+.fb-stars{display:flex;gap:2px;padding:0 16px 12px}.fb-star{font-size:30px;line-height:1;background:none;border:0;color:var(--muted);padding:4px 6px;min-height:46px;min-width:42px}.fb-star.on{color:var(--gold)}
+.fb-star-s{color:var(--gold);letter-spacing:2px;font-size:15px}.fb-msg{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px}
+.fb-cnt{display:block;text-align:right;color:var(--muted);font-size:12px;margin-top:4px}.fb-foot{margin:0 16px 12px;text-align:center}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -725,6 +734,7 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 <section class="sheet" id="search" aria-label="Search"></section>
 <section class="sheet" id="notif" aria-label="Notifications"></section>
 <section class="sheet" id="reqpage" aria-label="Request a Story"></section>
+<section class="sheet" id="fbpage" aria-label="Feedback and Suggestions"></section>
 <section class="sheet" id="story" aria-label="Story"></section>
 <section class="sheet" id="admin" aria-label="Admin panel"></section>
 <section class="sheet" id="editor" aria-label="Story editor"></section>
@@ -1377,7 +1387,7 @@ function renderMe(){
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
     <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
-    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="guide"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="help"')}${item('\u2B50', tr('pfb'), 'data-pbot="feedback"')}</div>
+    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="guide"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="help"')}${item('\u2B50', tr('pfb'), 'id="pfbBtn"')}</div>
     <h3 class="lsub">${tr('pdisp')}</h3>
     <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
     <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
@@ -1462,6 +1472,77 @@ async function submitRequest(){
     R.d = {name:'', platform:'', language:'', status:'', link:''}; R.photo = ''; R.items = null; R.tab = 'mine'; renderRequest();
   }catch(e){ toast(errText(e), 6000); const b2 = $('#rqSubmit'); if (b2){ b2.disabled = false; b2.textContent = tr('rqsubmit'); } }
   finally{ R.sending = false; }
+}
+
+/* ---------- feedback & suggestions (members send, admin reads everything) ---------- */
+const FB = {tab:'new', kind:'feedback', stars:0, text:'', items:null, state:'idle', err:'', sending:false};
+const FBA = {kind:'', status:'', source:'', q:'', limit:30};
+const fbWhen = ts => ts ? new Date(ts * 1000).toLocaleString(undefined, {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : '';
+const fbStars = n => n ? '★'.repeat(n) + '☆'.repeat(5 - n) : '';
+function openFeedback(tab){ if (tab) FB.tab = tab; renderFeedback(); openSheet('fbpage'); $('#fbpage').scrollTop = 0; }
+function renderFeedback(){
+  $('#fbpage').innerHTML = `<div class="top"><button class="btn ghost small" id="fbBack" aria-label="Back">Back</button><strong>Feedback &amp; Suggestions</strong><span style="width:60px"></span></div>
+    <div class="rq-tabs" role="tablist"><button class="rq-tab${FB.tab === 'new' ? ' on' : ''}" data-fbtab="new" role="tab" aria-selected="${FB.tab === 'new'}">Send</button><button class="rq-tab${FB.tab === 'mine' ? ' on' : ''}" data-fbtab="mine" role="tab" aria-selected="${FB.tab === 'mine'}">My messages</button></div>
+    <div id="fbBody"></div>`;
+  if (FB.tab === 'new') paintFbForm(); else { paintFbList(); loadFeedbackMine(); }
+}
+function paintFbForm(){
+  $('#fbBody').innerHTML = `<div class="field"><span>What would you like to send?</span><div class="rq-chips" data-fbgrp="kind">${[['feedback', '💬 Feedback'], ['suggestion', '💡 Suggestion']].map(([k, l]) => `<button type="button" class="rq-chip${FB.kind === k ? ' on' : ''}" data-fbkind="${k}" aria-pressed="${FB.kind === k}">${l}</button>`).join('')}</div></div>
+    <div class="field" style="margin-bottom:0"><span>Rate the app (optional)</span></div>
+    <div class="fb-stars" role="group" aria-label="Rating">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="fb-star${n <= FB.stars ? ' on' : ''}" data-fbstar="${n}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}</div>
+    <label class="field"><span>Your message *</span><textarea id="fb_msg" rows="6" maxlength="1500" placeholder="Tell us what you like, what is wrong, or what you would love to see…">${esc(FB.text)}</textarea><small class="fb-cnt" id="fbCount">${FB.text.length}/1500</small></label>
+    <div class="pad"><button class="btn block" id="fbSend">Send</button></div>
+    <div class="fb-foot"><button class="btn ghost small" type="button" data-pbot="feedback">Prefer chatting? Send it in the bot</button></div>`;
+}
+async function loadFeedbackMine(){
+  FB.state = 'loading'; paintFbList();
+  try{ const d = await api('/api/feedback', {signal: fresh('fblist')}); FB.items = d.items; FB.state = 'ok'; }
+  catch(e){ if (e.aborted) return; FB.state = 'error'; FB.err = errText(e); }
+  if (FB.tab === 'mine') paintFbList();
+}
+function paintFbList(){
+  const b = $('#fbBody'); if (!b || FB.tab !== 'mine') return;
+  if (FB.state === 'loading' && !FB.items) b.innerHTML = '<div class="sk hero"></div>';
+  else if (FB.state === 'error' && !FB.items) b.innerHTML = retryBox(FB.err, 'retryFb');
+  else if (!FB.items || !FB.items.length) b.innerHTML = `<div class="empty"><b style="color:var(--text);font-size:16px">Nothing sent yet</b><small style="display:block;margin:6px 0 12px">Your feedback and suggestions will show up here.</small><button class="btn" data-fbtab="new">Send one</button></div>`;
+  else b.innerHTML = FB.items.map(i => `<div class="rq-card"><div class="by"><span class="tag${i.kind === 'suggestion' ? ' gold' : ''}">${i.kind === 'suggestion' ? 'Suggestion' : 'Feedback'}</span>${i.status === 'done' ? ' <span class="tag live">Done</span>' : ''} ${esc(fbWhen(i.created))}</div>
+    ${i.stars ? `<div class="fb-star-s">${fbStars(i.stars)}${i.title ? ` <span class="by">${esc(i.title)}</span>` : ''}</div>` : ''}${i.message ? `<p class="fb-msg">${esc(i.message)}</p>` : ''}</div>`).join('');
+}
+async function submitFeedback(){
+  if (FB.sending) return;
+  const t = ($('#fb_msg').value || '').trim(); FB.text = t;
+  if (t.length < 3) return toast('Please write a few words.', 4000);
+  FB.sending = true; const b = $('#fbSend'); b.disabled = true; b.textContent = 'Sending…';
+  try{
+    const r = await api('/api/feedback', {method: 'POST', retry: false, body: JSON.stringify({kind: FB.kind, stars: FB.stars, message: t})});
+    toast(r.message || 'Thank you!', 5000); if (tg && tg.HapticFeedback) try{ tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
+    FB.text = ''; FB.stars = 0; FB.items = null; FB.tab = 'mine'; renderFeedback();
+  }catch(e){ toast(errText(e), 6000); const b2 = $('#fbSend'); if (b2){ b2.disabled = false; b2.textContent = 'Send'; } }
+  finally{ FB.sending = false; }
+}
+async function feedbackAdmin(body, sig, tab){
+  const qs = new URLSearchParams({kind: FBA.kind, status: FBA.status, source: FBA.source, q: FBA.q, offset: 0, limit: FBA.limit});
+  const d = await api('/api/admin/feedback?' + qs, {signal: sig}); if (A.tab !== tab) return;
+  const s = d.summary, k = (t, v) => `<div class="kpi"><small>${t}</small><b>${v}</b></div>`;
+  const chips = [['', '', 'All'], ['kind', 'suggestion', '💡 Suggestions'], ['kind', 'feedback', '💬 Feedback'], ['status', 'new', '🆕 New'], ['status', 'done', '✅ Done'], ['source', 'order', '🛒 After purchase']];
+  const on = (kk, v) => kk === '' ? !FBA.kind && !FBA.status && !FBA.source : FBA[kk] === v;
+  body.innerHTML = `<div class="kpis">${k('Total', s.total)}${k('New', s.new)}${k('Average rating', s.average == null ? '–' : s.average + ' ★')}${k('5-star', s.five_star)}${k('Suggestions', s.suggestions)}${k('Feedback', s.feedback)}</div>
+    <div class="seg" role="tablist" aria-label="Feedback filters">${chips.map(([kk, v, l]) => `<button class="chip${on(kk, v) ? ' on' : ''}" data-fbaf="${kk}:${v}">${l}</button>`).join('')}</div>
+    <div class="ctl" style="grid-template-columns:1fr"><input id="fbaq" type="search" placeholder="Search message, name, @username or ID" value="${esc(FBA.q)}" aria-label="Search feedback"></div>
+    <div class="by" style="margin:0 16px 8px">${d.total} item${d.total === 1 ? '' : 's'} · ${s.from_app} from the app · ${s.from_orders} after a purchase</div>` +
+    (d.items.map(i => `<div class="mrow"><div><span class="tag${i.source === 'order' ? '' : i.kind === 'suggestion' ? ' gold' : ''}">${i.source === 'order' ? 'After purchase' : i.kind === 'suggestion' ? 'Suggestion' : 'Feedback'}</span>${i.status ? ` <span class="tag ${i.status === 'new' ? 'warn' : i.status === 'done' ? 'live' : ''}">${esc(i.status)}</span>` : ''} <span class="by">${esc(fbWhen(i.created))}</span></div>
+      <div class="by" style="margin-top:6px"><b>${esc(i.name || '-')}</b> ${i.username ? '@' + esc(i.username) : ''} | ID ${esc(i.user_id)}${i.title ? ' | ' + esc(i.title) : ''}</div>
+      ${i.stars ? `<div class="fb-star-s">${fbStars(i.stars)}</div>` : ''}${i.message ? `<p class="fb-msg">${esc(i.message)}</p>` : ''}
+      ${i.source === 'app' ? `<div class="actions" style="padding:8px 0 0">${i.status !== 'done' ? `<button class="btn ok small" data-fbact="${esc(i.id)}|done">Done</button>` : `<button class="btn ghost small" data-fbact="${esc(i.id)}|new">Reopen</button>`}${i.status === 'new' ? `<button class="btn ghost small" data-fbact="${esc(i.id)}|read">Mark read</button>` : ''}<button class="btn danger small" data-fbact="${esc(i.id)}|delete">Delete</button></div>` : ''}</div>`).join('') || '<div class="empty">Nothing here yet.</div>') +
+    (d.total > d.items.length ? '<div class="pad"><button class="btn ghost block" id="fbaMore">Show more</button></div>' : '');
+}
+async function feedbackAction(id, action){
+  if (action === 'delete' && !confirm('Delete this message?')) return;
+  await once('fba' + id, async () => {
+    try{ await api('/api/admin/feedback/action', {method: 'POST', retry: false, body: JSON.stringify({id, action})}); toast(action === 'delete' ? 'Deleted' : 'Updated'); }
+    catch(e){ toast(adminErr(e), 5000); }
+    loadAdmin();
+  });
 }
 
 /* ---------- browse ---------- */
@@ -2207,7 +2288,7 @@ function renderStory(){
   }).join('');
   el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
-      ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2><div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
+      ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${mainGenre(s) ? `<span class="tag gold">${esc(mainGenre(s))}</span>` : ''}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
@@ -2290,7 +2371,7 @@ function renderAdmin(){
       <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
       <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
     </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['combos', '🔥 Combinations'], ['updates', '\uD83D\uDCE3 Updates'], ['index', '🗂 Index Bot'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['combos', '🔥 Combinations'], ['updates', '\uD83D\uDCE3 Updates'], ['feedback', '💡 Feedback'], ['index', '🗂 Index Bot'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
 function openCouponEditor(id){
@@ -2547,6 +2628,8 @@ async function loadAdmin(){
           <div class="two"><label class="field"><span>Days (blank = daily, 0 = off)</span><input type="number" min="0" max="365" inputmode="numeric" class="u_days" placeholder="daily" value="${st.custom_days ? st.days : ''}"></label><label class="field"><span>Time (blank = default)</span><input type="time" class="u_t" value="${st.custom_time ? esc(st.time) : ''}"></label></div>
           <div class="actions" style="padding:6px 0 0"><button class="btn small" data-usave="${esc(st.id)}" type="button">Save</button><button class="btn ghost small" data-usend="${esc(st.id)}" type="button">Send report now</button></div></div>`).join('') || '<div class="empty">No ongoing stories yet.</div>'}`;
       paintAway();
+    } else if (tab === 'feedback'){
+      await feedbackAdmin(body, sig, tab);
     } else if (tab === 'index'){
       await indexAdmin(body, sig, tab);
     } else if (tab === 'stats'){
@@ -2696,6 +2779,7 @@ async function openEditor(id){
     <label class="field"><span>Auto-fill from your channel's poster post (optional)</span><input id="e_poster" type="url" placeholder="https://t.me/c/1234567890/5"></label>
     <div class="actions" style="margin-bottom:14px"><button class="btn ghost small" id="autofill" type="button">Auto-fill details</button></div>
     <label class="field"><span>Title *</span><input id="e_title" value="${esc(s.title || '')}" maxlength="120"></label>
+    <label class="field"><span>Other titles (one per line)</span><textarea id="e_aliases" rows="3" maxlength="3600" placeholder="Names the sources used before or use now">${esc((s.aliases || []).join('\n'))}</textarea><small class="note">Sources rename stories. Members find the story by any of these names; they see the Title above.</small></label>
     <label class="field"><span>Platform or author</span><input id="e_author" value="${esc(s.author || '')}" placeholder="Pocket FM"></label>
     <div class="two"><label class="field"><span>Genre</span><input id="e_genre" value="${esc(s.genre || '')}" placeholder="Main genre first, then sub genres: Fantasy, Thriller"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
     <div class="two"><label class="field"><span>Status</span><input id="e_status" list="e_status_l" maxlength="30" placeholder="Ongoing"><datalist id="e_status_l"><option value="Ongoing"><option value="Completed"><option value="Upcoming"></datalist></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
@@ -2704,6 +2788,7 @@ async function openEditor(id){
     <label class="field check"><input type="checkbox" id="e_feat" ${s.featured ? 'checked' : ''}><span style="margin:0">Feature on the home page</span></label>
     <label class="field"><span>Cover emoji or image link</span><input id="e_cover" value="${esc(/^data:/.test(E.cover) ? '' : E.cover)}" placeholder="📖"></label>
     <div class="field"><span>Or upload a cover photo (keeps its own shape)</span><input id="e_photo" type="file" accept="image/*"><div id="e_prev" style="margin-top:8px"></div></div>
+    <div class="field" id="e_banners"><span>More banners (sources change them: keep the old ones)</span>${id ? '<div id="bnList"><div class="sk line"></div></div><input id="b_file" type="file" accept="image/*"><small class="note">Add a banner, then tap Make main to show it to members. The old main banner stays in this list.</small>' : '<small class="note">Save the story first, then add more banners here.</small>'}</div>
     <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
     <label class="field"><span>Upgrade credit cut % for this story (0 to 10, blank = default)</span><input id="e_ucut" type="number" min="0" max="10" step="0.5" inputmode="decimal" value="${s.upgrade_cut ?? ''}"></label>
     <div class="field"><span>Bot update reports for this story: every how many days? (blank = daily, 0 = off)</span><input id="e_udays" type="number" min="0" max="365" inputmode="numeric" placeholder="daily (default)" value="${s.update_days ?? ''}">
@@ -2715,8 +2800,20 @@ async function openEditor(id){
     ${planEditorHtml('e_opts', (s.options || []).filter(o => !o.topic), 'sg_', {auto: true})}
     <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
-  $('#e_status').value = s.status || 'Ongoing'; paintPhoto();
+  $('#e_status').value = s.status || 'Ongoing'; paintPhoto(); if (id) loadBanners();
   { const a = $('#sg_auto'); if (a){ const pk = s.pack; if (pk){ $('#sg_start').value = pk.start; $('#sg_size').value = pk.size; $('#sg_price').value = pk.price; a.checked = true; } } }
+}
+async function loadBanners(){
+  const box = $('#bnList'); if (!box || !E.id) return;
+  try{
+    const d = await api('/api/admin/story/' + encodeURIComponent(E.id) + '/banners'); if (!$('#bnList')) return;
+    $('#bnList').innerHTML = `<div class="bgrid">${d.main ? `<div class="btile main"><img src="${esc(d.main)}" alt="Main banner" loading="lazy"><small>Main (members see this)</small></div>` : ''}${d.banners.map(b => `<div class="btile"><img src="${esc(b.url)}" alt="Saved banner" loading="lazy"><button class="btn small" type="button" data-bmain="${b.id}">Make main</button><button class="btn danger small" type="button" data-bdel="${b.id}">Delete</button></div>`).join('')}</div>${d.banners.length ? '' : '<small class="note">No extra banners yet.</small>'}`;
+    E.bmain = d.main;
+  }catch(e){ box.innerHTML = '<small class="note">Could not load banners. ' + esc(adminErr(e)) + '</small>'; }
+}
+async function bannerCall(path, body, okMsg){
+  try{ const d = await api(path, {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify(body)}); toast(okMsg); return d; }
+  catch(e){ toast(adminErr(e), 5000); return null; }
 }
 function paintPhoto(){
   const src = E.photo || (isImg(E.cover) ? E.cover : '');
@@ -2744,6 +2841,7 @@ async function saveEditor(){
     if (!title) return toast('Add a title first');
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: $('#e_genre').value.trim(), language: $('#e_lang').value.trim(),
       status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '',
+      aliases: $('#e_aliases').value.split('\n').map(x => x.trim()).filter(Boolean),
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts')};
     const sBox = $('#sg_auto'), sAuto = !!sBox && sBox.checked && !!($('#sg_start').value || $('#sg_size').value), sPack = sAuto ? {start: parseInt($('#sg_start').value), size: parseInt($('#sg_size').value), price: Number($('#sg_price').value) || 0, days: 0} : null;
     if (sBox && sBox.checked && !(parseInt($('#sg_start').value) && parseInt($('#sg_size').value))) return toast('For automatic packs fill First ep and Pack size, or untick the box', 5000);
@@ -3083,6 +3181,26 @@ document.addEventListener('click', async e => {
   }
   if ((m = c('[data-pg]'))){ const pages = Math.ceil(V.total / PAGE_SIZE), p = Math.min(pages, Math.max(1, V.page + (m.dataset.pg === 'next' ? 1 : -1))); return loadStoryPage(p); }
   if (c('#epGo')){ const p = parseInt($('#epJump').value), pages = Math.ceil(V.total / PAGE_SIZE); if (!p || p < 1 || p > pages) return toast(`Type a page from 1 to ${pages}`); return loadStoryPage(p); }
+  /* story banners */
+  if ((m = c('[data-bmain]'))) return once('bn' + m.dataset.bmain, async () => {
+    const d = await bannerCall('/api/admin/story/banner/main', {banner_id: +m.dataset.bmain}, 'Main banner changed');
+    if (d){ E.photo = ''; E.cover = d.main.replace('size=thumb&', ''); paintPhoto(); loadBanners(); }
+  });
+  if ((m = c('[data-bdel]'))) return once('bn' + m.dataset.bdel, async () => {
+    if (!confirm('Delete this banner?')) return;
+    if (await bannerCall('/api/admin/story/banner/delete', {banner_id: +m.dataset.bdel}, 'Banner deleted')) loadBanners();
+  });
+  /* feedback & suggestions */
+  if (c('#pfbBtn')) return openFeedback('new');
+  if (c('#fbBack')) return closeSheet('fbpage');
+  if ((m = c('[data-fbtab]'))){ FB.tab = m.dataset.fbtab; return renderFeedback(); }
+  if (c('#retryFb')) return loadFeedbackMine();
+  if ((m = c('[data-fbkind]'))){ FB.kind = m.dataset.fbkind; $$('[data-fbkind]').forEach(b => { const on = b === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); return; }
+  if ((m = c('[data-fbstar]'))){ const n = +m.dataset.fbstar; FB.stars = FB.stars === n ? 0 : n; $$('[data-fbstar]').forEach(b => b.classList.toggle('on', +b.dataset.fbstar <= FB.stars)); return; }
+  if (c('#fbSend')) return submitFeedback();
+  if ((m = c('[data-fbaf]'))){ const [kk, v] = m.dataset.fbaf.split(':'); FBA.kind = FBA.status = FBA.source = ''; if (kk) FBA[kk] = v; FBA.limit = 30; return loadAdmin(); }
+  if (c('#fbaMore')){ FBA.limit += 30; return loadAdmin(); }
+  if ((m = c('[data-fbact]'))){ const [id, action] = m.dataset.fbact.split('|'); return feedbackAction(id, action); }
   /* request a story */
   if (c('#rqBack')) return closeSheet('reqpage');
   if ((m = c('[data-rqtab]'))){ R.tab = m.dataset.rqtab; return renderRequest(); }
@@ -3287,6 +3405,8 @@ document.addEventListener('input', e => {
   if (id === 'rq_link'){ R.d.link = e.target.value; const h = $('#rqLinkHint'); if (h){ const v = e.target.value.trim(); h.textContent = v && !validWebLink(v) ? tr('rqbadlink') : ''; h.className = 'rq-hint' + (v && !validWebLink(v) ? ' bad' : ''); } return; }
   if (id === 'epq'){ V.q = e.target.value.trim(); return epSearch(); }
   if (id === 'asq'){ A.sq = e.target.value.trim(); return adminSearch(); }
+  if (id === 'fb_msg'){ FB.text = e.target.value; const n = $('#fbCount'); if (n) n.textContent = e.target.value.length + '/1500'; return; }
+  if (id === 'fbaq'){ FBA.q = e.target.value.trim(); FBA.limit = 30; return adminSearch(); }
   if (id === 'aoq'){ A.oq = e.target.value.trim(); return adminSearch(); }
   if (id === 'm_q'){ M.q = e.target.value.trim(); M.page = 1; return manageSearch(); }
   if (id === 'fSeek'){ P.dragging = true; $('#fCur').textContent = clock(e.target.value); }
@@ -3305,6 +3425,7 @@ document.addEventListener('change', async e => {
   if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 1200); paintRqPhoto(); }catch(err){ toast(err.message); } }
   if (id === 'bn_cp') return fillBn();
   if (id === 'bn_file' && e.target.files[0]){ try{ const u = await downscale(e.target.files[0], 1200), im = $('#bn_prev'); im.src = u; im.hidden = false; BN.gen = ''; }catch(err){ toast(err.message); } }
+  if (id === 'b_file' && e.target.files[0]){ const f = e.target.files[0]; e.target.value = ''; return once('bnadd', async () => { try{ const img = await downscale(f, 1600); if (await bannerCall('/api/admin/story/banner', {story_id: E.id, image: img}, 'Banner added')) loadBanners(); }catch(err){ toast(err.message); } }); }
   if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
   if (id === 'm_file' && e.target.files[0]){ M.fileName = e.target.files[0].name; $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
