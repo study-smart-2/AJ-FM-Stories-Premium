@@ -3034,7 +3034,8 @@ function renderManageList(){
       <div class="two"><label class="field"><span>Episode no</span><input id="x_no" type="number" min="1" inputmode="numeric" value="${e.no}"></label><label class="field"><span>Ep title</span><input id="x_title" value="${esc(e.title || '')}" maxlength="200"></label></div>
       <div class="actions" style="padding:0"><button class="btn small" data-esave="${e.id}">Save</button><button class="btn ghost small" id="x_cancel">Cancel</button></div></div>`;
   list.innerHTML = (M.eps.map(e => M.edit === e.id ? form(e) : row(e)).join('') || '<div class="empty">No episodes yet. Import a file above.</div>') +
-    (M.total > 30 ? `<div class="pager"><button class="btn ghost small" data-mpg="-1" ${M.page <= 1 ? 'disabled' : ''}>Prev</button><span>Page ${M.page} of ${pages}</span><button class="btn ghost small" data-mpg="1" ${M.page >= pages ? 'disabled' : ''}>Next</button></div>` : '');
+    (M.total > 30 ? `<div class="pager"><button class="btn ghost small" data-mpg="-1" ${M.page <= 1 ? 'disabled' : ''}>Prev</button><span>Page ${M.page} of ${pages}</span><button class="btn ghost small" data-mpg="1" ${M.page >= pages ? 'disabled' : ''}>Next</button></div>
+    <div class="jump"><input id="mJump" type="number" min="1" max="${pages}" inputmode="numeric" placeholder="Go to page (1-${pages})" aria-label="Jump to page"><button class="btn ghost small" id="mGo">Go</button></div>` : '');
 }
 async function saveEpisodeEdit(id){
   const title = $('#x_title').value.trim(); if (!title) return toast('The episode needs a title');
@@ -3395,6 +3396,7 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-edel]'))) return deleteEpisode(m.dataset.edel);
   if ((m = c('[data-efree]'))) return editEpisode(m.dataset.efree, {free: !!+m.dataset.to});
   if ((m = c('[data-epub]'))) return editEpisode(m.dataset.epub, {published: !!+m.dataset.to});
+  if (c('#mGo')){ const p = parseInt($('#mJump').value), pages = Math.max(1, Math.ceil(M.total / 30)); if (!p || p < 1 || p > pages) return toast(`Type a page from 1 to ${pages}`); M.page = p; return loadManage(); }
   if ((m = c('[data-mpg]'))){ M.page = Math.max(1, M.page + +m.dataset.mpg); return loadManage(); }
 });
 document.addEventListener('input', e => {
@@ -3429,7 +3431,7 @@ document.addEventListener('change', async e => {
   if (id === 'e_photo' && e.target.files[0]){ try{ E.photo = await downscale(e.target.files[0]); paintPhoto(); toast('Photo added'); }catch(err){ toast(err.message); } }
   if (id === 'm_file' && e.target.files[0]){ M.fileName = e.target.files[0].name; $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); if (e.key === 'Enter' && e.target.id === 'mJump') $('#mGo').click(); });
 document.addEventListener('pointerdown', e => {                   // hold the speed buttons to keep stepping by 0.05x
   const b = e.target.closest('#rMinus, #rPlus'); if (!b) return;
   const d = b.id === 'rPlus' ? 0.05 : -0.05; setRate(P.rate + d);
