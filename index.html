@@ -1411,11 +1411,15 @@ function comboBarBtn(o){
   return `<button class="btn ghost block${inIt ? ' ok' : ''}" id="sbCombo" style="min-height:42px;padding:8px">${inIt ? '&#10003; In your combo (' + n + ') &middot; Open' : '&#129513; + Add to combo'}</button>`;
 }
 function addSelToCombo(){
-  const o = visOpts().find(x => String(x.id) === String(V.sel)), st = V.story;
-  if (!st || !o) return toast('Pick a plan first.');
+  let o = visOpts().find(x => String(x.id) === String(V.sel)); const st = V.story;
+  if (!st) return toast('Pick a plan first.');
+  if (!comboEligible(o)){                           // a story is combo-eligible when it has ANY Section 1 plan (Full Story plans); the selected plan may be a pack or rental, so use its Section 1 plan
+    const s1 = (st.options || []).filter(comboEligible).sort(byOrder);
+    o = s1.find(x => String(x.id) === String(CB.plans[V.id])) || s1[0];
+    if (!o) return toast('This story can\u2019t be added to a combo.', 3500);
+  }
   if (!CB.sel.length) CB.sel = lsGet('ajComboDraft', []);
   if (CB.sel.includes(V.id) && String((CB.plans[V.id] || (cbStory(V.id) || {}).plan_id)) === String(o.id)) return openComboHub('build');
-  if (!comboEligible(o)) return toast('Only Full Story or Topic plans can go in a combo. Pick one from Full Story plans.', 3500);
   const opts = (st.options || []).filter(comboEligible).map(x => ({id: x.id, label: x.label, price: x.price, kind: 'full', topic: x.topic || ''}));
   CB.extra[V.id] = Object.assign({}, CB.extra[V.id] || {}, {id: V.id, title: st.title, cover: st.cover, plan_id: o.id, plan: o.label, price: o.price, options: opts});
   CB.plans[V.id] = o.id; saveExtra(); savePlans();
@@ -2567,8 +2571,8 @@ function cbdHtml(st){
     `<div class="actions"><button class="btn" id="cbdSave">Save settings</button></div></div>`+
     `<div class="box"><b>Generation status</b><div class="by">Local time: ${esc(st.now || '—')} | Today: ${esc(st.today || '—')}</div><div class="by">Last successful generation: ${esc(when(st.last_success))}</div><div class="by">Today's batch: ${esc(batch.status || 'not generated')}${batch.count != null ? ' · ' + batch.count + ' combinations' : ''}${batch.error ? ' · ' + esc(batch.error) : ''}</div><div class="by">Eligible stories: <b>${Number(st.eligible || 0)}</b> · Active discount rules: <b>${Number(st.rules || 0)}</b></div></div>`+
     (st.preview ? `<div class="box"><b>Preview for ${esc(st.preview.pub_date)}</b>${(st.preview.combos || []).map(x => `<div class="mrow"><b>${x.size}-Story Combo</b><div class="by">${esc((x.titles || []).join(' + '))}</div></div>`).join('') || '<div class="by">No valid combinations for this date and configuration.</div>'}</div>` : '')+
-    `<h3 class="h3" style="font-size:20px">Published combinations</h3>`+
-    ((st.combos || []).map(x => `<div class="mrow"><b>${x.size}-Story Combo <span class="tag ${x.status === 'published' ? 'live' : ''}">${esc(x.status)} · ${esc(x.source)}</span></b><div class="by">${esc((x.titles || []).join(' + '))}</div><div class="by">${x.source === 'manual' ? 'Persistent manual combo' : esc(x.pub_date || '')}${x.eligible ? '' : ' · Contains an ineligible story'}</div>${x.status === 'published' ? `<div class="by" style="color:${x.on_home ? 'var(--ok,#1a8a5a)' : '#c0392b'}">${x.on_home ? '✓ Showing on your home screen' : '✗ Hidden on home: ' + esc(x.hidden_reason || 'unknown')}</div>` : ''}<div class="actions"><button class="btn ghost small" data-cbdstatus="${x.id}" data-status="${x.status === 'published' ? 'unpublish' : 'publish'}">${x.status === 'published' ? 'Unpublish' : 'Publish'}</button>${x.source === 'manual' ? `<button class="btn ghost small" data-cbdedit="${x.id}" data-ids="${esc(JSON.stringify(x.story_ids))}">Edit</button><button class="btn danger small" data-cbddelete="${x.id}">Delete</button>` : ''}</div></div>`).join('') || '<div class="empty">No combinations yet.</div>')+
+    `<h3 class="h3" style="font-size:20px">Published combinations</h3><div class="actions" style="margin:0 0 8px"><button class="btn danger small" id="cbdDelOld">Delete old combos</button></div>`+
+    ((st.combos || []).map(x => `<div class="mrow"><b>${x.size}-Story Combo <span class="tag ${x.status === 'published' ? 'live' : ''}">${esc(x.status)} · ${esc(x.source)}</span></b><div class="by">${esc((x.titles || []).join(' + '))}</div><div class="by">${x.source === 'manual' ? 'Persistent manual combo' : esc(x.pub_date || '')}${x.eligible ? '' : ' · Contains an ineligible story'}</div>${x.status === 'published' ? `<div class="by" style="color:${x.on_home ? 'var(--ok,#1a8a5a)' : '#c0392b'}">${x.on_home ? '✓ Showing on your home screen' : '✗ Hidden on home: ' + esc(x.hidden_reason || 'unknown')}</div>` : ''}<div class="actions"><button class="btn ghost small" data-cbdstatus="${x.id}" data-status="${x.status === 'published' ? 'unpublish' : 'publish'}">${x.status === 'published' ? 'Unpublish' : 'Publish'}</button>${x.source === 'manual' ? `<button class="btn ghost small" data-cbdedit="${x.id}" data-ids="${esc(JSON.stringify(x.story_ids))}">Edit</button>` : ''}<button class="btn danger small" data-cbddelete="${x.id}">Delete</button></div></div>`).join('') || '<div class="empty">No combinations yet.</div>')+
     `<h3 class="h3" style="font-size:20px">Recent job logs</h3>`+
     ((st.log || []).map(x => `<div class="mrow"><b>${esc(x.level || 'info')} · ${esc(x.batch_id || '')}</b><div class="by">${esc(x.message || '')}</div><small>${esc(when(x.ts))}</small></div>`).join('') || '<div class="empty">No generation logs yet.</div>');
 }
@@ -3424,7 +3428,8 @@ document.addEventListener('click', async e => {
   if (c('#cbdManualSave')) return cbdManualSave();
   if (c('#cbdManualCancel')){ $('#cbd_manual_id').value=''; Array.from($('#cbd_manual_stories').options).forEach(o=>o.selected=false); $('#cbdManualSave').textContent='Publish manual combination'; return; }
   if ((m = c('[data-cbdedit]'))) return cbdManualEdit(+m.dataset.cbdedit, m.dataset.ids);
-  if ((m = c('[data-cbddelete]'))){ const id=+m.dataset.cbddelete; if(!confirm('Permanently delete this manual combination?')) return; return once('cbddelete'+id, async()=>{ try{ await cpPost('/api/admin/combos/daily/action',{action:'delete_manual',id}); toast('Manual combination deleted'); }catch(e){ toast(adminErr(e),5000); } loadAdmin(); loadDailyCombos(); }); }
+  if ((m = c('[data-cbddelete]'))){ const id=+m.dataset.cbddelete; if(!confirm('Delete this combination?')) return; return once('cbddelete'+id, async()=>{ try{ await cpPost('/api/admin/combos/daily/action',{action:'delete',id}); toast('Combination deleted'); }catch(e){ toast(adminErr(e),5000); } loadAdmin(); loadDailyCombos(); }); }
+  if (c('#cbdDelOld')){ if(!confirm('Delete all old daily combos? The set showing now and manual combos stay.')) return; return once('cbddelold', async()=>{ try{ const r = await cpPost('/api/admin/combos/daily/action',{action:'delete_old'}); toast(`Deleted ${r && r.deleted != null ? r.deleted : 0} old combos`); }catch(e){ toast(adminErr(e),5000); } loadAdmin(); loadDailyCombos(); }); }
   if (c('#cbdPreview')) return cbdAction('preview');
   if (c('#cbdRun')) return cbdAction('run_date');
   if (c('#cbdRegenerate')){ const d = $('#cbd_date') ? $('#cbd_date').value : ''; if (!confirm(`Replace the automatically generated set for ${d || 'the selected date'}?`)) return; return cbdAction('regenerate_date'); }
