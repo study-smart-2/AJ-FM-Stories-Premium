@@ -559,6 +559,14 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 .obn:not(.has-img) .obt{padding:0;gap:1px;flex:1;min-width:0}.obn:not(.has-img) .obn-cta{display:none}
 .obn:not(.has-img) b{font-size:14px}.obn:not(.has-img) small{-webkit-line-clamp:1}
 .ocard img{aspect-ratio:auto;max-height:none;height:auto;object-fit:contain}
+/* banner carousel: banners sit side by side, one snaps into view per swipe, the next one peeks in; dots show which banner is on */
+.offer-rail{scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+.offer-rail .obn,.ocar .ocard{scroll-snap-align:start}
+.ocar .ocard{flex:none;width:clamp(280px,90vw,480px);margin:0}
+.bdots{display:flex;justify-content:center;align-items:center;gap:7px;margin:-6px 0 12px}
+.bdots button{width:8px;height:8px;padding:0;border:1px dashed var(--gold);border-radius:50%;background:transparent;transition:width .2s,background .2s}
+.bdots button.on{width:22px;border-radius:6px;border-style:solid;background:var(--gold)}
+@media(prefers-reduced-motion:reduce){.bdots button{transition:none}}
 .bnform{margin:0 0 12px}.bnform textarea{min-height:92px}.bnform img{max-width:100%;border-radius:10px;margin-top:8px;display:block}
 
 /* ---------- polish layer: one radius scale, clearer plans, calmer lists, steadier nav ---------- */
@@ -1161,16 +1169,31 @@ async function loadOffers(){
   if (S.tab === 'home' && S.home) renderHome(); else if (S.tab === 'me') renderMe();
   if ($('#offerpage').classList.contains('open')) renderOffers();
 }
+const bnDotsHtml = n => n > 1 ? `<div class="bdots" role="tablist" aria-label="Banners">${Array.from({length: n}, (_, i) => `<button type="button" role="tab" data-bdot="${i}" class="${i ? '' : 'on'}" aria-label="Banner ${i + 1} of ${n}"></button>`).join('')}</div>` : '';
+function bnDotsSync(r){
+  const d = r.nextElementSibling, k = r.children; if (!d || !d.classList.contains('bdots') || !k.length) return;
+  const w = k[0].offsetWidth + (parseFloat(getComputedStyle(r).columnGap) || 12);
+  let i = Math.round(r.scrollLeft / w); if (r.scrollLeft + r.clientWidth >= r.scrollWidth - 4) i = k.length - 1;
+  i = Math.max(0, Math.min(k.length - 1, i)); [...d.children].forEach((x, j) => x.classList.toggle('on', j === i));
+}
+document.addEventListener('scroll', e => { const r = e.target; if (r && r.classList && r.classList.contains('offer-rail')) bnDotsSync(r); }, true);
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-bdot]'); if (!b) return;
+  const r = b.parentElement.previousElementSibling, k = r && r.children[+b.dataset.bdot]; if (!k) return;
+  r.scrollTo({left: k.getBoundingClientRect().left - r.getBoundingClientRect().left + r.scrollLeft - 16, behavior: 'smooth'});
+}, true);
 function offersStrip(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
-  if (bn.length) return `<section class="offer-strip"><div class="sechead"><h2 class="sec">${esc(tr('otitle'))}</h2><button class="link" data-offers="1">View all &rarr;</button></div><div class="rail offer-rail">${bn.map(b => `<button class="obn${b.image ? ' has-img' : ''}" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="${esc(b.title)}" loading="lazy" decoding="async">` : `<span class="obn-art" aria-hidden="true">✦</span>`}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}<span class="obn-cta">Explore offer <span aria-hidden="true">→</span></span></span></button>`).join('')}</div></section>`;
+  if (bn.length) return `<section class="offer-strip"><div class="sechead"><h2 class="sec">${esc(tr('otitle'))}</h2><button class="link" data-offers="1">View all &rarr;</button></div><div class="rail offer-rail">${bn.map(b => `<button class="obn${b.image ? ' has-img' : ''}" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="${esc(b.title)}" loading="lazy" decoding="async">` : `<span class="obn-art" aria-hidden="true">✦</span>`}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}<span class="obn-cta">Explore offer <span aria-hidden="true">→</span></span></span></button>`).join('')}</div>${bnDotsHtml(bn.length)}</section>`;
   if (cs.length) return `<button class="promo" data-offers="1" style="display:block;width:calc(100% - 32px);text-align:left">&#127991;&#65039; ${esc(tr('cpavail', {n: cs.length}))}<small>${esc(cs.slice(0, 3).map(c => c.code + ' - ' + c.text).join(' | '))}</small></button>`;
   return '';
 }
 function renderOffers(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
   $('#offerpage').innerHTML = `<div class="top"><button class="btn ghost small" id="offBack">Back</button><strong>${tr('otitle')}</strong><span style="width:60px"></span></div>` +
+    (bn.length > 1 ? '<div class="rail offer-rail ocar">' : '') +
     bn.map(b => `<div class="ocard">${b.image ? `<img src="${esc(b.image)}" alt="" loading="lazy">` : ''}<div class="obody"><b>${esc(b.title)}</b>${b.body ? `<p>${esc(b.body)}</p>` : ''}</div></div>`).join('') +
+    (bn.length > 1 ? '</div>' + bnDotsHtml(bn.length) : '') +
     (cs.length ? cs.map(c => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(c.code)}</span><b>${esc(c.text)}</b>${c.title ? `<small>${esc(c.title)}</small>` : ''}<small>${esc([c.min_order ? tr('cpmin', {m: money(c.min_order)}) : '', c.expires_at ? tr('cpexp', {d: dateStr(c.expires_at)}) : ''].filter(Boolean).join(' | '))}</small></div>` +
       `<div class="lact"><button class="lbtn" data-cpcopy="${esc(c.code)}">${tr('cpcopy')}</button><button class="lbtn" data-cpuse="${esc(c.code)}">${tr('cpuse')}</button></div></div>`).join('') : `<div class="empty">${tr('cpnone')}</div>`) +
     ((o.used || []).length ? `<h3 class="lsub">Used coupons</h3>` + o.used.map(u => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(u.code)}</span><b>-${money(u.discount)}</b><small>${esc(u.title || '')} | ${esc(dateStr(u.at))}${u.status === 'pending' ? ' | waiting for approval' : ''}</small></div></div>`).join('') : '');
