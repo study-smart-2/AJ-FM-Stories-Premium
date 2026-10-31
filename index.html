@@ -260,6 +260,24 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .dmini .th{flex:none;width:46px;height:46px;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,var(--cv-a),var(--cv-b));display:flex;align-items:center;justify-content:center;font-size:22px}.dmini .th img{width:100%;height:100%;object-fit:cover}
 .dmini .mt{flex:1;min-width:0;display:flex;flex-direction:column}.dmini .mt b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dmini .mt small{color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dmini .pr{flex:none;font-size:12px;font-weight:700;color:var(--gold-2)}
+/* search: own screen with live suggestions, and its own results screen */
+.sbar{position:sticky;top:0;z-index:3;display:flex;gap:8px;align-items:center;padding:14px 16px;background:var(--ink)}
+.sbar .search{flex:1;min-width:0}
+.sbar .btn{flex:none}
+.sres-q{text-align:left;color:inherit;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:text}
+.vtitle{flex:1;min-width:0;margin:0;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sugg{display:flex;flex-direction:column;padding:0 8px 24px}
+.sugrow{display:flex;align-items:center;gap:12px;width:100%;padding:8px;border-radius:12px;text-align:left;background:transparent;border:0;color:inherit}
+.sugrow:active{background:var(--panel)}
+.sugrow .th{flex:none;width:46px;height:46px;border-radius:9px;overflow:hidden;background:linear-gradient(160deg,var(--cv-a),var(--cv-b));display:flex;align-items:center;justify-content:center;font-size:18px}
+.sugrow .th img{width:100%;height:100%;object-fit:cover}
+.sugrow .mt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sugrow .mt b{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sugrow .mt small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sugrow mark{background:none;color:var(--gold-2);font-weight:800}
+.sugrow .go{flex:none;color:var(--muted);font-size:18px}
+.sugrow.all{border-bottom:1px solid var(--line);border-radius:12px 12px 0 0;margin-bottom:4px}
+.sugrow.all .th{background:var(--panel);border:1px solid var(--line)}
 .dnone{padding:6px 4px;color:var(--muted);font-size:13px}
 @media (prefers-reduced-motion:reduce){.dbody,.dchev,.dcard{transition:none}}
 /* library */
@@ -767,6 +785,8 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 </nav>
 
 <section class="sheet" id="search" aria-label="Search"></section>
+<section class="sheet" id="sresults" aria-label="Search results"></section>
+<section class="sheet" id="vall" aria-label="All stories of a row"></section>
 <section class="sheet" id="notif" aria-label="Notifications"></section>
 <section class="sheet" id="reqpage" aria-label="Request a Story"></section>
 <section class="sheet" id="fbpage" aria-label="Feedback and Suggestions"></section>
@@ -892,7 +912,8 @@ function closeSheet(id){ $('#' + id).classList.remove('open'); const i = stack.i
 function goBack(){ const id = stack[stack.length - 1]; if (id === 'story' && typeof storyBack === 'function') return storyBack(); if (id) closeSheet(id); }
 
 function goBot(payload){
-  const url = `https://t.me/${BOT_USERNAME}?start=${payload}`;
+  const contact = payload === 'help' && S.home && S.home.contact;                 // Help & support opens the Contact Bot; if none is added, the store bot's help like before
+  const url = contact ? `https://t.me/${contact}` : `https://t.me/${BOT_USERNAME}?start=${payload}`;
   if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); if (audio.paused) setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); }   // stay open if audio is playing
   else window.open(url, '_blank');
 }
@@ -910,8 +931,9 @@ const priceLabel = s => {
   return lo === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(lo));
 };
 const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
-  <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? s.episodes + ' eps' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
-const tierCard = s => card(s).replace(/<span class="pr">.*?<\/span>/, `<span class="pr">${s.deal ? `<s>${money(s.max_price)}</s>` : ''}${money(s.last_price)}</span>`);      // Super deals show the last (highest) plan price only
+  <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
+const homeCard = card;                                    // no list shows an episode count any more
+const tierCard = s => homeCard(s).replace(/<span class="pr">.*?<\/span>/, `<span class="pr">${s.deal ? `<s>${money(s.max_price)}</s>` : ''}${money(s.last_price)}</span>`);      // Super deals show the last (highest) plan price only
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
 const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button class="btn" id="${id}">Try again</button></div>`;
 
@@ -1000,19 +1022,70 @@ function renderHeader(){
 }
 
 /* ---------- search and notifications ---------- */
-function renderSearch(){
-  let rec = []; try{ rec = JSON.parse(store.get('ajrs', '[]')); }catch(e){}
-  const tops = [...((S.home && S.home.trending) || []).map(s => s.title), ...((S.home && S.home.genres) || []).map(g => g.name)].slice(0, 8);
-  $('#search').innerHTML = `<div class="top" style="display:flex;gap:8px;padding:14px 16px"><input class="search" id="sq" type="search" placeholder="${esc(tr('searchph'))}" autocomplete="off" aria-label="Search stories"><button class="btn ghost small" id="closeSearch">${tr('close')}</button></div>
-    ${rec.length ? `<div class="sechead"><h2 class="sec">${tr('recents')}</h2><button class="link" id="clearRecent">${tr('clear')}</button></div><div class="chips wrap">${rec.map(q => `<button class="chip" data-sq="${esc(q)}">${esc(q)}</button>`).join('')}</div>` : ''}
-    ${tops.length ? `<div class="sechead"><h2 class="sec">${tr('tops')}</h2></div><div class="chips wrap">${tops.map(q => `<button class="chip" data-sq="${esc(q)}">${esc(q)}</button>`).join('')}</div>` : ''}`;
-  $('#sq').addEventListener('keydown', ev => { if (ev.key === 'Enter') doSearch(ev.target.value); });
+const getRecent = () => { try{ return JSON.parse(store.get('ajrs', '[]')); }catch(e){ return []; } };
+const addRecent = q => store.set('ajrs', JSON.stringify([q, ...getRecent().filter(x => x !== q)].slice(0, 8)));
+const hl = (t, q) => { t = String(t); const k = t.toLowerCase().indexOf(String(q).toLowerCase()); return k < 0 ? esc(t) : esc(t.slice(0, k)) + '<mark>' + esc(t.slice(k, k + q.length)) + '</mark>' + esc(t.slice(k + q.length)); };
+function renderSearch(){                                   // the search screen: the box, then recent / top searches, or story suggestions while typing
+  $('#search').innerHTML = `<div class="sbar"><input class="search" id="sq" type="search" enterkeyhint="search" placeholder="${esc(tr('searchph'))}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search stories"><button class="btn ghost small" id="closeSearch">${tr('close')}</button></div><div id="sbody"></div>`;
+  searchHome();
+  $('#sq').addEventListener('keydown', ev => { if (ev.key === 'Enter'){ ev.preventDefault(); ev.target.blur(); doSearch(ev.target.value); } });   // Go / Search key = the results screen
 }
-function doSearch(q){
+function searchHome(){
+  const rec = getRecent();
+  const tops = [...((S.home && S.home.trending) || []).map(s => s.title), ...((S.home && S.home.genres) || []).map(g => g.name)].slice(0, 8);
+  const b = $('#sbody'); if (!b) return;
+  b.innerHTML = `${rec.length ? `<div class="sechead"><h2 class="sec">${tr('recents')}</h2><button class="link" id="clearRecent">${tr('clear')}</button></div><div class="chips wrap">${rec.map(q => `<button class="chip" data-sq="${esc(q)}">${esc(q)}</button>`).join('')}</div>` : ''}
+    ${tops.length ? `<div class="sechead"><h2 class="sec">${tr('tops')}</h2></div><div class="chips wrap">${tops.map(q => `<button class="chip" data-sq="${esc(q)}">${esc(q)}</button>`).join('')}</div>` : ''}`;
+}
+function paintSuggest(q, list, err){
+  const b = $('#sbody'); if (!b) return;
+  const rows = (list || []).map(s => `<button class="sugrow" data-story="${esc(s.id)}" data-sugq="${esc(s.title)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${hl(s.title, q)}</b><small>${esc([mainGenre(s), s.status, s.episodes ? '' : ''].filter(Boolean).join(' | '))}</small></span><span class="go" aria-hidden="true">&#8599;</span></button>`).join('');
+  b.innerHTML = `<div class="sugg"><button class="sugrow all" data-sgo="${esc(q)}"><span class="th">&#128269;</span><span class="mt"><b>Search \u201C${esc(q)}\u201D</b><small>See all results</small></span><span class="go" aria-hidden="true">&rarr;</span></button>${rows}${list && !list.length ? `<div class="empty">No story matches \u201C${esc(q)}\u201D.</div>` : ''}${err ? `<div class="empty">${esc(err)}</div>` : ''}</div>`;
+}
+const suggestNow = deb(async q => {
+  const box = $('#sq'); if (!box || box.value.trim() !== q) return;
+  const sig = fresh('sugg'), k = q.toLowerCase();
+  try{
+    const d = await api('/api/catalog?' + new URLSearchParams({q, limit: 8, sort: 'newest'}), {signal: sig, timeout: 20000});
+    if (!$('#sq') || $('#sq').value.trim() !== q) return;                                      // the person typed on: this answer is old
+    const rank = s => { const t = String(s.title).toLowerCase(); return t.startsWith(k) ? 0 : t.includes(k) ? 1 : 2; };
+    paintSuggest(q, (d.stories || []).slice().sort((x, y) => rank(x) - rank(y)));
+  }catch(e){ if (!e.aborted && $('#sq') && $('#sq').value.trim() === q) paintSuggest(q, null, errText(e)); }
+}, 180);
+function onSearchType(v){
+  const q = String(v || '').trim();
+  if (!q){ fresh('sugg'); searchHome(); return; }
+  paintSuggest(q, null); suggestNow(q);                                                           // the "Search ..." row shows at once, the stories follow
+}
+document.addEventListener('input', e => { if (e.target && e.target.id === 'sq') onSearchType(e.target.value); });
+
+const SR = {q:'', items:[], total:0, state:'idle', err:''};
+function doSearch(q){                                       // opens the RESULTS SCREEN - the Discover tab is not touched
   q = String(q || '').trim(); if (!q) return;
-  let rec = []; try{ rec = JSON.parse(store.get('ajrs', '[]')); }catch(e){}
-  store.set('ajrs', JSON.stringify([q, ...rec.filter(x => x !== q)].slice(0, 8)));
-  Object.assign(B, {q, genre:'', status:'', language:'', sort:'newest', view:'list', state:'idle'}); closeSheet('search'); setTab('browse');
+  addRecent(q); SR.q = q; renderResults(); openSheet('sresults'); $('#sresults').scrollTop = 0; loadResults(true);
+}
+function renderResults(){
+  $('#sresults').innerHTML = `<div class="sbar"><button class="btn ghost small" id="sresBack" aria-label="Back">&larr;</button><button class="search sres-q" id="sresEdit" aria-label="Edit search">&#128269; ${esc(SR.q)}</button></div><div id="sresBody"></div>`;
+  paintResults();
+}
+function paintResults(){
+  const r = $('#sresBody'); if (!r) return;
+  if (SR.state === 'error' && !SR.items.length){ r.innerHTML = retryBox(SR.err, 'sresRetry'); return; }
+  if (SR.state === 'loading' && !SR.items.length){ r.innerHTML = `<div class="grid">${Array.from({length: 6}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>`; return; }
+  if (!SR.items.length){ r.innerHTML = `<div class="empty">No stories match \u201C${esc(SR.q)}\u201D.<br>Try another title, author, genre or language.</div>`; return; }
+  r.innerHTML = `<div class="by" style="margin:2px 16px 12px" aria-live="polite">${SR.total} ${SR.total === 1 ? 'result' : 'results'} for \u201C${esc(SR.q)}\u201D</div><div class="grid">${SR.items.map(card).join('')}</div>
+    <div class="browse-tail">${SR.items.length < SR.total ? `<button class="btn ghost block" id="sresMore"${SR.state === 'loading' ? ' disabled' : ''}>${SR.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${SR.state === 'error' ? `<div class="msg bad">${esc(SR.err)} <button class="link" id="sresRetry">Retry</button></div>` : ''}</div>`;
+}
+async function loadResults(reset){
+  const sig = fresh('sres'); if (reset) SR.items = [];
+  SR.state = 'loading'; paintResults();
+  try{
+    const d = await api('/api/catalog?' + new URLSearchParams({q: SR.q, limit: 24, offset: SR.items.length, sort: 'newest'}), {signal: sig, timeout: 60000});
+    const seen = new Set(SR.items.map(x => String(x.id)));
+    for (const st of (d.stories || [])){ const id = String(st.id); if (!seen.has(id)){ SR.items.push(st); seen.add(id); } }
+    SR.total = d.total; SR.state = 'ok';
+  }catch(e){ if (e.aborted) return; SR.state = 'error'; SR.err = errText(e); }
+  paintResults();
 }
 const noticeHead = `<div class="top" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px"><h2 class="sec">${'\u{1F514}'} <span data-i="notif"></span></h2><button class="btn ghost small" id="closeNotif" data-i="close"></button></div>`;
 function renderNotif(){
@@ -1034,12 +1107,12 @@ async function loadHome(){
   loadCombos(); loadDailyCombos();
   if (S.tab === 'home') renderHome();
 }
-const secRail = (title, items, key, render = card) => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>
+const secRail = (title, items, key, render = homeCard) => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>
   <div class="rail">${items.map(render).join('')}</div>` : '';
 const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
 const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
 const big = u => typeof u === 'string' ? u.replace('size=thumb', 'size=full') : u;      // the large home cards use the full-size picture
-const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
+const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([mainGenre(s)].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
 const dealCard = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>`;
 const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(mainGenre(s))}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
 const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data-contx="${esc(i.story.id)}" aria-label="Remove ${esc(i.story.title)} from continue listening">&times;</button></div>`;
@@ -1071,7 +1144,7 @@ function renderHome(){
 }
 function paintFeed(){
   const f = $('#feed'), F = S.feed; if (!f) return;
-  f.innerHTML = (F.items.length ? `<div class="sechead"><h2 class="sec">${tr('more')}</h2></div><div class="grid">${F.items.map(card).join('')}</div>` : '') +
+  f.innerHTML = (F.items.length ? `<div class="sechead"><h2 class="sec">${tr('more')}</h2></div><div class="grid">${F.items.map(homeCard).join('')}</div>` : '') +
     (F.state === 'loading' ? `<div class="grid">${Array.from({length: 3}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>` : '') +
     (F.state === 'error' ? retryBox(F.err, 'retryFeed') : '') + (F.done && F.items.length ? `<div class="empty"><small>${tr('caught')}</small></div>` : '');
 }
@@ -1115,6 +1188,14 @@ function homeClick(c){
   if (c('#bellBtn')){ openNotif(); return true; }
   if (c('#avatarBtn')){ setTab('me'); return true; }
   if (c('#closeSearch')){ closeSheet('search'); return true; }
+  if (c('#sresBack')){ closeSheet('sresults'); return true; }
+  if (c('#vallBack')){ closeSheet('vall'); return true; }
+  if (c('#vallMore')){ loadVall(false); return true; }
+  if (c('#vallRetry')){ loadVall(!VA.items.length); return true; }
+  if (c('#sresEdit')){ closeSheet('sresults'); const i = $('#sq'); if (i){ i.value = SR.q; i.focus(); onSearchType(SR.q); } return true; }
+  if ((m = c('[data-sgo]'))){ doSearch(m.dataset.sgo); return true; }
+  if (c('#sresMore')){ loadResults(false); return true; }
+  if (c('#sresRetry')){ loadResults(!SR.items.length); return true; }
   if (c('#closeNotif')){ closeSheet('notif'); return true; }
   if (c('#clearRecent')){ store.set('ajrs', '[]'); renderSearch(); return true; }
   if ((m = c('[data-sq]'))){ doSearch(m.dataset.sq); return true; }
@@ -1779,7 +1860,7 @@ function paintDiscover(){
     setTimeout(() => { const c = $$('#bbody .dcard').find(x => x.dataset.dkey === key); if (c) c.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 60);
   }
 }
-const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.status, s.episodes ? s.episodes + ' eps' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
+const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.status, s.episodes ? '' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
 const dPreview = r => `<div class="dpv">${r.items.slice(0, 3).map(dMini).join('')}<button class="btn ghost block" data-dsee="${esc(r.key)}">${tr('dsee', {n: r.items.length})} &rarr;</button></div>`;
 function toggleRow(key){
   const card = $$('#bbody .dcard').find(c => c.dataset.dkey === key), r = (B.rows || []).find(x => x.key === key); if (!card || !r) return;
@@ -1843,10 +1924,31 @@ function watchBrowse(){
   browseIO.observe(end);
 }
 const browseSearch = deb(() => { if (browseIO) browseIO.disconnect(); loadBrowse(true); browseChips(); }, 350);
-function viewAll(key){                                   // "View all" on Home = go to the Discover tab and open that category
-  const row = {trending:'trend', recent:'new', updated:'upd', completed:'s:Completed', ongoing:'s:Ongoing'}[key] || key;      // genre rows already use g:<name>
-  Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover', open: row, focus: row});
-  setTab('browse');
+const VA = {key:'', title:'', spec:{}, items:[], state:'idle', err:'', done:false};
+const VA_SPEC = {trending:{sort:'popular'}, recent:{sort:'newest'}, updated:{sort:'updated'}, ongoing:{sort:'updated', status:'Ongoing'}, completed:{sort:'updated', status:'Completed'}};
+function viewAll(key){                                   // "View all" on Home opens its OWN screen with every story of that row (the Discover tab is not touched)
+  const g = key.indexOf('g:') === 0;
+  Object.assign(VA, {key, spec: g ? {sort:'updated', genre:key.slice(2)} : (VA_SPEC[key] || {sort:'newest'}), title: g ? key.slice(2) : (tr(key) || 'Stories'), items: [], state: 'loading', err: '', done: false});
+  $('#vall').innerHTML = `<div class="sbar"><button class="btn ghost small" id="vallBack" aria-label="Back">&larr;</button><h2 class="sec vtitle">${esc(VA.title)}</h2></div><div id="vallBody"></div>`;
+  openSheet('vall'); $('#vall').scrollTop = 0; paintVall(); loadVall(true);
+}
+function paintVall(){
+  const r = $('#vallBody'); if (!r) return;
+  if (VA.state === 'error' && !VA.items.length){ r.innerHTML = retryBox(VA.err, 'vallRetry'); return; }
+  if (VA.state === 'loading' && !VA.items.length){ r.innerHTML = `<div class="grid">${Array.from({length: 6}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>`; return; }
+  if (!VA.items.length){ r.innerHTML = '<div class="empty">No stories here yet.</div>'; return; }
+  r.innerHTML = `<div class="grid">${VA.items.map(card).join('')}</div><div class="browse-tail">${!VA.done ? `<button class="btn ghost block" id="vallMore"${VA.state === 'loading' ? ' disabled' : ''}>${VA.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${VA.state === 'error' ? `<div class="msg bad">${esc(VA.err)} <button class="link" id="vallRetry">Retry</button></div>` : ''}</div>`;
+}
+async function loadVall(reset){
+  const sig = fresh('vall'); if (reset) VA.items = [];
+  let off = VA.items.length, got = 0; VA.state = 'loading'; paintVall();
+  try{
+    const d = await api('/api/catalog?' + new URLSearchParams({...VA.spec, limit: 24, offset: off}), {signal: sig, timeout: 60000});
+    const seen = new Set(VA.items.map(x => String(x.id)));
+    for (const st of (d.stories || [])){ got++; if (st.episodes > 0 && !seen.has(String(st.id))){ VA.items.push(st); seen.add(String(st.id)); } }   // like Home: stories that have episodes
+    VA.done = off + got >= d.total || !got; VA.state = 'ok';
+  }catch(e){ if (e.aborted) return; VA.state = 'error'; VA.err = errText(e); }
+  paintVall();
 }
 
 /* ---------- library ---------- */
@@ -1887,7 +1989,7 @@ async function loadLibrary(){
       const [w, cat] = await Promise.all([api('/api/wishlist', {signal: sig}), B.all ? Promise.resolve({stories: B.all}) : api('/api/catalog?limit=500&sort=updated', {signal: sig})]); if (L.seg !== seg) return;
       const by = new Map((cat.stories || []).map(s => [s.id, s])); S.wish = new Set(w.ids);
       const list = w.ids.map(id => by.get(id)).filter(Boolean);
-      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([mainGenre(s), s.status, s.episodes ? s.episodes + ' eps' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
+      body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([mainGenre(s), s.status, s.episodes ? '' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
         actions: `<button class="lbtn" data-story="${esc(s.id)}">${tr('lopen')}</button><button class="lbtn rm" data-lwx="${esc(s.id)}">${tr('lrem')}</button>`})).join('') : libEmpty('lew');
     } else {
       const d = await api('/api/account?limit=60', {signal: sig}); if (L.seg !== seg) return;
@@ -3337,6 +3439,7 @@ document.addEventListener('click', async e => {
   if (c('#bmore')) return loadBrowse(false);
   if ((m = c('[data-story]'))){
     if (m.dataset.avail === '0') return toast('This story is no longer in the store. Your purchase is kept.');
+    if (m.dataset.sugq) addRecent(m.dataset.sugq);                        // a suggestion that was opened counts as a recent search
     return openStory(m.dataset.story);
   }
   /* story page */
