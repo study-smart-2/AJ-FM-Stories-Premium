@@ -560,10 +560,11 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 .obn:not(.has-img) b{font-size:14px}.obn:not(.has-img) small{-webkit-line-clamp:1}
 .ocard img{aspect-ratio:auto;max-height:none;height:auto;object-fit:contain}
 /* banner carousel: banners sit side by side, one snaps into view per swipe, the next one peeks in; dots show which banner is on */
-.offer-rail{scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
-.offer-rail .obn,.ocar .ocard{scroll-snap-align:start}
-.ocar .ocard{flex:none;width:clamp(280px,90vw,480px);margin:0}
-.bgal::-webkit-scrollbar{display:none}
+.hcar{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;position:relative;z-index:1;-webkit-overflow-scrolling:touch}
+.hcar::-webkit-scrollbar{display:none}
+.hcar .hs{flex:none;width:100%;display:flex;justify-content:center;align-items:flex-start;scroll-snap-align:center}
+.hcar .hs .cv{margin-bottom:14px;cursor:pointer}
+.sh .bdots{position:relative;z-index:1;margin:-2px 0 14px}
 .bdots{display:flex;justify-content:center;align-items:center;gap:7px;margin:-6px 0 12px}
 .bdots button{width:8px;height:8px;padding:0;border:1px dashed var(--gold);border-radius:50%;background:transparent;transition:width .2s,background .2s}
 .bdots button.on{width:22px;border-radius:6px;border-style:solid;background:var(--gold)}
@@ -719,7 +720,7 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 @media(prefers-reduced-motion:reduce){.cmb-daily-card.hl{animation:none}}
 
 /* Story banners */
-.bgal{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 10px;scroll-snap-type:x mandatory;scroll-padding:0 16px;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.bgal{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
 .bgal button{flex:none;padding:0;border:1px solid var(--line,rgba(232,190,92,.35));border-radius:12px;background:var(--card);overflow:hidden;scroll-snap-align:start}
 .bgal img{display:block;height:170px;width:auto;max-width:78vw;object-fit:cover}
 .bview{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px}
@@ -1173,29 +1174,31 @@ async function loadOffers(){
 const bnDotsHtml = n => n > 1 ? `<div class="bdots" role="tablist" aria-label="Banners">${Array.from({length: n}, (_, i) => `<button type="button" role="tab" data-bdot="${i}" class="${i ? '' : 'on'}" aria-label="Banner ${i + 1} of ${n}"></button>`).join('')}</div>` : '';
 function bnDotsSync(r){
   const d = r.nextElementSibling, k = [...r.children]; if (!d || !d.classList.contains('bdots') || !k.length) return;
-  const L = r.getBoundingClientRect().left + 16; let i = 0, best = 1e9;
+  const L = r.getBoundingClientRect().left + (parseFloat(getComputedStyle(r).paddingLeft) || 0); let i = 0, best = 1e9;
   k.forEach((x, j) => { const dx = Math.abs(x.getBoundingClientRect().left - L); if (dx < best){ best = dx; i = j; } });
   if (r.scrollLeft + r.clientWidth >= r.scrollWidth - 4) i = k.length - 1;
   [...d.children].forEach((x, j) => x.classList.toggle('on', j === i));
 }
-document.addEventListener('scroll', e => { const r = e.target; if (r && r.classList && (r.classList.contains('offer-rail') || r.classList.contains('bgal'))) bnDotsSync(r); }, true);
+document.addEventListener('scroll', e => { const r = e.target; if (r && r.classList && r.classList.contains('hcar')) bnDotsSync(r); }, true);
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-bdot]'); if (!b) return;
   const r = b.parentElement.previousElementSibling, k = r && r.children[+b.dataset.bdot]; if (!k) return;
-  r.scrollTo({left: k.getBoundingClientRect().left - r.getBoundingClientRect().left + r.scrollLeft - 16, behavior: 'smooth'});
+  r.scrollTo({left: k.getBoundingClientRect().left - r.getBoundingClientRect().left + r.scrollLeft, behavior: 'smooth'});
 }, true);
+/* story hero: the cover (main banner) + the story's other banners swipe side by side, dots show which one is on */
+const heroBanners = s => (s.banners || []).length
+  ? `<div class="hcar"><div class="hs">${cover(s.cover)}</div>${s.banners.map((b, i) => `<div class="hs"><div class="cv has-img" data-bnview="${i}" role="button" tabindex="0" aria-label="Banner ${i + 1}"><img src="${esc(b.url)}" alt="" loading="lazy" decoding="async"></div></div>`).join('')}</div>${bnDotsHtml(s.banners.length + 1)}`
+  : cover(s.cover);
 function offersStrip(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
-  if (bn.length) return `<section class="offer-strip"><div class="sechead"><h2 class="sec">${esc(tr('otitle'))}</h2><button class="link" data-offers="1">View all &rarr;</button></div><div class="rail offer-rail">${bn.map(b => `<button class="obn${b.image ? ' has-img' : ''}" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="${esc(b.title)}" loading="lazy" decoding="async">` : `<span class="obn-art" aria-hidden="true">✦</span>`}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}<span class="obn-cta">Explore offer <span aria-hidden="true">→</span></span></span></button>`).join('')}</div>${bnDotsHtml(bn.length)}</section>`;
+  if (bn.length) return `<section class="offer-strip"><div class="sechead"><h2 class="sec">${esc(tr('otitle'))}</h2><button class="link" data-offers="1">View all &rarr;</button></div><div class="rail offer-rail">${bn.map(b => `<button class="obn${b.image ? ' has-img' : ''}" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="${esc(b.title)}" loading="lazy" decoding="async">` : `<span class="obn-art" aria-hidden="true">✦</span>`}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}<span class="obn-cta">Explore offer <span aria-hidden="true">→</span></span></span></button>`).join('')}</div></section>`;
   if (cs.length) return `<button class="promo" data-offers="1" style="display:block;width:calc(100% - 32px);text-align:left">&#127991;&#65039; ${esc(tr('cpavail', {n: cs.length}))}<small>${esc(cs.slice(0, 3).map(c => c.code + ' - ' + c.text).join(' | '))}</small></button>`;
   return '';
 }
 function renderOffers(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
   $('#offerpage').innerHTML = `<div class="top"><button class="btn ghost small" id="offBack">Back</button><strong>${tr('otitle')}</strong><span style="width:60px"></span></div>` +
-    (bn.length > 1 ? '<div class="rail offer-rail ocar">' : '') +
     bn.map(b => `<div class="ocard">${b.image ? `<img src="${esc(b.image)}" alt="" loading="lazy">` : ''}<div class="obody"><b>${esc(b.title)}</b>${b.body ? `<p>${esc(b.body)}</p>` : ''}</div></div>`).join('') +
-    (bn.length > 1 ? '</div>' + bnDotsHtml(bn.length) : '') +
     (cs.length ? cs.map(c => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(c.code)}</span><b>${esc(c.text)}</b>${c.title ? `<small>${esc(c.title)}</small>` : ''}<small>${esc([c.min_order ? tr('cpmin', {m: money(c.min_order)}) : '', c.expires_at ? tr('cpexp', {d: dateStr(c.expires_at)}) : ''].filter(Boolean).join(' | '))}</small></div>` +
       `<div class="lact"><button class="lbtn" data-cpcopy="${esc(c.code)}">${tr('cpcopy')}</button><button class="lbtn" data-cpuse="${esc(c.code)}">${tr('cpuse')}</button></div></div>`).join('') : `<div class="empty">${tr('cpnone')}</div>`) +
     ((o.used || []).length ? `<h3 class="lsub">Used coupons</h3>` + o.used.map(u => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(u.code)}</span><b>-${money(u.discount)}</b><small>${esc(u.title || '')} | ${esc(dateStr(u.at))}${u.status === 'pending' ? ' | waiting for approval' : ''}</small></div></div>`).join('') : '');
@@ -2461,10 +2464,9 @@ function renderStory(){
   }).join('');
   el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
-      ${cover(s.cover)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
+      ${heroBanners(s)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${mainGenre(s) ? `<span class="tag gold">${esc(mainGenre(s))}</span>` : ''}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
- ${(s.banners || []).length ? `<h3 class="h3">${tr('sbanners')}</h3><div class="bgal">${s.banners.map((b, i) => `<button data-bnview="${i}" aria-label="Banner ${i + 1}"><img src="${esc(b.url)}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>${bnDotsHtml(s.banners.length)}` : ''}
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
     <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
       <div class="stat"><small>${tr('shrs')}</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
