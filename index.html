@@ -424,7 +424,9 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .sh-bg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(30px) brightness(.5) saturate(1.25);transform:scale(1.1)}
 .sh:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,0) 35%,var(--ink) 98%)}
 .sh>*{position:relative;z-index:1}
-.sh>.sh-bg{position:absolute;z-index:0}
+.sh>.sh-bg,.sh>.sh-bgs{position:absolute;z-index:0}
+.sh-bgs{inset:-24px;overflow:hidden;filter:blur(30px) brightness(.5) saturate(1.25);transform:scale(1.1)}
+.sh-bgs>div{position:absolute;inset:0;background-size:cover;background-position:center;will-change:transform}
 .sh .cv{width:min(46vw,190px);margin:0 auto 14px;box-shadow:0 16px 38px rgba(0,0,0,.5)}
 .sh .cv.has-img{display:block}
 .sh-top{position:absolute!important;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;z-index:3!important}
@@ -1179,19 +1181,24 @@ function bnDotsSync(r){
   k.forEach((x, j) => { const dx = Math.abs(x.getBoundingClientRect().left - L); if (dx < best){ best = dx; i = j; } });
   if (r.scrollLeft + r.clientWidth >= r.scrollWidth - 4) i = k.length - 1;
   [...d.children].forEach((x, j) => x.classList.toggle('on', j === i));
-  const bg = r.closest('.sh') && r.closest('.sh').querySelector('.sh-bg'), u = k[i].dataset.bg;   // the blurred backdrop takes the colours of the banner that is on
-  if (bg && u && r.dataset.cur !== String(i)) bg.style.backgroundImage = `url('${u}')`;
-  r.dataset.cur = String(i);
 }
-document.addEventListener('scroll', e => { const r = e.target; if (r && r.classList && r.classList.contains('hcar')) bnDotsSync(r); }, true);
+function hcarBg(r){          // the blurred backdrop slides together with the banners (one tile per banner, moved by the scroll position)
+  const g = r.closest('.sh') && r.closest('.sh').querySelector('.sh-bgs'); if (!g || !r.clientWidth) return;
+  const p = r.scrollLeft / r.clientWidth, w = g.clientWidth;
+  [...g.children].forEach((t, i) => { t.style.transform = `translateX(${(i - p) * w}px)`; });
+}
+document.addEventListener('scroll', e => { const r = e.target; if (r && r.classList && r.classList.contains('hcar')){ bnDotsSync(r); hcarBg(r); } }, true);
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-bdot]'); if (!b) return;
   const r = b.parentElement.previousElementSibling, k = r && r.children[+b.dataset.bdot]; if (!k) return;
   r.scrollTo({left: k.getBoundingClientRect().left - r.getBoundingClientRect().left + r.scrollLeft, behavior: 'smooth'});
 }, true);
 /* story hero: the cover (main banner) + the story's other banners swipe side by side, dots show which one is on */
+const heroBg = s => (s.banners || []).length
+  ? `<div class="sh-bgs">${[s.cover, ...s.banners.map(b => b.url)].map((u, i) => `<div style="${isImg(u) ? `background-image:url('${esc(u)}');` : ''}transform:translateX(${i * 100}%)"></div>`).join('')}</div>`
+  : (isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : '');
 const heroBanners = s => (s.banners || []).length
-  ? `<div class="hcar"><div class="hs" data-bg="${esc(s.cover)}">${cover(s.cover)}</div>${s.banners.map((b, i) => `<div class="hs" data-bg="${esc(b.url)}"><div class="cv has-img" data-bnview="${i}" role="button" tabindex="0" aria-label="Banner ${i + 1}"><img src="${esc(b.url)}" alt="" loading="lazy" decoding="async"></div></div>`).join('')}</div>${bnDotsHtml(s.banners.length + 1)}`
+  ? `<div class="hcar"><div class="hs">${cover(s.cover)}</div>${s.banners.map((b, i) => `<div class="hs"><div class="cv has-img" data-bnview="${i}" role="button" tabindex="0" aria-label="Banner ${i + 1}"><img src="${esc(b.url)}" alt="" loading="lazy" decoding="async"></div></div>`).join('')}</div>${bnDotsHtml(s.banners.length + 1)}`
   : cover(s.cover);
 function offersStrip(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
@@ -2466,7 +2473,7 @@ function renderStory(){
     const opts = optsFor(t.id);
     return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${t.n} episodes</small><span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
   }).join('');
-  el.innerHTML = `<div class="sh">${isImg(s.cover) ? `<div class="sh-bg" style="background-image:url('${esc(s.cover)}')"></div>` : ''}
+  el.innerHTML = `<div class="sh">${heroBg(s)}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
       ${heroBanners(s)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${mainGenre(s) ? `<span class="tag gold">${esc(mainGenre(s))}</span>` : ''}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
