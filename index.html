@@ -565,10 +565,11 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 .hcar .hs{flex:none;width:100%;display:flex;justify-content:center;align-items:flex-start;scroll-snap-align:center}
 .hcar .hs .cv{margin-bottom:14px;cursor:pointer}
 .sh .bdots{position:relative;z-index:1;margin:-2px 0 14px}
-.bdots{display:flex;justify-content:center;align-items:center;gap:7px;margin:-6px 0 12px}
-.bdots button{width:8px;height:8px;padding:0;border:1px dashed var(--gold);border-radius:50%;background:transparent;transition:width .2s,background .2s}
-.bdots button.on{width:22px;border-radius:6px;border-style:solid;background:var(--gold)}
-@media(prefers-reduced-motion:reduce){.bdots button{transition:none}}
+.bdots{display:flex;justify-content:center;align-items:center;gap:10px;margin:-6px 0 12px}
+.bdots i{display:block;cursor:pointer;position:relative;box-sizing:border-box;flex:none;width:9px!important;height:9px!important;min-width:0;min-height:0;padding:0;border:1.5px solid var(--gold);border-radius:50%;background:transparent;opacity:.7;transition:background .2s,opacity .2s}
+.bdots i::before{content:"";position:absolute;inset:-8px}
+.bdots i.on{background:var(--gold);opacity:1}
+@media(prefers-reduced-motion:reduce){.bdots i{transition:none}}
 .bnform{margin:0 0 12px}.bnform textarea{min-height:92px}.bnform img{max-width:100%;border-radius:10px;margin-top:8px;display:block}
 
 /* ---------- polish layer: one radius scale, clearer plans, calmer lists, steadier nav ---------- */
@@ -1171,13 +1172,16 @@ async function loadOffers(){
   if (S.tab === 'home' && S.home) renderHome(); else if (S.tab === 'me') renderMe();
   if ($('#offerpage').classList.contains('open')) renderOffers();
 }
-const bnDotsHtml = n => n > 1 ? `<div class="bdots" role="tablist" aria-label="Banners">${Array.from({length: n}, (_, i) => `<button type="button" role="tab" data-bdot="${i}" class="${i ? '' : 'on'}" aria-label="Banner ${i + 1} of ${n}"></button>`).join('')}</div>` : '';
+const bnDotsHtml = n => n > 1 ? `<div class="bdots" role="tablist" aria-label="Banners">${Array.from({length: n}, (_, i) => `<i role="tab" data-bdot="${i}" class="${i ? '' : 'on'}" aria-label="Banner ${i + 1} of ${n}"></i>`).join('')}</div>` : '';
 function bnDotsSync(r){
   const d = r.nextElementSibling, k = [...r.children]; if (!d || !d.classList.contains('bdots') || !k.length) return;
   const L = r.getBoundingClientRect().left + (parseFloat(getComputedStyle(r).paddingLeft) || 0); let i = 0, best = 1e9;
   k.forEach((x, j) => { const dx = Math.abs(x.getBoundingClientRect().left - L); if (dx < best){ best = dx; i = j; } });
   if (r.scrollLeft + r.clientWidth >= r.scrollWidth - 4) i = k.length - 1;
   [...d.children].forEach((x, j) => x.classList.toggle('on', j === i));
+  const bg = r.closest('.sh') && r.closest('.sh').querySelector('.sh-bg'), u = k[i].dataset.bg;   // the blurred backdrop takes the colours of the banner that is on
+  if (bg && u && r.dataset.cur !== String(i)) bg.style.backgroundImage = `url('${u}')`;
+  r.dataset.cur = String(i);
 }
 document.addEventListener('scroll', e => { const r = e.target; if (r && r.classList && r.classList.contains('hcar')) bnDotsSync(r); }, true);
 document.addEventListener('click', e => {
@@ -1187,7 +1191,7 @@ document.addEventListener('click', e => {
 }, true);
 /* story hero: the cover (main banner) + the story's other banners swipe side by side, dots show which one is on */
 const heroBanners = s => (s.banners || []).length
-  ? `<div class="hcar"><div class="hs">${cover(s.cover)}</div>${s.banners.map((b, i) => `<div class="hs"><div class="cv has-img" data-bnview="${i}" role="button" tabindex="0" aria-label="Banner ${i + 1}"><img src="${esc(b.url)}" alt="" loading="lazy" decoding="async"></div></div>`).join('')}</div>${bnDotsHtml(s.banners.length + 1)}`
+  ? `<div class="hcar"><div class="hs" data-bg="${esc(s.cover)}">${cover(s.cover)}</div>${s.banners.map((b, i) => `<div class="hs" data-bg="${esc(b.url)}"><div class="cv has-img" data-bnview="${i}" role="button" tabindex="0" aria-label="Banner ${i + 1}"><img src="${esc(b.url)}" alt="" loading="lazy" decoding="async"></div></div>`).join('')}</div>${bnDotsHtml(s.banners.length + 1)}`
   : cover(s.cover);
 function offersStrip(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
