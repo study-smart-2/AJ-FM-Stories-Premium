@@ -1045,9 +1045,22 @@ function goBot(payload){
 }
 
 /* ---------- shared pieces ---------- */
-const genreList = s => String((s && s.genre) || '').split(',').map(x => x.trim().replace(/^[\s.;]+|[\s.;]+$/g, '')).filter(Boolean);
-const mainGenre = s => genreList(s)[0] || '';   // first genre = the main genre
-const subGenres = s => genreList(s).slice(1);   // the rest = sub genres (story page only)
+const splitGenres = t => { const seen = new Set(); return String(t || '').split(/\s*(?:,|;|&|\band\b)\s*/i).map(x => x.trim().replace(/^[\s.;]+|[\s.;]+$/g, '')).filter(x => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())); };   // "," "and" "&" separate genres
+const genreList = s => splitGenres(s && s.genre);
+const hasSubField = s => !!s && s.sub_genre != null;                              // saved with the two fields; an older story has one "genre" field: first = main, the rest = sub genres
+const mainGenres = s => hasSubField(s) ? genreList(s) : genreList(s).slice(0, 1);
+/* A story with several main genres shows ONE of them on its card: inside a genre section (Drama, Romance...) that genre, everywhere else a random one
+   (it changes whenever you open a screen and every 20 seconds, but not on every repaint, so cards do not flicker while you scroll). */
+let GENRE_CTX = '';
+let GSEED = String(Math.random());
+const hashStr = t => { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return Math.abs(h); };
+const mainGenre = s => {
+  const g = mainGenres(s); if (g.length < 2) return g[0] || '';
+  const ctx = GENRE_CTX && g.find(x => x.toLowerCase() === GENRE_CTX.toLowerCase());
+  return ctx || g[hashStr(String(s.id) + GSEED + Math.floor(Date.now() / 20000)) % g.length];      // changes with every new screen and every 20 seconds, not on each repaint
+};
+const inGenre = (name, fn) => (s, i) => { const old = GENRE_CTX; GENRE_CTX = name || ''; try { return fn(s, i); } finally { GENRE_CTX = old; } };
+const subGenres = s => hasSubField(s) ? splitGenres(s.sub_genre) : genreList(s).slice(1);   // story page only
 const priceMax = s => { if (s.max_price != null) return +s.max_price; if (s.options && s.options.length) return Math.max(...s.options.map(o => +o.price)); return null; };
 const dealOf = (p, s) => Math.round(+p * (100 - s.deal.pct) / 100);
 const priceLabel = s => {                                                       // ONE price, never a range: the highest plan of the story
@@ -1290,7 +1303,7 @@ function renderHome(){
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
     tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
     secRail(tr('recent'), h.recent, 'recent'), dailyCombosSection(), secRail(tr('ongoing'), h.ongoing, 'ongoing'), secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
-    ...h.genre_rows.map(g => secRail(esc(g.name), g.items, 'g:' + g.name))
+    ...h.genre_rows.map(g => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)))
   ].join('');
   v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
     (S.homeState === 'error' ? `<div class="msg bad">Could not refresh: ${esc(S.homeErr)} <button class="link" id="retryHome">Retry</button></div>` : '');
@@ -2084,7 +2097,7 @@ function discoverRows(){
   mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
   mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
   (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
-  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => mainGenre(s) === g.name).sort(byUpd), {genre:g.name, sort:'updated'}); });
+  ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => mainGenres(s).includes(g.name)).sort(byUpd), {genre:g.name, sort:'updated'}); });
   if ((f.languages || []).length > 1) f.languages.forEach(l => mk('dlang', 'l:' + l, '\uD83C\uDF10', l, all.filter(s => s.language === l).sort(byUpd), {language:l, sort:'updated'}));
   return rows.filter(r => r.items.length);
 }
@@ -2103,7 +2116,7 @@ function paintDiscover(){
   }
 }
 const dMini = s => `<button class="dmini" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><span class="th">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" data-fb="?">` : esc(s.cover || '?')}</span><span class="mt"><b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.status, s.episodes ? '' : ''].filter(Boolean).join(' | '))}</small></span><span class="pr">${esc(priceLabel(s).replace('From ', ''))}</span></button>`;
-const dPreview = r => `<div class="dpv">${r.items.slice(0, 3).map(dMini).join('')}<button class="btn ghost block" data-dsee="${esc(r.key)}">${tr('dsee', {n: r.items.length})} &rarr;</button></div>`;
+const dPreview = r => `<div class="dpv">${r.items.slice(0, 3).map(inGenre(r.see && r.see.genre, dMini)).join('')}<button class="btn ghost block" data-dsee="${esc(r.key)}">${tr('dsee', {n: r.items.length})} &rarr;</button></div>`;
 function toggleRow(key){
   const card = $$('#bbody .dcard').find(c => c.dataset.dkey === key), r = (B.rows || []).find(x => x.key === key); if (!card || !r) return;
   const open = !card.classList.contains('open');
@@ -2134,7 +2147,7 @@ function browseResults(){
   if (B.state === 'error' && !B.items.length){ r.innerHTML = retryBox(B.err, 'retryBrowse'); return; }
   if (B.state === 'loading' && !B.items.length){ r.innerHTML = `<div class="grid rows">${Array.from({length: 4}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>`; return; }
   if (!B.items.length){ r.innerHTML = `<div class="empty">No stories match${B.q ? ` "${esc(B.q)}"` : ' these filters'}.${browseActive() ? '<br><button class="btn ghost small" id="bclear2">Clear search and filters</button>' : ''}</div>`; return; }
-  r.innerHTML = `<div class="grid rows">${B.items.map(rowCard).join('')}</div><div class="browse-tail"><div class="by" id="browseCount" aria-live="polite">${B.items.length} of ${B.total}</div>
+  r.innerHTML = `<div class="grid rows">${B.items.map(inGenre(B.genre, rowCard)).join('')}</div><div class="browse-tail"><div class="by" id="browseCount" aria-live="polite">${B.items.length} of ${B.total}</div>
     ${B.items.length < B.total ? `<div id="browseEnd" class="browse-end" aria-hidden="true"></div><button class="btn ghost block" id="bmore"${B.state === 'loading' ? ' disabled' : ''}>${B.state === 'loading' ? 'Loading more stories…' : 'Load more stories ↓'}</button>` : `<div class="browse-finished">You’re all caught up ✨</div>`}
     ${B.state === 'error' ? `<div class="msg bad">${esc(B.err)} <button class="link" id="retryBrowse">Retry</button></div>` : ''}</div>`;
   watchBrowse();
@@ -2179,7 +2192,7 @@ function paintVall(){
   if (VA.state === 'error' && !VA.items.length){ r.innerHTML = retryBox(VA.err, 'vallRetry'); return; }
   if (VA.state === 'loading' && !VA.items.length){ r.innerHTML = `<div class="grid rows">${Array.from({length: 4}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>`; return; }
   if (!VA.items.length){ r.innerHTML = '<div class="empty">No stories here yet.</div>'; return; }
-  r.innerHTML = `<div class="grid rows">${VA.items.map(rowCard).join('')}</div><div class="browse-tail">${!VA.done ? `<button class="btn ghost block" id="vallMore"${VA.state === 'loading' ? ' disabled' : ''}>${VA.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${VA.state === 'error' ? `<div class="msg bad">${esc(VA.err)} <button class="link" id="vallRetry">Retry</button></div>` : ''}</div>`;
+  r.innerHTML = `<div class="grid rows">${VA.items.map(inGenre(VA.spec && VA.spec.genre, rowCard)).join('')}</div><div class="browse-tail">${!VA.done ? `<button class="btn ghost block" id="vallMore"${VA.state === 'loading' ? ' disabled' : ''}>${VA.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${VA.state === 'error' ? `<div class="msg bad">${esc(VA.err)} <button class="link" id="vallRetry">Retry</button></div>` : ''}</div>`;
 }
 async function loadVall(reset){
   const sig = fresh('vall'); if (reset) VA.items = [];
@@ -2839,7 +2852,7 @@ function renderStory(){
   el.innerHTML = `<div class="sh">${heroBg(s)}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
       ${heroBanners(s)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
-      <div class="tags">${mainGenre(s) ? `<span class="tag gold">${esc(mainGenre(s))}</span>` : ''}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
+      <div class="tags">${mainGenres(s).map(g => `<span class="tag gold">${esc(g)}</span>`).join('')}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
     <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || (s.ep_first && s.ep_last ? s.ep_first + '-' + s.ep_last : V.totalAll || 0))}</b></div>
@@ -3170,7 +3183,7 @@ async function openStoryDetails(id){                         // tap on a story c
   const epsTxt = f.episodes_text ? String(f.episodes_text).replace(/\u221e/g, 'ongoing') : '';
   body.innerHTML = `${isImg(f.cover) ? `<img class="sdcover" src="${esc(f.cover)}" alt="">` : ''}
     <div style="margin-bottom:12px">${f.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${f.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${esc(f.status || 'Ongoing')}</span> <span class="tag">${f.episodes} eps</span></div>
-    <div class="box"><b>Details</b>${kv('ID', f.id)}${kv('Author', f.author)}${kv('Genre', f.genre)}${kv('Language', f.language)}${kv('Voice', f.voice)}${kv('Episodes', epsTxt)}${kv('Also known as', (f.aliases || []).join(', '))}${kv('Listeners', f.listeners)}${f.update_next ? kv('Next update report', new Date(f.update_next * 1000).toLocaleString()) : ''}</div>
+    <div class="box"><b>Details</b>${kv('ID', f.id)}${kv('Author', f.author)}${kv('Main genre', f.genre)}${kv('Sub genres', f.sub_genre)}${kv('Language', f.language)}${kv('Voice', f.voice)}${kv('Episodes', epsTxt)}${kv('Also known as', (f.aliases || []).join(', '))}${kv('Listeners', f.listeners)}${f.update_next ? kv('Next update report', new Date(f.update_next * 1000).toLocaleString()) : ''}</div>
     ${f.preview ? `<div class="box"><b>Story summary</b><p class="sdtext">${rich(f.preview)}</p></div>` : ''}
     ${f.notes ? `<div class="box"><b>Notes</b><p class="sdtext">${rich(f.notes)}</p></div>` : ''}
     <div class="box"><b>Episodes</b>${tp.map(t => `<div class="kvrow"><span>${t.name ? esc(t.name) : 'All episodes'}</span><b>${t.eps} episodes${t.gaps ? ` <span style="color:var(--warn)">| missing: ${esc(t.gaps)}</span>` : (t.eps ? ' <span style="color:var(--ok)">| no missing numbers</span>' : '')}</b></div>`).join('') || '<div class="by">No episodes yet.</div>'}</div>
@@ -3385,7 +3398,8 @@ async function openEditor(id){
     <label class="field"><span>Title *</span><input id="e_title" value="${esc(s.title || '')}" maxlength="120"></label>
     <label class="field"><span>Other titles (one per line)</span><textarea id="e_aliases" rows="3" maxlength="3600" placeholder="Names the sources used before or use now">${esc((s.aliases || []).join('\n'))}</textarea><small class="note">Sources rename stories. Members find the story by any of these names; they see the Title above.</small></label>
     <label class="field"><span>Platform or author</span><input id="e_author" value="${esc(s.author || '')}" placeholder="Pocket FM"></label>
-    <div class="two"><label class="field"><span>Genre</span><input id="e_genre" value="${esc(s.genre || '')}" placeholder="Main genre first, then sub genres: Fantasy, Thriller"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
+    <div class="two"><label class="field"><span>Main genre</span><input id="e_genre" value="${esc(hasSubField(s) ? (s.genre || '') : mainGenres(s).join(', '))}" placeholder="Romance, Drama"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
+    <label class="field"><span>Sub genres</span><input id="e_sub" value="${esc(hasSubField(s) ? (s.sub_genre || '') : subGenres(s).join(', '))}" placeholder="Forced Marriage, Revenge and Retribution"><small class="note">Separate genres with a comma, "and" or "&amp;". Main genres are the filters members browse by; sub genres show on the story page.</small></label>
     <div class="two"><label class="field"><span>Status</span><input id="e_status" list="e_status_l" maxlength="30" placeholder="Ongoing"><datalist id="e_status_l"><option value="Ongoing"><option value="Completed"><option value="Upcoming"></datalist></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
     <label class="field"><span>Episodes label (optional, e.g. 1101 To 1150)</span><input id="e_epstext" value="${esc(s.episodes_text || '')}"></label>
     <label class="field check"><input type="checkbox" id="e_pub" ${s.published === false ? '' : 'checked'}><span style="margin:0">Published (visible in the store)</span></label>
@@ -3443,7 +3457,7 @@ async function saveEditor(){
   await once('save', async () => {
     const title = $('#e_title').value.trim();
     if (!title) return toast('Add a title first');
-    const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: $('#e_genre').value.trim(), language: $('#e_lang').value.trim(),
+    const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: splitGenres($('#e_genre').value).join(', '), sub_genre: splitGenres($('#e_sub').value).join(', '), language: $('#e_lang').value.trim(),
       status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '',
       aliases: $('#e_aliases').value.split('\n').map(x => x.trim()).filter(Boolean),
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts')};
@@ -3699,6 +3713,7 @@ async function runImport(dry){
 
 /* ---------- navigation ---------- */
 function setTab(t){
+  GSEED = String(Math.random());                       // a new tab / screen: stories with several main genres may show another one
   S.tab = t; $$('.bnav button').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
   [...stack].forEach(closeSheet); $('#view').scrollTop = 0; window.scrollTo(0, 0);
   if (t === 'home'){ if (S.home) renderHome(); else loadHome(); if (S.home && S.homeState !== 'loading') loadHome(); }
@@ -3981,7 +3996,7 @@ document.addEventListener('click', async e => {
       try{
         const r = await api('/api/admin/parse', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({link})}), f = r.fields || {};
         const set = (id, v) => { if (v) $(id).value = v; };
-        set('#e_title', f.title); set('#e_author', f.author); set('#e_genre', f.genre); set('#e_lang', f.language); set('#e_voice', f.voice); set('#e_epstext', f.episodes_text); set('#e_preview', f.description);
+        set('#e_title', f.title); set('#e_author', f.author); set('#e_genre', f.genre); set('#e_sub', f.sub_genre); set('#e_lang', f.language); set('#e_voice', f.voice); set('#e_epstext', f.episodes_text); set('#e_preview', f.description);
         if (f.status) $('#e_status').value = f.status;
         if (r.cover){ E.photo = r.cover; paintPhoto(); }
         toast(r.cover ? 'Details and cover filled in' : 'Details filled in. Add the cover yourself.');
