@@ -826,6 +826,27 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .mrp{font-size:11.5px;font-weight:500;color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
 .plc .pp .mrp,.pkd .pdp .mrp{font-size:13px;margin-left:4px}
 .plc .pp .off,.pkd .pdp .off{margin-left:4px;font-size:11.5px}
+
+/* Add to cart under a story card + Select plan sheet (one line per topic) */
+.card.cwrap .atc{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;min-height:40px;padding:6px 8px;white-space:nowrap}
+.atc-ov{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:flex-end}
+.atc-sheet{width:100%;max-height:88vh;display:flex;flex-direction:column;background:var(--surf);border-top:1px solid var(--gold);border-radius:18px 18px 0 0;overflow:hidden}
+.atc-grab{flex:none;width:44px;height:4px;border-radius:4px;background:var(--line);margin:8px auto 0}
+.atc-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 16px 2px}.atc-head b{font-size:18px}
+.atc-x{background:none;border:0;font-size:28px;line-height:1;min-height:40px;padding:0 8px;color:var(--muted)}
+.atc-story{flex:none;display:flex;gap:10px;align-items:center;padding:8px 16px 10px;border-bottom:1px solid var(--line)}.atc-story span{display:flex;flex-direction:column;min-width:0}.atc-story small{color:var(--gold-2);font-weight:700}
+.atc-body{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 10px}
+.atc-t{padding:10px 0;border-bottom:1px solid var(--line)}.atc-t:last-child{border-bottom:0}
+.atc-th{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}.atc-th b{font-size:15px;overflow-wrap:anywhere}.atc-th small{color:var(--muted);font-size:12px;flex:none}
+.atcrow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px}.atcrow::-webkit-scrollbar{display:none}
+.atcp{flex:none;min-width:108px;max-width:176px;text-align:left;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:2px;min-height:62px}
+.atcp b{font-size:13.5px;line-height:1.2;overflow-wrap:anywhere}.atcp small{color:var(--muted);font-size:11.5px}.atcp em{font-style:normal;font-weight:800;color:var(--gold-2);font-size:14px;margin-top:auto;padding-top:3px}
+.atcp .off{margin-left:3px;font-size:10.5px}
+.atcp.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.14);box-shadow:0 0 0 1px var(--gold)}.atcp.have{opacity:.55}
+.atc-t .pkd{margin:8px 0 2px}
+.atc-foot{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surf)}
+.atc-sel{flex:1;min-width:0;display:flex;flex-direction:column}.atc-sel small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.atc-sel b{color:var(--gold-2);font-size:19px}
+.atc-btns{display:flex;gap:8px}.atc-btns .btn{min-height:44px;padding:8px 14px;white-space:nowrap}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -1011,8 +1032,10 @@ const priceHtml = s => {                                                       /
   const lo = +s.min_mrp, hi = +s.max_mrp, one = !s.has_free && priceMax(s) === +s.min_price;
   return `<span class="pr prx"><span class="prn">${one ? money(s.min_price) : priceLabel(s)}</span><span class="prrow"><s class="mrp" aria-label="MRP">${hi > lo ? money(lo) + ' - ' + money(hi) : money(lo)}</s><em class="off">${s.save_var ? 'Up to ' : ''}${s.save_pct}% off</em></span></span>`;
 };
-const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
-  <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small>${priceHtml(s)}</button>`;
+const atcShow = s => s.plans > 0 && (+s.min_price > 0 || (priceMax(s) || 0) > 0 || !!s.deal);          // a story with at least one paid plan gets the button
+const atcBtn = s => atcShow(s) ? `<button class="btn small atc" data-atc="${esc(s.id)}" aria-label="Add ${esc(s.title)} to cart">&#128722; Add to cart</button>` : '';
+const card = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
+  <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small>${priceHtml(s)}</button>${atcBtn(s)}</div>`;
 const homeCard = card;                                    // no list shows an episode count any more
 const tierCard = s => homeCard(s).replace(/<span class="pr">.*?<\/span>/, `<span class="pr">${s.deal ? `<s>${money(s.max_price)}</s>` : ''}${money(s.last_price)}</span>`);      // Super deals show the last (highest) plan price only
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
@@ -1194,7 +1217,7 @@ const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return 
 const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
 const big = u => typeof u === 'string' ? u.replace('size=thumb', 'size=full') : u;      // the large home cards use the full-size picture
 const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([mainGenre(s)].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
-const dealCard = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>`;
+const dealCard = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>${atcBtn(s)}</div>`;
 const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(mainGenre(s))}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
 const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data-contx="${esc(i.story.id)}" aria-label="Remove ${esc(i.story.title)} from continue listening">&times;</button></div>`;
 const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}" aria-label="Continue ${esc(i.story.title)}, episode ${i.episode.no}">${cover(i.story.cover)}
@@ -1718,7 +1741,65 @@ const topicNameOf = (s, o) => { const t = o && o.topic && ((s && s.topics) || []
 function cartToggle(oid){
   const s = V.story, o = s && s.options.find(x => String(x.id) === String(oid)); if (!o) return false;
   if (cartHas(V.id, oid)){ CART = CART.filter(i => !(i.sid === V.id && String(i.oid) === String(oid))); cartSave(); toast(tr('cremd')); return false; }
-  CART.push({sid: V.id, oid: o.id, title: s.title, cover: s.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(s, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0}); cartSave(); toast(tr('cadded')); return true;
+  CART.push({sid: V.id, oid: o.id, title: s.title, cover: s.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(s, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0, eps: isSnap(o) ? snapEps(o, s) : ''}); cartSave(); toast(tr('cadded')); return true;
+}
+function cartToggleOpt(sid, s, o){                      // add / remove any plan of any story (used by the card button)
+  if (cartHas(sid, o.id)){ CART = CART.filter(i => !(i.sid === sid && String(i.oid) === String(o.id))); cartSave(); toast(tr('cremd')); return false; }
+  CART.push({sid, oid: o.id, title: s.title, cover: s.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(s, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0, eps: isSnap(o) ? snapEps(o, s) : ''}); cartSave(); toast(tr('cadded')); return true;
+}
+/* ---------- Add to cart on a story card: "Select plan" sheet, one line per topic ---------- */
+const AT = {sid: '', s: null, a: null, sel: null};
+const atcKindSub = (o, s) => planKind(o) === 'rental' ? `${o.days}-day rental` : planKind(o) === 'pack' ? (o.from && o.to ? `${o.to - o.from + 1} episodes` : 'Pack') : (isSnap(o) ? (snapEps(o, s) || 'Till date') : 'Full story');
+function atcRows(){                                         // Topic 1 {name} -> its plans, Topic 2 {name} -> its plans (full story plans are part of every topic)
+  const s = AT.s, kinds = ['full', 'pack', 'rental'];
+  const opts = (s.options || []).filter(o => !o.hidden && Number(o.price) > 0).sort((a, b) => kinds.indexOf(planKind(a)) - kinds.indexOf(planKind(b)) || byOrder(a, b));
+  const whole = opts.filter(o => !o.topic), tps = s.topics || [], rows = [];
+  if (!tps.length) return opts.length ? [{name: 'All episodes', sub: epRange(s.ep_first, s.ep_last, s.episodes), list: opts}] : [];
+  tps.forEach((tp, i) => { const l = [...opts.filter(o => o.topic === tp.id), ...whole].sort((a, b) => kinds.indexOf(planKind(a)) - kinds.indexOf(planKind(b)) || byOrder(a, b)); if (l.length) rows.push({name: `Topic ${i + 1}: ${tp.name}`, sub: epRange(tp.first, tp.last, tp.episodes), list: l}); });
+  const known = new Set(tps.map(x => x.id)), rest = opts.filter(o => o.topic && !known.has(o.topic)); if (rest.length) rows.push({name: 'More plans', sub: '', list: rest});
+  return rows;
+}
+function atcChip(o, i){
+  const own = planOwnedIn(AT.a, o), on = String(o.id) === String(AT.sel) && i === AT.row, off = offPct(o);
+  return `<button class="atcp${on ? ' on' : ''}${own ? ' have' : ''}" data-atcplan="${esc(o.id)}" data-atcrow="${i}" aria-pressed="${on}"><b>${esc(planKind(o) === 'pack' ? packName(o) : o.label)}</b><small>${esc(atcKindSub(o, AT.s))}</small><em>${own ? 'Owned' : money(payOf(o))}${off && !own ? ` <i class="off">${off}% off</i>` : ''}</em></button>`;
+}
+function atcPaint(){
+  const ov = $('#atcOv'); if (!ov) return;
+  const bd = ov.querySelector('.atc-body'), top = bd ? bd.scrollTop : 0, keep = {};
+  ov.querySelectorAll('.atcrow').forEach(r => { keep[r.dataset.i] = r.scrollLeft; });
+  const s = AT.s, a = AT.a, rows = atcRows(), o = (s.options || []).find(x => String(x.id) === String(AT.sel));
+  const body = rows.map((r, i) => `<div class="atc-t"><div class="atc-th"><b>${esc(r.name)}</b><small>${esc(r.sub)}</small></div><div class="atcrow" data-i="${i}">${r.list.map(x => atcChip(x, i)).join('')}</div>${o && i === AT.row && r.list.includes(o) ? planDetailHtml(o, s, a) : ''}</div>`).join('');
+  const own = !!o && planOwnedIn(a, o), inCart = !!o && cartHas(AT.sid, o.id);
+  const foot = o ? `<div class="atc-foot"><div class="atc-sel"><small>${esc(o.label)}</small><b>${money(payOf(o))}</b></div><div class="atc-btns"><button class="btn${inCart ? ' ok' : ''}" id="atcCart"${own ? ' disabled' : ''}>${own ? 'Already owned' : inCart ? '&#10003; In cart' : '&#128722; Add to cart'}</button></div></div>`
+    : '<div class="atc-foot"><button class="btn block" disabled>Select a plan</button></div>';
+  ov.innerHTML = `<div class="atc-sheet" role="dialog" aria-label="Select plan"><div class="atc-grab"></div><div class="atc-head"><b>Select plan</b><button class="atc-x" data-atcx="1" aria-label="Close">&times;</button></div>
+    <div class="atc-story">${lthumb(s.cover)}<span><b>${esc(s.title)}</b><small>${esc(rangeOf(s.options || []))}</small></span></div>
+    <div class="atc-body">${body || '<div class="by" style="padding:12px 0">No paid plans yet.</div>'}</div>${foot}</div>`;
+  const nb = ov.querySelector('.atc-body'); if (nb) nb.scrollTop = top;
+  ov.querySelectorAll('.atcrow').forEach(r => { r.scrollLeft = keep[r.dataset.i] || 0; });
+}
+async function atcOpen(sid, btn){
+  return once('atc', async () => {
+    if (btn) btn.disabled = true;
+    try{
+      let d; try{ d = await api(`/api/story/${encodeURIComponent(sid)}?limit=1`, {timeout: 30000}); }catch(e){ return toast(errText(e)); }
+      const s = d.story, a = d.access || {};
+      if (a.full && !a.admin) return toast('You already own this story');
+      Object.assign(AT, {sid, s, a, sel: null, row: 0});
+      const rs = atcRows(); if (rs.length === 1 && rs[0].list.length === 1) AT.sel = rs[0].list[0].id;
+      let ov = $('#atcOv'); if (!ov){ ov = document.createElement('div'); ov.id = 'atcOv'; ov.className = 'atc-ov'; document.body.appendChild(ov); }
+      atcPaint();
+    } finally { if (btn) btn.disabled = false; }
+  });
+}
+function atcClick(c){
+  let m;
+  if ((m = c('[data-atc]'))){ atcOpen(m.dataset.atc, m); return true; }
+  const ov = $('#atcOv'); if (!ov) return false;
+  if (c('[data-atcx]') || (c('#atcOv') && !c('.atc-sheet'))){ ov.remove(); return true; }
+  if ((m = c('[data-atcplan]'))){ AT.sel = m.dataset.atcplan; AT.row = +m.dataset.atcrow || 0; atcPaint(); const dt = $('#atcOv #pkDetail'); if (dt) dt.scrollIntoView({block: 'nearest', behavior: 'smooth'}); return true; }
+  if (c('#atcCart')){ const o = (AT.s.options || []).find(x => String(x.id) === String(AT.sel)); if (o && !planOwnedIn(AT.a, o)) cartToggleOpt(AT.sid, AT.s, o); atcPaint(); return true; }
+  return !!c('#atcOv');
 }
 async function refreshCart(){                       // drop what is already owned or no longer sold; refresh price and plan name
   const sids = [...new Set(CART.map(i => i.sid))]; if (!sids.length) return;
@@ -1744,7 +1825,7 @@ function paintCart(){
   if (!CART.length){ v.innerHTML = `<div class="empty"><div style="font-size:44px">&#128722;</div><b style="color:var(--text);font-size:17px">${tr('cempty')}</b><small style="display:block;margin:6px 0 14px">${tr('cemptynote')}</small><button class="btn" id="cartBrowse">${tr('cbrowse')}</button></div>`; return; }
   const {sub, saved, total} = cartCalc();
   v.innerHTML = `<div class="sechead"><h2 class="sec">${tr('ctitle')}</h2><span class="by">${tr('citems', {n: CART.length})}</span></div>` +
-    CART.map(i => `<div class="crow"><button class="lmain" data-story="${esc(i.sid)}" aria-label="Open ${esc(i.title)}">${lthumb(i.cover)}<span class="cmt"><span class="cplan">${esc(i.label)}</span><b>${esc(i.title)}</b>${i.topicName ? `<small>&#128194; ${esc(tr('ctopic'))}: <b style="color:var(--text)">${esc(i.topicName)}</b></small>` : ''}<small>${esc(tr('cplanl'))}: ${esc(i.label)}</small><small>${i.from ? `Episodes ${i.from} to ${i.to}` : 'All episodes'} | ${Number(i.days) > 0 ? i.days + ' days' : tr('lkeep')}</small><span class="cpr">${cartCp(i) ? `<s style="opacity:.55;font-weight:400;margin-right:5px">${money(i.price)}</s>${money(cartCp(i).final)}` : money(i.price)}</span>${cpHint(i)}</span></button>
+    CART.map(i => `<div class="crow"><button class="lmain" data-story="${esc(i.sid)}" aria-label="Open ${esc(i.title)}">${lthumb(i.cover)}<span class="cmt"><span class="cplan">${esc(i.label)}</span><b>${esc(i.title)}</b>${i.topicName ? `<small>&#128194; ${esc(tr('ctopic'))}: <b style="color:var(--text)">${esc(i.topicName)}</b></small>` : ''}<small>${esc(tr('cplanl'))}: ${esc(i.label)}</small><small>${i.from ? `Episodes ${i.from} to ${i.to}` : (i.eps || 'All episodes')} | ${Number(i.days) > 0 ? i.days + ' days' : tr('lkeep')}</small><span class="cpr">${cartCp(i) ? `<s style="opacity:.55;font-weight:400;margin-right:5px">${money(i.price)}</s>${money(cartCp(i).final)}` : money(i.price)}</span>${cpHint(i)}</span></button>
       <div class="lact"><button class="lbtn" data-cartpay="${esc(i.sid)}|${esc(i.oid)}">${tr('cpay')}</button><button class="lbtn rm" data-cartrm="${esc(i.sid)}|${esc(i.oid)}">${tr('crem')}</button></div></div>`).join('') +
     cpBoxHtml() +
     `<div class="cbill"><div><span>${tr('csub')}</span><span>${money(sub)}</span></div>${saved ? `<div style="color:var(--ok)"><span>${tr('cdisc')} (${esc(CP.code)})</span><span>-${money(saved)}</span></div>` : ''}<div class="tot"><span>${tr('ctotal')}</span><span>${money(total)}</span></div><small class="by">${tr('cnote')}</small></div>
@@ -2542,7 +2623,7 @@ window.addEventListener('offline', () => { toast('You are offline.', 3000); cons
 const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null, mode:'overview', pack:null, sel:null};
 const storyTag = s => ({id: s.id, title: s.title, cover: s.cover});
 async function openStory(id){
-  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null, mode:'overview', pack:null});
+  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null, mode:'overview', pack:null, det:null});
   renderStory(); openSheet('story'); $('#story').scrollTop = 0;
   await loadStoryPage(1);
 }
@@ -2561,13 +2642,13 @@ function shareStory(){
   if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
 }
 function storyBack(){                                                              // topic page -> story overview -> close
-  if (V.mode === 'topic'){ V.mode = 'overview'; V.topic = null; V.pack = null; V.q = ''; V.filter = 'all'; V.page = 1; renderStory(); $('#story').scrollTop = 0; loadStoryPage(1); }
+  if (V.mode === 'topic'){ V.mode = 'overview'; V.topic = null; V.pack = null; V.det = null; V.q = ''; V.filter = 'all'; V.page = 1; renderStory(); $('#story').scrollTop = 0; loadStoryPage(1); }
   else closeSheet('story');
 }
 function topicCards(){
-  const s = V.story, tps = shownTopics(), list = tps.map(t => ({id: t.id, name: t.name, n: t.episodes, note: t.note || ''}));
+  const s = V.story, tps = shownTopics(), list = tps.map(t => ({id: t.id, name: t.name, n: t.episodes, first: t.first, last: t.last, note: t.note || ''}));
   if (s.episodes_unassigned && tps.length) list.push({id: '_none', name: 'More episodes', n: s.episodes_unassigned, note: ''});
-  if (!tps.length) list.push({id: '', name: 'All episodes', n: V.totalAll, note: ''});     // a story without topics shows one card
+  if (!tps.length) list.push({id: '', name: 'All episodes', n: V.totalAll, first: s.ep_first, last: s.ep_last, note: ''});     // a story without topics shows one card
   return list;
 }
 const optsFor = id => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === id);
@@ -2601,11 +2682,20 @@ function ownedSummary(a){
   if (a.full) return `<div class="access"><b>Full access</b>${a.ranges.filter(r => r.from === null)[0].expires ? ' until ' + dateStr(a.ranges.filter(r => r.from === null)[0].expires) : ' (yours to keep)'}</div>`;
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
-const planOwned = o => !!(V.access && V.access.ranges.some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
+const planOwnedIn = (a, o) => !!(a && (a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
+const planOwned = o => planOwnedIn(V.access, o);
 const scopeOf = o => o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes';
 const accessOf = o => Number(o.days) > 0 ? o.days + ' days' : tr('lkeep');
 const isSnap = o => o && o.scope === 'snapshot' && planKind(o) === 'full';
-const planSub = o => isSnap(o) ? `\u{1F4DA} Episodes available till the date you get access | ${accessOf(o)}` : o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}${isRent(o) ? ' | ' + accessOf(o) : ''}` : `${scopeOf(o)} | ${accessOf(o)}`;
+const epRange = (f, l, n) => f && l ? (f === l ? `Episode ${f}` : `Episodes ${f} to ${l}`) : (n ? `${n} episodes` : '');      // 1 to 1117, not the count 1067
+const snapEps = (o, s) => {                                 // "Episodes 1 to 400": the episode numbers a till-date plan covers right now
+  s = s || V.story; if (!s) return '';
+  const tp = o && o.topic && (s.topics || []).find(x => x.id === o.topic), f = tp ? tp.first : s.ep_first, l = tp ? tp.last : s.ep_last;
+  if (f && l) return f === l ? `Episode ${f}` : `Episodes ${f} to ${l}`;
+  const n = tp ? tp.episodes : (s.episodes || 0);
+  return n ? `${n} episodes` : '';
+};
+const planSub = (o, s) => isSnap(o) ? `\u{1F4DA} ${snapEps(o, s) || 'All episodes'} | ${accessOf(o)}` : o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}${isRent(o) ? ' | ' + accessOf(o) : ''}` : `${scopeOf(o)} | ${accessOf(o)}`;
 const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
 const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
 function pickPlan(){
@@ -2622,7 +2712,7 @@ function planGroups(opts){                                  // 1 full story plan
 }
 const offPct = o => { const m = +o.mrp, p = +o.price; return p > 0 && m > p ? Math.round((m - p) * 100 / m) : 0; };
 const planPrice = o => Number(o.price) === 0 ? 'Listen free' : `${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}` + (offPct(o) ? ` <s class="mrp">${money(o.mrp)}</s> <em class="off">${offPct(o)}% off</em>` : '');
-const storyDone = () => !!(V.story && /complet/i.test(String(V.story.status || '')));      // a finished story has no upcoming episodes, so no warning
+const storyDone = (s = V.story) => !!(s && /complet/i.test(String(s.status || '')));      // a finished story has no upcoming episodes, so no warning
 const fullNoteHtml = o => (storyDone() || o.nonote) ? '' : isSnap(o)
   ? '<span class="pn warn">\u{1F4CC} Includes every episode available on the day your access starts. Episodes uploaded later are not included.</span>'
   : '<span class="pn warn">\u26A0\uFE0F Note: we don\'t guarantee to supply all upcoming episodes.<br>\u{1F6D1} Uploading of episodes can stop any day for this story.</span>';
@@ -2633,27 +2723,36 @@ function planCardHtml(o){
   return `<button class="plc${isRent(o) ? ' rental' : ''}${free ? ' free' : ''}${on ? ' on' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
 }
 const packCardHtml = o => { const open = String(o.id) === String(V.pack); return `<button class="pk${open ? ' on' : ''}${planOwned(o) ? ' have' : ''}" data-pack="${esc(o.id)}" aria-pressed="${open}">${esc(packName(o))}</button>`; };
-function packDetailHtml(){
-  const o = visOpts().find(x => planKind(x) === 'pack' && !x.hidden && String(x.id) === String(V.pack)); if (!o) return '';
-  const tn = topicNameOf(V.story, o), owned = planOwned(o), free = Number(o.price) === 0, n = o.from && o.to ? o.to - o.from + 1 : 0;
+function planDetailHtml(o, s, a){                            // every detail of one plan; used on the story page and in the Select plan sheet
+  s = s || V.story; a = a === undefined ? V.access : a;
+  const kind = planKind(o), tn = topicNameOf(s, o), owned = planOwnedIn(a, o), free = Number(o.price) === 0, n = o.from && o.to ? o.to - o.from + 1 : 0;
   const row = (k, v, cls = '') => `<div${cls ? ` class="${cls}"` : ''}><span>${k}</span><span>${v}</span></div>`;
-  return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${tn ? row('Topic', esc(tn)) : ''}${o.from ? row('Episodes', o.ongoing ? `${o.from} to Ongoing` : o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : ''}
+  const eps = o.from ? (o.ongoing ? `${o.from} to Ongoing` : o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : (isSnap(o) ? esc(snapEps(o, s).replace(/^Episodes? /, '')) : 'All episodes');
+  const warn = kind === 'full' && !storyDone(s) && !o.nonote ? (isSnap(o) ? 'Includes every episode available on the day your access starts. Episodes uploaded later are not included.' : 'We do not guarantee to supply all upcoming episodes. Uploading of episodes can stop any day for this story.') : '';
+  return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${row('Type', kind === 'rental' ? 'Rental' : kind === 'pack' ? 'Episode pack' : (isSnap(o) ? 'Full story (till date)' : 'Full story'))}${tn ? row('Topic', esc(tn)) : ''}${row('Episodes', eps)}
     ${o.badge ? row('Highlight', '&#9733; ' + esc(o.badge)) : ''}${o.note ? row('About', esc(o.note)) : ''}
-    ${row('Access', Number(o.days) > 0 ? `${o.days} days` : esc(tr('lkeep')))}${o.ongoing ? row('Note', `Ongoing series: only ${n} episodes can be added in this range, so episodes till ${Number(o.to).toLocaleString('en-IN')} are covered. New episodes are added as they release, but we do not guarantee that every ongoing episode will be updated.`) : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
+    ${row('Access', Number(o.days) > 0 ? `${o.days} days` : esc(tr('lkeep')))}${kind === 'rental' ? row('Starts', 'When your payment is approved') : ''}
+    ${o.ongoing ? row('Note', `Ongoing series: only ${n} episodes can be added in this range, so episodes till ${Number(o.to).toLocaleString('en-IN')} are covered. New episodes are added as they release, but we do not guarantee that every ongoing episode will be updated.`) : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
+    ${warn ? row('Note', warn) : ''}${free ? '' : row('Forwarding', o.fwd ? 'Forwarding &amp; saving allowed' : '&#128274; Protected: no forwarding')}
     ${row('Price', owned ? 'Owned' : planPrice(o) + (o.credit && !free ? ` (upgrade credit -${money(o.credit)})` : ''), 'pdp')}
     ${free && !owned ? `<button class="btn block" data-free="${o.from || 1}">Listen free</button>` : ''}</div>`;
+}
+function packDetailHtml(){
+  const o = visOpts().find(x => planKind(x) === 'pack' && !x.hidden && String(x.id) === String(V.pack)); if (!o) return '';
+  return planDetailHtml(o);
 }
 function plansHtml(){
   return plansMarkup(visOpts(), true);
 }
 function plansMarkup(opts, detail){                          // shared by the story page and the admin preview
   const g = planGroups(opts);
+  const detFor = list => { if (!detail || V.det == null) return ''; const o = list.find(x => String(x.id) === String(V.det)); return o ? planDetailHtml(o) : ''; };      // tapped Full story / rental plan: its full detail right under the row
   const sec = (title, hint, inner) => `<div class="pl-sec"><div class="pl-h"><b>${title}</b><small>${hint}</small></div>${inner}</div>`;
   const dots = n => n > 1 ? `<div class="pl-dots">${Array.from({length: n}, (_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</div>` : '';
   const none = t => `<div class="by" style="padding:0 16px 8px">${t}</div>`;
-  return sec('&#128081; Full Story plans', g.show.length > 1 ? 'Swipe for more' : '', g.show.length ? `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}` : none('No full story plan yet'))
+  return sec('&#128081; Full Story plans', g.show.length > 1 ? 'Swipe for more' : '', g.show.length ? `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}${detFor(g.show)}` : none('No full story plan yet'))
     + sec('&#128230; Episode packs', g.pack.length ? 'Tap a range for details' : '', g.pack.length ? `<div class="pl-row" data-row="pack">${g.pack.map(packCardHtml).join('')}</div>${detail ? packDetailHtml() : ''}` : none('No episode packs yet'))
-    + sec('&#9203; Rental plans', g.rent.length > 1 ? 'Swipe for more' : '', g.rent.length ? `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>` : none('No rental plans yet'));
+    + sec('&#9203; Rental plans', g.rent.length > 1 ? 'Swipe for more' : '', g.rent.length ? `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>${detFor(g.rent)}` : none('No rental plans yet'));
 }
 document.addEventListener('scroll', e => {                  // the dots under the one-at-a-time row follow the slide
   const r = e.target; if (!r || !r.classList || !r.classList.contains('one')) return;
@@ -2685,7 +2784,7 @@ function renderStory(){
   const range = rangeOf(s.options || []);
   const cards = topicCards().map((t, i) => {
     const opts = optsFor(t.id);
-    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${t.n} episodes</small><span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
+    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${esc(epRange(t.first, t.last, t.n))}</small><span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
   }).join('');
   el.innerHTML = `<div class="sh">${heroBg(s)}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
@@ -2693,7 +2792,7 @@ function renderStory(){
       <div class="tags">${mainGenre(s) ? `<span class="tag gold">${esc(mainGenre(s))}</span>` : ''}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
-    <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || V.totalAll || 0)}</b></div>
+    <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || (s.ep_first && s.ep_last ? s.ep_first + '-' + s.ep_last : V.totalAll || 0))}</b></div>
       <div class="stat"><small>${tr('shrs')}</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}${act}
     ${showPlans ? `<h3 class="h3" id="plans">${tr('splan')}</h3><div id="planPills">${plansHtml()}</div>` : (a.admin ? adminPlansHtml() : '')}
@@ -2705,7 +2804,7 @@ function renderTopicPage(){
   const t = topicCards().find(x => x.id === V.topic) || {name: 'Episodes', n: V.total, note: ''};
   const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
-    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${t.n} episodes | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
+    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${esc(epRange(t.first, t.last, t.n))} | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
     ${full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
@@ -2726,6 +2825,7 @@ function epRow(e){
 function renderEps(){
   const box = $('#epBox'); if (!box) return;
   const pages = Math.max(1, Math.ceil(V.total / PAGE_SIZE));
+  const tcd = topicCards().find(x => x.id === (V.topic || '')), pgCount = !V.q && V.filter === 'all' && tcd ? epRange(tcd.first, tcd.last, V.total) : `${V.total} episodes`;
   const ctl = `<div class="ctl"><input id="epq" type="search" inputmode="search" placeholder="Search episode number or title" value="${esc(V.q)}" aria-label="Search episodes">
     <select id="epf" aria-label="Filter episodes"><option value="all">All episodes</option><option value="unlocked">Unlocked only</option><option value="locked">Locked only</option></select></div>`;
   let body;
@@ -2734,7 +2834,7 @@ function renderEps(){
   else if (!V.eps.length) body = `<div class="empty">${V.q || V.filter !== 'all' ? 'No episodes match your search or filter.' : 'Episodes will appear here soon.'}</div>`;
   else body = V.eps.map(epRow).join('');
   const pager = V.total > PAGE_SIZE ? `<div class="pager"><button class="btn ghost small" data-pg="prev" ${V.page <= 1 ? 'disabled' : ''} aria-label="Previous page">Prev</button>
-    <span>Page ${V.page} of ${pages}<br>${V.total} episodes</span><button class="btn ghost small" data-pg="next" ${V.page >= pages ? 'disabled' : ''} aria-label="Next page">Next</button></div>
+    <span>Page ${V.page} of ${pages}<br>${pgCount}</span><button class="btn ghost small" data-pg="next" ${V.page >= pages ? 'disabled' : ''} aria-label="Next page">Next</button></div>
     <div class="jump"><input id="epJump" type="number" min="1" max="${pages}" inputmode="numeric" placeholder="Go to page (1-${pages})" aria-label="Jump to page"><button class="btn ghost small" id="epGo">Go</button></div>` : '';
   const keep = document.activeElement && document.activeElement.id === 'epq';
   const sendbar = `<div class="by" style="padding:0 16px 6px">Tap an episode and the audio bot opens and sends only that episode to you.</div><div class="chiprow" style="padding:0 16px 10px"><button class="chip" id="openChatBtn">Open chat</button></div>`;
@@ -3561,6 +3661,7 @@ function setTab(t){
 document.addEventListener('click', async e => {
   const t = e.target, c = s => t.closest(s);
   let m;
+  if (atcClick(c)) return;
   if (homeClick(c)) return;
   if (comboClick(c)) return;
   if ((m = c('.bnav button'))){ if (m.dataset.tab === 'browse' && S.tab === 'browse') Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover'}); return setTab(m.dataset.tab); }
@@ -3615,10 +3716,10 @@ document.addEventListener('click', async e => {
   if (c('#storyCopy')) return copyStoryLink();
   if (c('#storySearch')){ const i = $('#epq'); if (i){ i.scrollIntoView({behavior: 'smooth', block: 'center'}); setTimeout(() => i.focus(), 350); } return; }
   if ((m = c('[data-topic]'))){
-    V.topic = m.dataset.topic; V.pack = null; V.mode = 'topic'; V.page = 1; V.q = ''; V.filter = 'all'; V.eps = []; V.total = 0; V.epState = 'loading'; pickPlan(); renderStory(); $('#story').scrollTop = 0; return loadStoryPage(1);
+    V.topic = m.dataset.topic; V.pack = null; V.det = null; V.mode = 'topic'; V.page = 1; V.q = ''; V.filter = 'all'; V.eps = []; V.total = 0; V.epState = 'loading'; pickPlan(); renderStory(); $('#story').scrollTop = 0; return loadStoryPage(1);
   }
-  if ((m = c('[data-pack]'))){ const id = m.dataset.pack, o = visOpts().find(x => String(x.id) === id); V.pack = String(V.pack) === id ? null : id; if (V.pack && o && +o.price > 0 && !planOwned(o)) V.sel = o.id; return paintPlanBar(); }
-  if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; V.pack = null; return paintPlanBar(); }
+  if ((m = c('[data-pack]'))){ const id = m.dataset.pack, o = visOpts().find(x => String(x.id) === id); V.pack = id; V.det = null; if (o && +o.price > 0 && !planOwned(o)) V.sel = o.id; paintPlanBar(); const dt = $('#pkDetail'); if (dt) dt.scrollIntoView({block: 'nearest', behavior: 'smooth'}); return; }
+  if ((m = c('[data-plan]'))){ V.sel = m.dataset.plan; V.pack = null; V.det = m.dataset.plan; paintPlanBar(); const dt = $('#pkDetail'); if (dt) dt.scrollIntoView({block: 'nearest', behavior: 'smooth'}); return; }
   if (c('#sbCart')){ if (V.sel) cartToggle(V.sel); return paintPlanBar(); }
   if (c('#sbBuy')){ const oid = V.sel; if (oid) return once('buy', async () => { goBot(`buy_${V.id}_${oid}`); await sleep(1200); }); return; }
   if (c('[data-demo]')) return once('start', () => playFirst(1, true));
