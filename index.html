@@ -877,6 +877,76 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .atc-foot{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surf)}
 .atc-sel{flex:1;min-width:0;display:flex;flex-direction:column}.atc-sel small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.atc-sel b{color:var(--gold-2);font-size:19px}
 .atc-btns{display:flex;gap:8px}.atc-btns .btn{min-height:44px;padding:8px 14px;white-space:nowrap}
+
+/* Light theme — Lavender & Pearl palette */
+html[data-theme=light]{
+  --ink:#F7F5FC; --panel:#FFFFFF; --panel2:#EEEAF7; --line:#D8D0E8;
+  --gold:#7652B5; --gold-2:#56358F; --gold-rgb:118,82,181;
+  --text:#241D33; --muted:#6F6680; --soft:#443A55;
+  --ok:#21845B; --ok-rgb:33,132,91; --bad:#C34E63; --warn:#9A650D;
+  --cv-a:#E9E1F5; --cv-b:#D8CBEA; --surf:#FFFFFF; --nav-bg:#FFFFFF;
+  --sk-a:#EEEAF5; --sk-b:#F8F6FB; --feat-a:#F0EAF8; --wish-bg:rgba(255,255,255,.96);
+  color-scheme:light;
+}
+html[data-theme=light] .promo{background:linear-gradient(120deg,#EDE5F8,#FAF8FD);border-color:#C7B5E2;color:#56358F}
+html[data-theme=light] .promo small{color:#443A55}
+html[data-theme=light] .feat{background:linear-gradient(130deg,#F0EAF8,#FFFFFF);border-color:#CFC1E4}
+html[data-theme=light] .cv{border-color:#CFC1E4}
+html[data-theme=light] .bnav{background:#FFFFFF;border-top-color:#DED7EA}
+html[data-theme=light] .bnav button.on svg{background:#7652B5;color:#FFFFFF;box-shadow:0 6px 16px rgba(118,82,181,.28)}
+html[data-theme=light] .btn{background:#7652B5;border-color:#7652B5;color:#FFFFFF;box-shadow:0 3px 10px rgba(118,82,181,.16)}
+html[data-theme=light] .btn.ghost{background:transparent;color:#56358F;border-color:#BDAAD9}
+html[data-theme=light] .chip.on,html[data-theme=light] .ep.on,html[data-theme=light] .rq-chip.on,html[data-theme=light] .rq-tab.on{background:rgba(118,82,181,.10);border-color:#7652B5;color:#56358F}
+html[data-theme=light] .plan{background:rgba(118,82,181,.055);border-color:#C7B5E2}
+html[data-theme=light] .badge{background:#7652B5;color:#FFFFFF}
+html[data-theme=light] .wish.on{background:#7652B5;color:#FFFFFF}
+
+
+/* Dark + Warm themes — coordinated with the Lavender & Pearl light palette */
+html[data-theme=dark]{
+  --ink:#171321; --panel:#211B2D; --panel2:#302740; --line:#493B5C;
+  --gold:#B69AE6; --gold-2:#D2BDF4; --gold-rgb:182,154,230;
+  --text:#F5F0FC; --muted:#B9ADC9; --soft:#DED4EB;
+  --ok:#73C9A0; --ok-rgb:115,201,160; --bad:#F08A9B; --warn:#E8BD70;
+  --cv-a:#382D4B; --cv-b:#211A2E; --surf:#211B2D; --nav-bg:#1B1626;
+  --sk-a:#292136; --sk-b:#382D49; --feat-a:#342843; --wish-bg:rgba(23,19,33,.88);
+  color-scheme:dark;
+}
+html[data-theme=dark] .promo{background:linear-gradient(120deg,#382B4D,#251E33);border-color:#665080;color:#E0CEF9}
+html[data-theme=dark] .promo small{color:#E8DDF6}
+html[data-theme=dark] .feat{background:linear-gradient(130deg,#342843,#211B2D);border-color:#665080}
+html[data-theme=dark] .cv{border-color:#665080}
+html[data-theme=dark] .bnav{background:rgba(27,22,38,.96);border-top-color:#493B5C}
+html[data-theme=dark] .bnav button.on svg{background:#9B7ACB;color:#171321;box-shadow:0 6px 16px rgba(182,154,230,.25)}
+html[data-theme=dark] .btn{background:#9B7ACB;border-color:#9B7ACB;color:#171321;box-shadow:0 3px 10px rgba(182,154,230,.18)}
+html[data-theme=dark] .btn.ghost{background:transparent;color:#D2BDF4;border-color:#80689F}
+html[data-theme=dark] .chip.on,html[data-theme=dark] .ep.on,html[data-theme=dark] .rq-chip.on,html[data-theme=dark] .rq-tab.on{background:rgba(182,154,230,.16);border-color:#B69AE6;color:#E3D4FA}
+html[data-theme=dark] .plan{background:rgba(182,154,230,.09);border-color:#665080}
+html[data-theme=dark] .badge{background:#B69AE6;color:#21182E}
+html[data-theme=dark] .wish.on{background:#9B7ACB;color:#171321}
+
+html[data-theme=warm]{
+  --ink:#F4EFE7; --panel:#FFFCF7; --panel2:#EEE6DD; --line:#D8CBBB;
+  --gold:#80639F; --gold-2:#62477F; --gold-rgb:128,99,159;
+  --text:#30283A; --muted:#766B7C; --soft:#51465C;
+  --ok:#287A59; --ok-rgb:40,122,89; --bad:#B94F61; --warn:#95620D;
+  --cv-a:#E9DFEB; --cv-b:#DED1E2; --surf:#FFFCF7; --nav-bg:#FBF7F0;
+  --sk-a:#EEE6E8; --sk-b:#F8F3EC; --feat-a:#EDE4EF; --wish-bg:rgba(255,252,247,.94);
+  color-scheme:light;
+}
+html[data-theme=warm] .promo{background:linear-gradient(120deg,#E9DFEB,#FBF7F0);border-color:#CBBBD5;color:#62477F}
+html[data-theme=warm] .promo small{color:#51465C}
+html[data-theme=warm] .feat{background:linear-gradient(130deg,#EDE4EF,#FFFCF7);border-color:#CBBBD5}
+html[data-theme=warm] .cv{border-color:#CBBBD5}
+html[data-theme=warm] .bnav{background:#FBF7F0;border-top-color:#D8CBBB}
+html[data-theme=warm] .bnav button.on svg{background:#80639F;color:#FFFFFF;box-shadow:0 6px 16px rgba(128,99,159,.22)}
+html[data-theme=warm] .btn{background:#80639F;border-color:#80639F;color:#FFFFFF;box-shadow:0 3px 10px rgba(128,99,159,.16)}
+html[data-theme=warm] .btn.ghost{background:transparent;color:#62477F;border-color:#B9A6C8}
+html[data-theme=warm] .chip.on,html[data-theme=warm] .ep.on,html[data-theme=warm] .rq-chip.on,html[data-theme=warm] .rq-tab.on{background:rgba(128,99,159,.11);border-color:#80639F;color:#62477F}
+html[data-theme=warm] .plan{background:rgba(128,99,159,.07);border-color:#CBBBD5}
+html[data-theme=warm] .badge{background:#80639F;color:#FFFFFF}
+html[data-theme=warm] .wish.on{background:#80639F;color:#FFFFFF}
+
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
