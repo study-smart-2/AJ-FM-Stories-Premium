@@ -923,8 +923,17 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
 /* text that sits on the accent colour must follow it in every theme */
 .toast,#admin .admin-mark,.cmb-best,.cmb-tick,.badge,.btn,.mini button#mPlay,.fp #fPlay,.wish.on,.plc .bdg,.bnav button.on svg{color:var(--on-gold)}
 .btn.ghost{color:var(--gold-2)}.btn.danger{color:var(--bad)}
+
+/* plan cards: every plan its own card; plans the cart rules do not allow right now */
+.pl-col{display:flex;flex-direction:column;gap:10px;padding:2px 16px 6px}
+.plc.blk,.atcp.blk{opacity:.62}
+.plc.have.inc::after{content:"Included"}
+.plwhy{display:block;color:var(--warn);font-size:12px;line-height:1.4;margin-top:4px}
+.plwhy.sb{padding:6px 16px 0}
+.atc-btns .plwhy{flex:1;margin:0 10px 0 0}
+.btn:disabled{opacity:.5;box-shadow:none}
 </style>
-<script>document.documentElement.setAttribute('data-theme','dark');</script>
+<script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
 <body>
 <div id="splash" role="status" aria-live="polite">
@@ -938,6 +947,7 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
   <div class="hgreet" id="hgreet"></div>
   <div class="hicons">
     <button class="hic" data-act="lang" id="langBtn" aria-label="Change language"></button>
+    <button class="hic" data-act="theme" id="themeBtn" aria-label="Change theme"></button>
     <button class="hic" id="searchBtn" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
     <button class="hic" id="bellBtn" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z"/><path d="M10 21h4"/></svg><i class="dot" id="bellDot" hidden></i></button>
     <button class="ib" id="adminBtn" hidden aria-label="Open admin panel">Admin</button>
@@ -1193,7 +1203,7 @@ Object.assign(TR.hing, {cmbtitle:'Story Combinations', cmbbest:'BEST DEAL', cmba
   cmbmax:'Aap zyada se zyada 5 kahaniyan chun sakte ho', cmbmin:'Kam se kam 2 kahaniyan chuno', cmbchecking:'Check ho raha hai...', cmbfull:'Sirf full story plans', cmbcredit:'upgrade credit', cmbnosize:'Is size ke combo abhi nahi hain.', cmbnolist:'Koi kahani nahi mili.'});
 const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi'}, LANG_NAME = {en:'English', hi:'हिन्दी', hing:'Hinglish'};
 let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
-let THEME = 'dark';      // one fixed look (dark + warm): members cannot choose a colour theme
+let THEME = store.get('ajt', 'dark'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'dark';      // Dark (warm) is the default; Light and Warm stay available
 const tr = (k, v) => { let s = (TR[LANG] && TR[LANG][k]) || TR.en[k] || k; if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]); return s; };
 // ---- auto-translate story text (description, notes) into the app language; the server caches every translation
 const TC = {}, TQ = new Set(); let TT = 0;
@@ -1211,6 +1221,7 @@ const THEME_ICON = {dark:'\u263E', light:'\u2600', warm:'\uD83D\uDD25'}, THEME_B
 function applyTheme(){
   document.documentElement.dataset.theme = THEME;
   try{ if (tg){ tg.setHeaderColor(THEME_BG[THEME]); tg.setBackgroundColor(THEME_BG[THEME]); } }catch(e){}
+  const tb = $('#themeBtn'); if (tb) tb.textContent = THEME_ICON[THEME];
   $$('.thopt').forEach(b => { const on = b.dataset.setTheme === THEME; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
 }
 function setTheme(t){
@@ -1228,7 +1239,7 @@ function renderHeader(){
   const hr = new Date().getHours(), g = hr < 12 ? 'gm' : hr < 17 ? 'ga' : 'ge', wish = S.home && S.home.festive;
   $('#hgreet').innerHTML = `<small>${tr(g)}, ${esc(NAME)}</small>` + (wish ? `<b>${esc(wish.replace(/\{name\}/g, NAME))}</b>` : `<b>AJ's FM Stories</b>`);
   const av = $('#avatarBtn'); av.textContent = avatarInit(); av.style.backgroundImage = TGU.photo_url ? `url('${TGU.photo_url}')` : '';
-  $('#langBtn').textContent = LANG_LABEL[LANG];
+  $('#langBtn').textContent = LANG_LABEL[LANG]; $('#themeBtn').textContent = THEME_ICON[THEME];
   $('#bellDot').hidden = !(S.notices.length && S.notices[0].id > +store.get('ajn', '0'));
 }
 
@@ -1393,6 +1404,8 @@ async function removeCont(id){
 function homeClick(c){
   let m;
   if (c('[data-act=lang]')){ cycleLang(); return true; }
+  { const m = c('[data-set-theme]'); if (m){ setTheme(m.dataset.setTheme); return true; } }
+  if (c('[data-act=theme]')){ cycleTheme(); return true; }
   if (c('#searchBtn')){ renderSearch(); openSheet('search'); setTimeout(() => { const i = $('#sq'); if (i) i.focus(); }, 60); return true; }
   if (c('#bellBtn')){ openNotif(); return true; }
   if (c('#avatarBtn')){ setTab('me'); return true; }
@@ -1858,11 +1871,13 @@ const topicNameOf = (s, o) => { const t = o && o.topic && ((s && s.topics) || []
 function cartToggle(oid){
   const s = V.story, o = s && s.options.find(x => String(x.id) === String(oid)); if (!o) return false;
   if (cartHas(V.id, oid)){ CART = CART.filter(i => !(i.sid === V.id && String(i.oid) === String(oid))); cartSave(); toast(tr('cremd')); return false; }
-  CART.push({sid: V.id, oid: o.id, title: s.title, cover: s.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(s, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0, eps: isSnap(o) ? snapEps(o, s) : ''}); cartSave(); toast(tr('cadded')); return true;
+  const why = cartBlock(V.id, s, o, V.access); if (why){ toast(why, 4500); return false; }
+  CART.push({sid: V.id, oid: o.id, title: s.title, cover: s.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(s, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0, eps: isSnap(o) ? snapEps(o, s) : '', kind: planKind(o), span: planSpan(o, s)}); cartSave(); toast(tr('cadded')); return true;
 }
 function cartToggleOpt(sid, s, o){                      // add / remove any plan of any story (used by the card button)
   if (cartHas(sid, o.id)){ CART = CART.filter(i => !(i.sid === sid && String(i.oid) === String(o.id))); cartSave(); toast(tr('cremd')); return false; }
-  CART.push({sid, oid: o.id, title: s.title, cover: s.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(s, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0, eps: isSnap(o) ? snapEps(o, s) : ''}); cartSave(); toast(tr('cadded')); return true;
+  const why = cartBlock(sid, s, o, AT.a); if (why){ toast(why, 4500); return false; }
+  CART.push({sid, oid: o.id, title: s.title, cover: s.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(s, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0, eps: isSnap(o) ? snapEps(o, s) : '', kind: planKind(o), span: planSpan(o, s)}); cartSave(); toast(tr('cadded')); return true;
 }
 /* ---------- Add to cart on a story card: "Select plan" sheet, one line per topic ---------- */
 const AT = {sid: '', s: null, a: null, sel: null};
@@ -1877,8 +1892,8 @@ function atcRows(){                                         // Topic 1 {name} ->
   return rows;
 }
 function atcChip(o, i){
-  const own = planOwnedIn(AT.a, o), on = String(o.id) === String(AT.sel) && i === AT.row, off = offPct(o);
-  return `<button class="atcp${on ? ' on' : ''}${own ? ' have' : ''}" data-atcplan="${esc(o.id)}" data-atcrow="${i}" aria-pressed="${on}"><b>${esc(planKind(o) === 'pack' ? packName(o) : o.label)}</b><small>${esc(atcKindSub(o, AT.s))}</small><em>${own ? 'Owned' : money(payOf(o))}${off && !own ? ` <i class="off">${off}% off</i>` : ''}</em></button>`;
+  const own = planOwnedIn(AT.a, o, AT.s), on = String(o.id) === String(AT.sel) && i === AT.row, off = offPct(o), blk = !own && cartBlock(AT.sid, AT.s, o, AT.a);
+  return `<button class="atcp${on ? ' on' : ''}${own ? ' have' : ''}${blk ? ' blk' : ''}" data-atcplan="${esc(o.id)}" data-atcrow="${i}" aria-pressed="${on}"><b>${esc(planKind(o) === 'pack' ? packName(o) : o.label)}</b><small>${esc(atcKindSub(o, AT.s))}</small><em>${own ? 'Owned' : money(payOf(o))}${off && !own ? ` <i class="off">${off}% off</i>` : ''}</em></button>`;
 }
 function atcPaint(){
   const ov = $('#atcOv'); if (!ov) return;
@@ -1886,8 +1901,8 @@ function atcPaint(){
   ov.querySelectorAll('.atcrow').forEach(r => { keep[r.dataset.i] = r.scrollLeft; });
   const s = AT.s, a = AT.a, rows = atcRows(), o = (s.options || []).find(x => String(x.id) === String(AT.sel));
   const body = rows.map((r, i) => `<div class="atc-t"><div class="atc-th"><b>${esc(r.name)}</b><small>${esc(r.sub)}</small></div><div class="atcrow" data-i="${i}">${r.list.map(x => atcChip(x, i)).join('')}</div>${o && i === AT.row && r.list.includes(o) ? planDetailHtml(o, s, a) : ''}</div>`).join('');
-  const own = !!o && planOwnedIn(a, o), inCart = !!o && cartHas(AT.sid, o.id);
-  const foot = o ? `<div class="atc-foot"><div class="atc-sel"><small>${esc(o.label)}</small><b>${money(payOf(o))}</b></div><div class="atc-btns"><button class="btn${inCart ? ' ok' : ''}" id="atcCart"${own ? ' disabled' : ''}>${own ? 'Already owned' : inCart ? '&#10003; In cart' : '&#128722; Add to cart'}</button></div></div>`
+  const own = !!o && planOwnedIn(a, o, s), inCart = !!o && cartHas(AT.sid, o.id), why = o && !own && !inCart ? cartBlock(AT.sid, s, o, a) : '';
+  const foot = o ? `<div class="atc-foot"><div class="atc-sel"><small>${esc(o.label)}</small><b>${money(payOf(o))}</b></div><div class="atc-btns">${why ? `<small class="plwhy">${esc(why)}</small>` : ''}<button class="btn${inCart ? ' ok' : ''}" id="atcCart"${own || why ? ' disabled' : ''}>${own ? 'Already owned' : inCart ? '&#10003; In cart' : '&#128722; Add to cart'}</button></div></div>`
     : '<div class="atc-foot"><button class="btn block" disabled>Select a plan</button></div>';
   ov.innerHTML = `<div class="atc-sheet" role="dialog" aria-label="Select plan"><div class="atc-grab"></div><div class="atc-head"><b>Select plan</b><button class="atc-x" data-atcx="1" aria-label="Close">&times;</button></div>
     <div class="atc-story">${lthumb(s.cover)}<span><b>${esc(s.title)}</b><small>${esc(rangeOf(s.options || []))}</small></span></div>
@@ -1915,10 +1930,11 @@ function atcClick(c){
   const ov = $('#atcOv'); if (!ov) return false;
   if (c('[data-atcx]') || (c('#atcOv') && !c('.atc-sheet'))){ ov.remove(); return true; }
   if ((m = c('[data-atcplan]'))){ AT.sel = m.dataset.atcplan; AT.row = +m.dataset.atcrow || 0; atcPaint(); const dt = $('#atcOv #pkDetail'); if (dt) dt.scrollIntoView({block: 'nearest', behavior: 'smooth'}); return true; }
-  if (c('#atcCart')){ const o = (AT.s.options || []).find(x => String(x.id) === String(AT.sel)); if (o && !planOwnedIn(AT.a, o)) cartToggleOpt(AT.sid, AT.s, o); atcPaint(); return true; }
+  if (c('#atcCart')){ const o = (AT.s.options || []).find(x => String(x.id) === String(AT.sel)); if (o && !planOwnedIn(AT.a, o, AT.s)) cartToggleOpt(AT.sid, AT.s, o); atcPaint(); return true; }
   return !!c('#atcOv');
 }
-async function refreshCart(){                       // drop what is already owned or no longer sold; refresh price and plan name
+let _rcAt = 0;
+async function refreshCart(){ _rcAt = Date.now();                       // drop what is already owned or no longer sold; refresh price and plan name
   const sids = [...new Set(CART.map(i => i.sid))]; if (!sids.length) return;
   let changed = false, owned = 0;
   await Promise.all(sids.map(async sid => {
@@ -1929,7 +1945,7 @@ async function refreshCart(){                       // drop what is already owne
         if (i.sid !== sid) return true;
         const o = opts.find(x => String(x.id) === String(i.oid));
         if (!o || +o.price === 0){ changed = true; return false; }
-        if (a.full || a.admin || (a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0))){ changed = true; owned++; return false; }
+        if (a.admin || planOwnedIn(a, o, d.story)){ changed = true; owned++; return false; }
         const tn = topicNameOf(d.story, o); if (payOf(o) !== i.price || o.label !== i.label || (i.topicName || '') !== tn){ i.price = payOf(o); i.label = o.label; i.topic = o.topic || ''; i.topicName = tn; changed = true; }
         return true;
       });
@@ -1957,6 +1973,7 @@ function renderCart(){
 }
 function askConfirm(msg, ok){ if (tg && tg.showConfirm) tg.showConfirm(msg, y => { if (y) ok(); }); else if (confirm(msg)) ok(); }
 function renderMe(){
+  const sel = `<div class="thsel">${['dark','light','warm'].map(k => `<button class="thopt${THEME === k ? ' on' : ''}" data-set-theme="${k}" aria-pressed="${THEME === k}"><span class="sw">${THEME_SW[k].map(c2 => `<i style="background:${c2}"></i>`).join('')}</span>${THEME_ICON[k]} ${tr({dark:'tdark', light:'tlight', warm:'twarm'}[k])}</button>`).join('')}</div>`;
   const item = (ic, label, attr) => `<button class="pm-i" ${attr}><span class="ic">${ic}</span><span class="tx">${label}</span><span class="ar">&rsaquo;</span></button>`;
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
@@ -1964,7 +1981,7 @@ function renderMe(){
     <div style="margin-top:14px">${ownComboBlock()}</div>
     <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="guide"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="help"')}${item('\u2B50', tr('pfb'), 'id="pfbBtn"')}</div>
     <h3 class="lsub">${tr('pdisp')}</h3>
-    <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button></div>
+    <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
     <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
   api('/api/library').then(d => { const e = $('#pcOwn'); if (e) e.textContent = d.stories.length; }).catch(() => {});
   if (!S.wish) api('/api/wishlist').then(d => { S.wish = new Set(d.ids); const e = $('#pcWish'); if (e) e.textContent = S.wish.size; }).catch(() => {});
@@ -2531,7 +2548,8 @@ async function swapToNext(){
   catch(e){ if (seq !== P.seq) return; if (e.name === 'NotAllowedError') P.state = 'paused'; else { P.state = 'error'; P.err = 'Could not start the next episode.'; } }
   paintAll();
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden){ saveProgress(true, false, true); keepAlive(); } else offResumeAll(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden){ saveProgress(true, false, true); keepAlive(); } else { offResumeAll(); if (CART.length && Date.now() - _rcAt > 8000) refreshCart(); } });      // back from the bot after paying: bought plans leave the cart
+setTimeout(() => { if (CART.length) refreshCart(); }, 2500);
 window.addEventListener('pagehide', () => saveProgress(true, false, true));
 if (tg && tg.onEvent){ try{ tg.onEvent('deactivated', () => { saveProgress(true, false, true); keepAlive(); }); }catch(e){} }
 
@@ -2798,7 +2816,7 @@ function ownedSummary(a){
   if (a.full) return `<div class="access"><b>Full access</b>${a.ranges.filter(r => r.from === null)[0].expires ? ' until ' + dateStr(a.ranges.filter(r => r.from === null)[0].expires) : ' (yours to keep)'}</div>`;
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
-const planOwnedIn = (a, o) => !!(a && (a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
+const planOwnedIn = (a, o, s) => !!(a && ((a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)) || ownedCover(a, o, s || V.story)));
 const planOwned = o => planOwnedIn(V.access, o);
 const scopeOf = o => o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes';
 const accessOf = o => Number(o.days) > 0 ? o.days + ' days' : tr('lkeep');
@@ -2811,7 +2829,7 @@ const snapEps = (o, s) => {                                 // "Episodes 1 to 40
   const n = tp ? tp.episodes : (s.episodes || 0);
   return n ? `${n} episodes` : '';
 };
-const planSub = (o, s) => isSnap(o) ? `\u{1F4DA} ${snapEps(o, s) || 'All episodes'} | ${accessOf(o)}` : o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}${isRent(o) ? ' | ' + accessOf(o) : ''}` : `${scopeOf(o)} | ${accessOf(o)}`;
+const planSub = (o, s) => isSnap(o) ? `\u{1F4DA} ${snapEps(o, s) || 'All episodes'} | ${accessOf(o)}` : o.ongoing ? `Ongoing | includes ${o.from ? o.to - o.from + 1 : ''} episodes, till ${o.to}${isRent(o) ? ' | ' + accessOf(o) : ''}` : planKind(o) === 'pack' && o.from && o.to ? `${o.to - o.from + 1} episodes | ${accessOf(o)}` : `${scopeOf(o)} | ${accessOf(o)}`;
 const epn = e => e.to && e.to > e.no ? e.no + ' - ' + e.to : e.no;      // a file can hold many episodes: 101 - 200
 const payOf = o => o.pay != null ? +o.pay : +o.price;                // what this member pays (after the upgrade credit)
 function pickPlan(){
@@ -2821,7 +2839,47 @@ function pickPlan(){
 const planKind = o => { const k = o && o.kind; return k === 'full' || k === 'pack' || k === 'rental' ? k : (Number(o.days) > 0 ? 'rental' : o.auto ? 'pack' : o.topic ? (/^\s*(episodes?\s*)?\d+\s*(-|\u2013|to)\s*(\d+|ongoing)\s*$/i.test(o.label || '') ? 'pack' : 'full') : 'full'); };      // older plans have no kind yet: a topic plan named like a range is a pack
 const isRent = o => planKind(o) === 'rental';
 const byOrder = (a, b) => (a.order || 9999) - (b.order || 9999);
-const packName = o => o.from ? `Episode ${o.from} to ${o.ongoing || !o.to ? 'Ongoing' : o.to}` : o.label;
+const packName = o => o.from ? `Episode ${o.from} To ${o.ongoing || !o.to ? 'Ongoing' : o.to}` : o.label;
+/* ---------- plan rules for the cart ----------
+   Section 1 (full story / topic plan): only ONE in the cart; once chosen, nothing that overlaps its episodes can be added, but episodes outside it can (packs, rentals).
+   Section 2 (episode packs): any pack can be added.
+   Section 3 (rentals): one at a time, and the next one only after the running rental has ended. */
+const SPAN_INF = 1e9;
+function planSpan(o, s){                                    // [first, last] episode numbers a plan covers
+  if (o.from) return [+o.from, o.to ? +o.to : SPAN_INF];
+  const tp = o.topic && ((s && s.topics) || []).find(x => x.id === o.topic), f = tp ? (+tp.first || 1) : 1, l = tp ? +tp.last : +(s && s.ep_last);
+  return [f, isSnap(o) && l ? l : SPAN_INF];
+}
+const spansHit = (x, y) => x[0] <= y[1] && y[0] <= x[1];
+const itemKind = i => i.kind || (Number(i.days) > 0 ? 'rental' : i.from ? 'pack' : 'full');
+const itemSpan = i => Array.isArray(i.span) ? i.span : (i.from ? [+i.from, i.to ? +i.to : SPAN_INF] : [1, SPAN_INF]);
+function coveredBy(spans, t){                               // is [first, last] t completely inside the episodes of these spans taken together?
+  const m = spans.filter(x => x[1] >= x[0]).sort((p, q) => p[0] - q[0]), out = []; let cur = null;
+  m.forEach(x => { if (cur && x[0] <= cur[1] + 1) cur[1] = Math.max(cur[1], x[1]); else { cur = [x[0], x[1]]; out.push(cur); } });
+  return out.some(r => r[0] <= t[0] && r[1] >= t[1]);
+}
+function ownedCover(a, o, s){                               // every episode of this plan is already in what the member keeps for good
+  if (!a) return false;
+  return coveredBy((a.ranges || []).filter(r => !r.expires).map(r => !r.from ? [1, SPAN_INF] : [+r.from, r.to ? +r.to : SPAN_INF]), planSpan(o, s));      // a running rental is not ownership for keeps
+}
+const planExact = (a, o) => !!(a && (a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)));
+/* A plan is refused only when ALL its episodes are already covered (owned, or in the cart); a plan that adds even one new episode is fine.
+   e.g. owns 1001-1300: 1001-1100 is refused, 1001-1500 is allowed. A full plan frozen at 1-1400 allows only 1001-1500. */
+function cartBlock(sid, s, o, a){                           // '' when the plan can go into the cart, else the reason
+  if (!s || !o || cartHas(sid, o.id)) return '';
+  const k = planKind(o), sp = planSpan(o, s), mine = CART.filter(i => i.sid === sid);
+  if (planOwnedIn(a, o, s)) return 'Already included in what you own.';
+  const s1 = mine.find(i => itemKind(i) === 'full');
+  if (k === 'full' && s1) return `Only one full story plan can be in the cart. Remove "${s1.label}" first.`;
+  const inc = mine.filter(i => itemKind(i) !== 'rental');
+  if (inc.length && coveredBy(inc.map(itemSpan), sp)) return `Already included in ${inc.filter(i => spansHit(itemSpan(i), sp)).map(i => `"${i.label}"`).join(' + ')} (in your cart).`;
+  if (k === 'rental'){
+    if (mine.some(i => itemKind(i) === 'rental')) return 'Only one rental at a time. Remove the rental in your cart first.';
+    const run = ((a && a.ranges) || []).filter(r => r.expires);
+    if (run.length) return `Your rental is still running. You can rent again after it ends on ${dateStr(Math.max(...run.map(r => +r.expires)))}.`;
+  }
+  return '';
+}
 function planGroups(opts){                                  // 1 full story plans, 2 episode packs, 3 rentals; hidden plans never show, the admin's position decides the order
   const live = opts.filter(o => !o.hidden), by = k => live.filter(o => planKind(o) === k).sort(byOrder);
   return {show: by('full'), pack: by('pack'), rent: by('rental')};
@@ -2833,10 +2891,10 @@ const fullNoteHtml = o => (storyDone() || o.nonote) ? '' : isSnap(o)
   ? '<span class="pn warn">\u{1F4CC} Includes every episode available on the day your access starts. Episodes uploaded later are not included.</span>'
   : '<span class="pn warn">\u26A0\uFE0F Note: we don\'t guarantee to supply all upcoming episodes.<br>\u{1F6D1} Uploading of episodes can stop any day for this story.</span>';
 function planCardHtml(o){
-  const owned = planOwned(o), free = Number(o.price) === 0, on = !free && String(o.id) === String(V.sel);
-  const body = `${o.badge ? `<span class="bdg">&#9733; ${esc(o.badge)}</span>` : ''}${isRent(o) ? `<span class="rtag">&#9203; ${o.days}-day rental</span>` : ''}<b>${esc(o.label)}</b><small>${esc(planSub(o))}</small>${planKind(o) === 'full' ? fullNoteHtml(o) : ''}${o.fwd ? '<small class="fwdb">\u{1F4E4} Forwarding &amp; saving allowed</small>' : (Number(o.price) > 0 ? '<small class="fwdb off">\u{1F512} Protected: no forwarding</small>' : '')}${isRent(o) ? `<small>Access starts when your payment is approved</small>` : ''}${o.note ? `<span class="pn">${esc(o.note)}</span>` : ''}${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}<span class="pp">${owned ? 'Owned' : planPrice(o)}</span>`;
-  if (owned) return `<div class="plc have">${body}</div>`;
-  return `<button class="plc${isRent(o) ? ' rental' : ''}${free ? ' free' : ''}${on ? ' on' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
+  const owned = planOwned(o), inc = owned && !planExact(V.access, o), free = Number(o.price) === 0, on = !free && String(o.id) === String(V.sel), why = !owned && !free ? cartBlock(V.id, V.story, o, V.access) : '';
+  const body = `${o.badge ? `<span class="bdg">&#9733; ${esc(o.badge)}</span>` : ''}${isRent(o) ? `<span class="rtag">&#9203; ${o.days}-day rental</span>` : ''}<b>${esc(planKind(o) === 'pack' ? packName(o) : o.label)}</b><small>${esc(planSub(o))}</small>${planKind(o) === 'full' ? fullNoteHtml(o) : ''}${o.fwd ? '<small class="fwdb">\u{1F4E4} Forwarding &amp; saving allowed</small>' : (Number(o.price) > 0 ? '<small class="fwdb off">\u{1F512} Protected: no forwarding</small>' : '')}${isRent(o) ? `<small>Access starts when your payment is approved</small>` : ''}${o.note ? `<span class="pn">${esc(o.note)}</span>` : ''}${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}${why ? `<small class="plwhy">&#9888;&#65039; ${esc(why)}</small>` : ''}<span class="pp">${owned ? (inc ? 'Included in your plan' : 'Owned') : planPrice(o)}</span>`;
+  if (owned) return `<div class="plc have${inc ? ' inc' : ''}">${body}</div>`;
+  return `<button class="plc${isRent(o) ? ' rental' : ''}${free ? ' free' : ''}${on ? ' on' : ''}${why ? ' blk' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
 }
 const packCardHtml = o => { const open = String(o.id) === String(V.pack); return `<button class="pk${open ? ' on' : ''}${planOwned(o) ? ' have' : ''}" data-pack="${esc(o.id)}" aria-pressed="${open}">${esc(packName(o))}</button>`; };
 function planDetailHtml(o, s, a){                            // every detail of one plan; used on the story page and in the Select plan sheet
@@ -2867,7 +2925,7 @@ function plansMarkup(opts, detail){                          // shared by the st
   const dots = n => n > 1 ? `<div class="pl-dots">${Array.from({length: n}, (_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</div>` : '';
   const none = t => `<div class="by" style="padding:0 16px 8px">${t}</div>`;
   return sec('&#128081; Full Story plans', g.show.length > 1 ? 'Swipe for more' : '', g.show.length ? `<div class="pl-row one" data-row="show">${g.show.map(planCardHtml).join('')}</div>${dots(g.show.length)}${detFor(g.show)}` : none('No full story plan yet'))
-    + sec('&#128230; Episode packs', g.pack.length ? 'Tap a range for details' : '', g.pack.length ? `<div class="pl-row" data-row="pack">${g.pack.map(packCardHtml).join('')}</div>${detail ? packDetailHtml() : ''}` : none('No episode packs yet'))
+    + sec('&#128230; Episode packs', g.pack.length ? 'Pick any pack' : '', g.pack.length ? `<div class="pl-col" data-row="pack">${g.pack.map(o => planCardHtml(o) + (detail && V.det != null && String(V.det) === String(o.id) ? planDetailHtml(o) : '')).join('')}</div>` : none('No episode packs yet'))
     + sec('&#9203; Rental plans', g.rent.length > 1 ? 'Swipe for more' : '', g.rent.length ? `<div class="pl-row rent" data-row="rent">${g.rent.map(planCardHtml).join('')}</div>${detFor(g.rent)}` : none('No rental plans yet'));
 }
 document.addEventListener('scroll', e => {                  // the dots under the one-at-a-time row follow the slide
@@ -2877,9 +2935,9 @@ document.addEventListener('scroll', e => {                  // the dots under th
 }, true);
 function sbarHtml(){
   const o = visOpts().find(x => String(x.id) === String(V.sel)); if (!o) return '';
-  const inCart = cartHas(V.id, o.id);
+  const inCart = cartHas(V.id, o.id), why = !inCart && !planOwned(o) ? cartBlock(V.id, V.story, o, V.access) : '';
   return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}${o.credit ? ' | upgrade credit -' + money(o.credit) : ''}</small><b>${money(payOf(o))}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
-    <div class="sb-btns">${V.totalAll ? '<button class="btn ghost" data-demo="1">Click for Demo</button>' : '<span></span>'}<button class="btn${inCart ? ' ok' : ''}" id="sbCart">${inCart ? '&#10003; In cart' : '&#128722; ADD TO CART'}</button></div>
+    <div class="sb-btns">${V.totalAll ? '<button class="btn ghost" data-demo="1">Click for Demo</button>' : '<span></span>'}<button class="btn${inCart ? ' ok' : ''}" id="sbCart"${why ? ' disabled' : ''}>${inCart ? '&#10003; In cart' : '&#128722; ADD TO CART'}</button></div>${why ? `<div class="plwhy sb">&#9888;&#65039; ${esc(why)}</div>` : ''}
     ${comboBarBtn(o)}`;
 }
 function paintPlanBar(){
