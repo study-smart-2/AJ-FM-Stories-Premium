@@ -785,6 +785,47 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .fb-stars{display:flex;gap:2px;padding:0 16px 12px}.fb-star{font-size:30px;line-height:1;background:none;border:0;color:var(--muted);padding:4px 6px;min-height:46px;min-width:42px}.fb-star.on{color:var(--gold)}
 .fb-star-s{color:var(--gold);letter-spacing:2px;font-size:15px}.fb-msg{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px}
 .fb-cnt{display:block;text-align:right;color:var(--muted);font-size:12px;margin-top:4px}.fb-foot{margin:0 16px 12px;text-align:center}
+
+/* compact tick chips (coupon editor): the checkbox stays small, the whole pill is tappable */
+.tickrow{display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 2px}
+.field .tick,.tick{display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);cursor:pointer;min-height:38px;font-size:14px;line-height:1.2;color:var(--text)}
+.field .tick input,.tick input{width:18px;height:18px;min-height:0;padding:0;margin:0;flex:none;accent-color:var(--gold);border-radius:4px}
+.tick:has(input:checked){border-color:var(--gold);background:rgba(var(--gold-rgb),.14);color:var(--gold-2);font-weight:700}
+.tick small{color:var(--muted);font-weight:500;font-size:12px}
+.field .hint{display:block;margin:6px 0 0;font-size:12.5px;color:var(--muted)}
+/* offers: the big title */
+.cpcard .cphead{font-size:19px;line-height:1.25;font-weight:800;color:var(--text);margin:6px 0 2px;overflow-wrap:anywhere}
+.ocard .obody>b{display:block;font-size:20px;line-height:1.25;font-weight:800}
+/* admin story details */
+.sdtop{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--ink);border-bottom:1px solid var(--line)}
+#sdet .pad{padding:12px 16px 0}
+#sdet .box{margin:0 0 14px}
+#sdet .box>b{font-size:16px}
+#sdet .sdcover{width:100%;max-height:340px;object-fit:contain;border-radius:16px;background:var(--panel);margin-bottom:12px;display:block}
+#sdet .kvrow{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+#sdet .kvrow:last-child{border-bottom:0}
+#sdet .kvrow span{color:var(--muted);flex:none}
+#sdet .kvrow b{text-align:right;font-weight:600;overflow-wrap:anywhere;min-width:0}
+#sdet .sdtext{font-size:14px;line-height:1.55;color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;margin:0}
+#sdet .plsec{padding:8px 0;border-bottom:1px solid var(--line)}
+#sdet .plsec:last-child{border-bottom:0}
+#sdet .plh{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+#sdet .plh small{color:var(--muted);font-size:12.5px}
+#sdet .plchips{display:flex;flex-wrap:wrap;gap:6px}
+#sdet .plchip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2,var(--panel));font-size:13px}
+#sdet .plchip b{color:var(--gold-2)}
+#sdet .plchip em{font-style:normal;font-size:11px;color:var(--warn)}
+#sdet .sdacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0 28px}
+#sdet .sdacts .btn{width:100%;min-width:0}
+
+/* MRP: current price on the left, "% off" on the right, the small struck-through original price below */
+.card .pr.prx{display:flex;flex-direction:column;gap:2px}
+.prx .prrow{display:flex;align-items:center;justify-content:space-between;gap:4px 6px;flex-wrap:wrap}
+.prx .prn{white-space:nowrap}
+.off{font-style:normal;font-size:11px;font-weight:800;line-height:1;color:var(--ok);background:rgba(var(--ok-rgb),.14);padding:3px 6px;border-radius:6px;white-space:nowrap;flex:none}
+.mrp{font-size:11.5px;font-weight:500;color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+.plc .pp .mrp,.pkd .pdp .mrp{font-size:13px;margin-left:4px}
+.plc .pp .off,.pkd .pdp .off{margin-left:4px;font-size:11.5px}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -964,8 +1005,14 @@ const priceLabel = s => {
   if (hi != null && hi > lo) return money(lo) + ' - ' + money(hi);          // low and high price of the story's plans
   return lo === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(lo));
 };
+const mrpOn = s => !s.deal && s.min_mrp != null && s.max_mrp != null && +s.save_pct > 0;
+const priceHtml = s => {                                                       // price | % saved on the right | small struck-through MRP range below (no MRP set: just the price as before)
+  if (!mrpOn(s)) return `<span class="pr">${priceLabel(s)}</span>`;
+  const lo = +s.min_mrp, hi = +s.max_mrp, one = !s.has_free && priceMax(s) === +s.min_price;
+  return `<span class="pr prx"><span class="prn">${one ? money(s.min_price) : priceLabel(s)}</span><span class="prrow"><s class="mrp" aria-label="MRP">${hi > lo ? money(lo) + ' - ' + money(hi) : money(lo)}</s><em class="off">${s.save_var ? 'Up to ' : ''}${s.save_pct}% off</em></span></span>`;
+};
 const card = s => `<button class="card" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
-  <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small><span class="pr">${priceLabel(s)}</span></button>`;
+  <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small>${priceHtml(s)}</button>`;
 const homeCard = card;                                    // no list shows an episode count any more
 const tierCard = s => homeCard(s).replace(/<span class="pr">.*?<\/span>/, `<span class="pr">${s.deal ? `<s>${money(s.max_price)}</s>` : ''}${money(s.last_price)}</span>`);      // Super deals show the last (highest) plan price only
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
@@ -1344,6 +1391,7 @@ const heroBg = s => (s.banners || []).length
 const heroBanners = s => (s.banners || []).length
   ? `<div class="hcar"><div class="hs">${cover(s.cover)}</div>${s.banners.map((b, i) => `<div class="hs"><div class="cv has-img" data-bnview="${i}" role="button" tabindex="0" aria-label="Banner ${i + 1}"><img src="${esc(b.url)}" alt="" loading="lazy" decoding="async"></div></div>`).join('')}</div>${bnDotsHtml(s.banners.length + 1)}`
   : cover(s.cover);
+const ordw = n => n === 1 ? 'first' : n === 2 ? '2nd' : n === 3 ? '3rd' : n + 'th';
 function offersStrip(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
   if (bn.length) return `<section class="offer-strip"><div class="sechead"><h2 class="sec">${esc(tr('otitle'))}</h2><button class="link" data-offers="1">View all &rarr;</button></div><div class="rail offer-rail">${bn.map(b => `<button class="obn${b.image ? ' has-img' : ''}" data-offers="1" aria-label="${esc(b.title)}">${b.image ? `<img src="${esc(b.image)}" alt="${esc(b.title)}" loading="lazy" decoding="async">` : `<span class="obn-art" aria-hidden="true">✦</span>`}<span class="obt"><b>${esc(b.title)}</b>${b.body ? `<small>${esc(b.body)}</small>` : ''}<span class="obn-cta">Explore offer <span aria-hidden="true">→</span></span></span></button>`).join('')}</div></section>`;
@@ -1354,7 +1402,7 @@ function renderOffers(){
   const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [];
   $('#offerpage').innerHTML = `<div class="top"><button class="btn ghost small" id="offBack">Back</button><strong>${tr('otitle')}</strong><span style="width:60px"></span></div>` +
     bn.map(b => `<div class="ocard">${b.image ? `<img src="${esc(b.image)}" alt="" loading="lazy">` : ''}<div class="obody"><b>${esc(b.title)}</b>${b.body ? `<p>${esc(b.body)}</p>` : ''}</div></div>`).join('') +
-    (cs.length ? cs.map(c => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(c.code)}</span><b>${esc(c.text)}</b>${c.title ? `<small>${esc(c.title)}</small>` : ''}<small>${esc([c.story_title ? 'Only for \u201C' + c.story_title + '\u201D' : '', (c.statuses || []).length ? (c.statuses || []).map(x => x[0].toUpperCase() + x.slice(1)).join('/') + ' stories only' : '', (c.sections || []).length ? 'Section ' + c.sections.join('/') + ' plans only' : '', c.min_stories ? 'Add ' + c.min_stories + '+ ' + ((c.statuses || []).length ? 'such ' : '') + 'stories to the cart' : '', c.min_order ? tr('cpmin', {m: money(c.min_order)}) : '', c.expires_at ? tr('cpexp', {d: dateStr(c.expires_at)}) : ''].filter(Boolean).join(' | '))}</small></div>` +
+    (cs.length ? cs.map(c => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(c.code)}</span><b class="cphead">${esc(c.headline || c.text)}</b>${c.title && c.title !== c.headline ? `<small>${esc(c.title)}</small>` : ''}<small>${esc([c.order_mode === 'exact' ? 'Only on your ' + ordw(c.order_no) + ' purchase' : '', c.order_mode === 'from' && c.order_no > 1 ? 'From your ' + ordw(c.order_no) + ' purchase onwards' : '', c.story_title ? 'Only for \u201C' + c.story_title + '\u201D' : '', (c.statuses || []).length ? (c.statuses || []).map(x => x[0].toUpperCase() + x.slice(1)).join('/') + ' stories only' : '', (c.sections || []).length ? 'Section ' + c.sections.join('/') + ' plans only' : '', c.min_stories ? 'Add ' + c.min_stories + '+ ' + ((c.statuses || []).length ? 'such ' : '') + 'stories to the cart' : '', c.min_order ? tr('cpmin', {m: money(c.min_order)}) : '', c.expires_at ? tr('cpexp', {d: dateStr(c.expires_at)}) : ''].filter(Boolean).join(' | '))}</small></div>` +
       `<div class="lact"><button class="lbtn" data-cpcopy="${esc(c.code)}">${tr('cpcopy')}</button><button class="lbtn" data-cpuse="${esc(c.code)}">${tr('cpuse')}</button></div></div>`).join('') : `<div class="empty">${tr('cpnone')}</div>`) +
     ((o.used || []).length ? `<h3 class="lsub">Used coupons</h3>` + o.used.map(u => `<div class="cpcard"><div class="cpl"><span class="cpcode">${esc(u.code)}</span><b>-${money(u.discount)}</b><small>${esc(u.title || '')} | ${esc(dateStr(u.at))}${u.status === 'pending' ? ' | waiting for approval' : ''}</small></div></div>`).join('') : '');
 }
@@ -2572,7 +2620,8 @@ function planGroups(opts){                                  // 1 full story plan
   const live = opts.filter(o => !o.hidden), by = k => live.filter(o => planKind(o) === k).sort(byOrder);
   return {show: by('full'), pack: by('pack'), rent: by('rental')};
 }
-const planPrice = o => Number(o.price) === 0 ? 'Listen free' : `${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}`;
+const offPct = o => { const m = +o.mrp, p = +o.price; return p > 0 && m > p ? Math.round((m - p) * 100 / m) : 0; };
+const planPrice = o => Number(o.price) === 0 ? 'Listen free' : `${o.credit ? `<s>${money(o.price)}</s> ` : ''}${money(payOf(o))}` + (offPct(o) ? ` <s class="mrp">${money(o.mrp)}</s> <em class="off">${offPct(o)}% off</em>` : '');
 const storyDone = () => !!(V.story && /complet/i.test(String(V.story.status || '')));      // a finished story has no upcoming episodes, so no warning
 const fullNoteHtml = o => (storyDone() || o.nonote) ? '' : isSnap(o)
   ? '<span class="pn warn">\u{1F4CC} Includes every episode available on the day your access starts. Episodes uploaded later are not included.</span>'
@@ -2706,7 +2755,7 @@ const A = {tab:'stories', sq:'', pub:'', sort:'az', oq:'', ostatus:'', list:[]};
 const M = {sid:null, title:'', topic:'', tname:'', scope:'', page:1, q:'', eps:[], total:0, state:'idle', edit:null, fileName:''};
 const E = {id:null, cover:'', photo:''};
 const INFO = {};                                       // remembers cards so a tap can start playback without another request
-const CPA = {list: [], stories: [], id: null};
+const CPA = {list: [], stories: [], statuses: [], id: null};
 const adminErr = e => e.status === 403 || e.status === 401 ? 'Admin access is required.' : errText(e);
 async function paintAway(){
   const box = $('#awayCard'); if (!box) return;
@@ -2729,14 +2778,18 @@ function renderAdmin(){
 function openCouponEditor(id){
   const c = CPA.list.find(x => x.id === id) || {discount_type: 'percentage', is_active: true, listed: true}; CPA.id = c.id || null;
   const dt = ts => ts ? new Date(ts * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+  const stOpts = (CPA.statuses || []).map(o => ({value: o.value, count: o.count})); (c.statuses || []).forEach(v => { if (!stOpts.some(o => o.value === v)) stOpts.push({value: v, count: 0}); });   // only statuses that exist on stories (plus any already ticked)
   $('#cpedit').innerHTML = `<div class="top"><button class="btn ghost small" id="cpClose">Back</button><strong>${c.id ? 'Edit coupon' : 'New coupon'}</strong></div>
     <div class="two"><label class="field"><span>Code *</span><input id="cp_code" value="${esc(c.code || '')}" maxlength="20" autocapitalize="characters" placeholder="DIWALI20"></label><label class="field"><span>Short title</span><input id="cp_title" value="${esc(c.title || '')}" maxlength="60"></label></div>
+    <label class="field"><span>Big title (shown large on the coupon; empty = made automatically)</span><input id="cp_head" value="${esc(c.headline || '')}" maxlength="80" placeholder="${esc(c.auto_headline || 'Flat 40% off on your purchase')}"></label>
     <div class="two"><label class="field"><span>Discount type</span><select id="cp_type"><option value="percentage"${c.discount_type === 'percentage' ? ' selected' : ''}>Percentage (%)</option><option value="fixed"${c.discount_type === 'fixed' ? ' selected' : ''}>Fixed amount</option></select></label><label class="field"><span>Discount value *</span><input id="cp_value" type="number" min="0" step="any" inputmode="decimal" value="${c.discount_value ?? ''}"></label></div>
     <div class="two"><label class="field"><span>Minimum order total (0 = none)</span><input id="cp_min" type="number" min="0" inputmode="decimal" value="${c.min_order_value || ''}"></label><label class="field"><span>Total uses (0 = unlimited)</span><input id="cp_use" type="number" min="0" inputmode="numeric" value="${c.usage_limit || ''}"></label></div>
     <div class="two"><label class="field"><span>Uses per member (0 = unlimited)</span><input id="cp_per" type="number" min="0" inputmode="numeric" value="${c.id ? (c.per_user_limit || '') : 1}"></label><label class="field"><span>Minimum stories in the cart (0 = none)</span><input id="cp_mins" type="number" min="0" max="30" inputmode="numeric" value="${c.min_stories || ''}"></label></div>
     <label class="field"><span>Only for this story (empty = every story)</span><input id="cp_story" list="cp_stories" value="${esc(c.story_title || '')}" placeholder="All stories" autocomplete="off"><datalist id="cp_stories">${CPA.stories.map(x => `<option value="${esc(x.title)}"></option>`).join('')}</datalist></label>
-    <div class="field"><span>Only for stories with this status (none ticked = every status)</span><div class="chips wrap" style="padding:6px 0">${['ongoing', 'completed', 'stopped', 'upcoming'].map(x => `<label class="chip" style="cursor:pointer"><input type="checkbox" class="cp_st" value="${x}"${(c.statuses || []).includes(x) ? ' checked' : ''}> ${x[0].toUpperCase() + x.slice(1)}</label>`).join('')}</div></div>
-    <div class="field"><span>Works on these plan sections (none ticked = every section)</span><div class="chips wrap" style="padding:6px 0">${[[1, 'Section 1: full story / topic plans'], [2, 'Section 2: episode packs'], [3, 'Section 3: rentals']].map(([n, t]) => `<label class="chip" style="cursor:pointer"><input type="checkbox" class="cp_sec" value="${n}"${(c.sections || []).includes(n) ? ' checked' : ''}> ${t}</label>`).join('')}</div></div>
+    <div class="field"><span>Only for stories with this status (none ticked = every status)</span><div class="tickrow">${stOpts.map(o => `<label class="tick"><input type="checkbox" class="cp_st" value="${esc(o.value)}"${(c.statuses || []).includes(o.value) ? ' checked' : ''}> ${esc(o.value[0].toUpperCase() + o.value.slice(1))} <small>${o.count ? o.count : 'none'}</small></label>`).join('') || '<span class="hint">No story has a status yet.</span>'}</div><span class="hint">Only the statuses your stories really have are listed.</span></div>
+    <div class="field"><span>Works on these plan sections (none ticked = every section)</span><div class="tickrow">${[[1, 'Section 1: full story / topic plans'], [2, 'Section 2: episode packs'], [3, 'Section 3: rentals']].map(([n, t]) => `<label class="tick"><input type="checkbox" class="cp_sec" value="${n}"${(c.sections || []).includes(n) ? ' checked' : ''}> ${t}</label>`).join('')}</div></div>
+    <div class="two"><label class="field"><span>Works on which order</span><select id="cp_ordmode"><option value=""${!c.order_mode ? ' selected' : ''}>Every order</option><option value="exact"${c.order_mode === 'exact' ? ' selected' : ''}>Only order no.</option><option value="from"${c.order_mode === 'from' ? ' selected' : ''}>Order no. and later</option></select></label><label class="field"><span>Order number</span><input id="cp_ordno" type="number" min="1" max="99" inputmode="numeric" value="${c.order_no || ''}" placeholder="1"${c.order_mode ? '' : ' disabled'}></label></div>
+    <div class="by" style="padding:0 16px 8px">Order number counts the member's earlier orders: 1 = first purchase, 2 = second purchase, and so on. &ldquo;Only order no.&rdquo; with 1 makes a first-purchase code that stops showing after the first order.</div>
     <div class="by" style="padding:0 16px 8px">&ldquo;Minimum order&rdquo; looks at the whole cart total. &ldquo;Only for this story&rdquo; gives the discount on that story's plans only. &ldquo;Minimum stories&rdquo; counts the different stories in the cart; with a status ticked it counts only stories of that status (e.g. 3 Completed or Stopped stories).</div>
     <div class="two"><label class="field"><span>Valid from</span><input id="cp_start" type="datetime-local" value="${dt(c.starts_at)}"></label><label class="field"><span>Valid till</span><input id="cp_end" type="datetime-local" value="${dt(c.expires_at)}"></label></div>
     <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cp_active"${c.is_active ? ' checked' : ''}> <span>Active (members can use it; untick to hide it completely)</span></label>
@@ -2749,7 +2802,8 @@ async function saveCoupon(){
     const g = k => $('#cp_' + k), dt = v => v ? Math.floor(new Date(v).getTime() / 1000) : null;
     const sTitle = g('story').value.trim(), sPick = sTitle ? CPA.stories.find(x => x.title.toLowerCase() === sTitle.toLowerCase()) : null;
     if (sTitle && !sPick) return toast('Pick the story from the list, or clear that box for every story.', 5000);
-    const body = {id: CPA.id, story_id: sPick ? sPick.id : '', min_stories: g('mins').value || 0, statuses: $$('.cp_st:checked').map(x => x.value), sections: $$('.cp_sec:checked').map(x => +x.value), code: g('code').value.trim(), title: g('title').value.trim(), discount_type: g('type').value, discount_value: g('value').value, min_order_value: g('min').value || 0,
+    if (g('ordmode').value && !(+g('ordno').value >= 1)) return toast('Type the order number (1 = first purchase), or choose Every order.', 5000);
+    const body = {id: CPA.id, story_id: sPick ? sPick.id : '', min_stories: g('mins').value || 0, order_mode: g('ordmode').value, order_no: g('ordno').value || 0, headline: g('head').value.trim(), statuses: $$('.cp_st:checked').map(x => x.value), sections: $$('.cp_sec:checked').map(x => +x.value), code: g('code').value.trim(), title: g('title').value.trim(), discount_type: g('type').value, discount_value: g('value').value, min_order_value: g('min').value || 0,
       usage_limit: g('use').value || 0, per_user_limit: g('per').value || 0, starts_at: dt(g('start').value), expires_at: dt(g('end').value), is_active: g('active').checked, listed: g('listed').checked};
     try{ await api('/api/admin/coupon', {method: 'POST', retry: false, body: JSON.stringify(body)}); toast('Coupon saved'); closeSheet('cpedit'); loadAdmin(); loadOffers(); }
     catch(e){ toast(adminErr(e), 5000); }
@@ -2843,9 +2897,9 @@ const fillBn = () => {
   const c = (CPA.list || []).find(x => x.id === +$('#bn_cp').value), box = $('#bn_pbox');
   if (!c){ box.hidden = true; return; }
   $('#bn_prompt').value = bnPrompt(c); box.hidden = false; BN.gen = ''; const pv = $('#bn_prev'); if (pv) pv.hidden = true;
-  $('#bn_title').value = `Use code ${c.code}`; $('#bn_body').value = `Get ${c.text}${c.title ? ' | ' + c.title : ''}`;
+  $('#bn_title').value = c.headline || c.auto_headline || `Use code ${c.code}`; $('#bn_body').value = `Use code ${c.code}${c.title && c.title !== c.headline ? ' | ' + c.title : ''}`;
 };
-const bnPrompt = c => `Create an image of a coupon with the text: "Use code - ${c.code} & get ${c.text}${c.title ? ' ' + c.title : ''}". Wide thin strip banner, ultra-wide 21:9 shape, premium dark and gold look, big clear readable text, no other text.`;
+const bnPrompt = c => `Create an image of a coupon with the text: "Use code - ${c.code}. ${c.headline || c.auto_headline || ('Get ' + c.text)}". Wide thin strip banner, ultra-wide 21:9 shape, premium dark and gold look, big clear readable text, no other text.`;
 const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JSON.stringify(body)});
 /* ---------------- Admin → Index Bot (added section; talks only to /api/admin/index/*) ---------------- */
 const IX = {view: 'overview', edit: null, maps: null};
@@ -2953,19 +3007,25 @@ async function adminComplete(id, title){
 }
 async function openStoryDetails(id){                         // tap on a story card: every detail on one screen
   const s0 = A.list.find(x => String(x.id) === String(id)); if (!s0) return;
-  $('#sdet').innerHTML = `<div class="sbar"><button class="btn ghost small" id="sdetBack" aria-label="Back">&larr;</button><h2 class="sec vtitle">${esc(s0.title)}</h2></div><div id="sdetBody" class="pad"><div class="sk hero"></div></div>`;
+  $('#sdet').innerHTML = `<div class="sdtop"><button class="btn ghost small" id="sdetBack" aria-label="Back">&larr; Back</button><h2 class="sec vtitle">${esc(s0.title)}</h2></div><div id="sdetBody" class="pad"><div class="sk hero"></div></div>`;
   openSheet('sdet');
   let f = s0; try{ f = {...s0, ...(await api('/api/admin/story/' + encodeURIComponent(id))).story, adm: s0.adm}; }catch(e){ if (!$('#sdetBody')) return; $('#sdetBody').innerHTML = retryBox(adminErr(e), 'sdetRetry'); $('#sdetRetry').onclick = () => openStoryDetails(id); return; }
   const body = $('#sdetBody'); if (!body) return;
   const opts = f.options || [], tp = (f.adm || {}).topics || [];
-  const planRows = tid => { const rows = [1, 2, 3].map(n => { const l = opts.filter(o => (o.topic || '') === tid && ({full: 1, pack: 2, rental: 3})[planKind(o)] === n); return `<div class="by" style="margin:4px 0"><b>Section ${n}</b> (${l.length}): ${l.length ? l.map(o => esc(o.label || (o.days ? o.days + ' days' : 'Plan')) + ' ' + money(o.price) + (o.hidden ? ' (hidden)' : '')).join(' | ') : '<span style="opacity:.6">none</span>'}</div>`; }); return rows.join(''); };
-  const kv = (k, v) => v || v === 0 ? `<div class="by" style="margin:3px 0"><b>${k}:</b> ${esc(String(v))}</div>` : '';
-  body.innerHTML = `${isImg(f.cover) ? `<img src="${esc(f.cover)}" alt="" style="width:100%;max-height:340px;object-fit:contain;border-radius:16px;background:var(--panel);margin-bottom:12px">` : ''}
-    <div style="margin-bottom:8px">${f.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${f.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${esc(f.status || 'Ongoing')}</span> <span class="tag">${f.episodes} eps</span></div>
-    <div class="box"><b>Details</b>${kv('ID', f.id)}${kv('Author', f.author)}${kv('Genre', f.genre)}${kv('Language', f.language)}${kv('Voice', f.voice)}${kv('Episodes text', f.episodes_text)}${kv('Also known as', (f.aliases || []).join(', '))}${kv('Listeners', f.listeners)}${f.update_next ? kv('Next update report', new Date(f.update_next * 1000).toLocaleString()) : ''}${kv('Notes', f.notes)}${f.preview ? `<div class="by" style="margin:6px 0 0">${esc(f.preview)}</div>` : ''}</div>
-    <div class="box"><b>Episodes</b>${tp.map(t => `<div class="by" style="margin:4px 0">${t.name ? `<b>${esc(t.name)}</b>: ` : ''}${t.eps} episodes${t.gaps ? ` <span style="color:var(--warn)">| missing: ${esc(t.gaps)}</span>` : (t.eps ? ' <span style="color:var(--ok)">| no missing numbers</span>' : '')}</div>`).join('') || '<div class="by">No episodes yet.</div>'}</div>
-    <div class="box"><b>Plans</b>${tp.map(t => `<div style="margin:8px 0 0">${t.name ? `<div><b>${esc(t.name)}</b></div>` : ''}${planRows(t.id)}</div>`).join('') || '<div class="by">No plans yet.</div>'}</div>
-    <div class="actions" style="padding:12px 0 24px">${storyBtns(f)}</div>`;
+  const secName = {1: 'Full story / topic plans', 2: 'Episode packs', 3: 'Rentals'};
+  const planRows = tid => [1, 2, 3].map(n => { const l = opts.filter(o => (o.topic || '') === tid && ({full: 1, pack: 2, rental: 3})[planKind(o)] === n);
+    return `<div class="plsec"><div class="plh"><b>Section ${n}</b><small>${secName[n]}</small><span class="tag">${l.length}</span></div>${l.length ? `<div class="plchips">${l.map(o => `<span class="plchip${o.hidden ? ' hid' : ''}">${esc(o.label || (o.days ? o.days + ' days' : 'Plan'))} <b>${money(o.price)}</b>${+o.mrp > +o.price ? ` <s class="mrp">${money(o.mrp)}</s> <em class="off">${offPct(o)}% off</em>` : ''}${o.hidden ? ' <em>hidden</em>' : ''}</span>`).join('')}</div>` : '<div class="by" style="opacity:.6">None</div>'}</div>`; }).join('');
+  const kv = (k, v) => v || v === 0 ? `<div class="kvrow"><span>${k}</span><b>${esc(String(v))}</b></div>` : '';
+  const rich = t => esc(String(t || '').replace(/\r/g, '').trim()).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');     // notes keep their line breaks; **bold** shows as bold instead of stars
+  const epsTxt = f.episodes_text ? String(f.episodes_text).replace(/\u221e/g, 'ongoing') : '';
+  body.innerHTML = `${isImg(f.cover) ? `<img class="sdcover" src="${esc(f.cover)}" alt="">` : ''}
+    <div style="margin-bottom:12px">${f.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${f.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${esc(f.status || 'Ongoing')}</span> <span class="tag">${f.episodes} eps</span></div>
+    <div class="box"><b>Details</b>${kv('ID', f.id)}${kv('Author', f.author)}${kv('Genre', f.genre)}${kv('Language', f.language)}${kv('Voice', f.voice)}${kv('Episodes', epsTxt)}${kv('Also known as', (f.aliases || []).join(', '))}${kv('Listeners', f.listeners)}${f.update_next ? kv('Next update report', new Date(f.update_next * 1000).toLocaleString()) : ''}</div>
+    ${f.preview ? `<div class="box"><b>Story summary</b><p class="sdtext">${rich(f.preview)}</p></div>` : ''}
+    ${f.notes ? `<div class="box"><b>Notes</b><p class="sdtext">${rich(f.notes)}</p></div>` : ''}
+    <div class="box"><b>Episodes</b>${tp.map(t => `<div class="kvrow"><span>${t.name ? esc(t.name) : 'All episodes'}</span><b>${t.eps} episodes${t.gaps ? ` <span style="color:var(--warn)">| missing: ${esc(t.gaps)}</span>` : (t.eps ? ' <span style="color:var(--ok)">| no missing numbers</span>' : '')}</b></div>`).join('') || '<div class="by">No episodes yet.</div>'}</div>
+    <div class="box"><b>Plans</b>${tp.map(t => `<div>${t.name ? `<div style="margin:6px 0 2px"><b>${esc(t.name)}</b></div>` : ''}${planRows(t.id)}</div>`).join('') || '<div class="by">No plans yet.</div>'}</div>
+    <div class="sdacts">${storyBtns(f)}</div>`;
 }
 async function loadAdmin(){
   closeSheet('sdet');                                  // the details screen would show old numbers after any change
@@ -2993,11 +3053,11 @@ async function loadAdmin(){
       $('#aost').value = A.ostatus;
     } else if (tab === 'coupons'){
       const [d, bn] = await Promise.all([api('/api/admin/coupons', {signal: sig}), api('/api/admin/banners', {signal: sig})]); if (A.tab !== tab) return;
-      CPA.list = d.coupons; CPA.stories = d.stories || [];
+      CPA.list = d.coupons; CPA.stories = d.stories || []; CPA.statuses = d.statuses || [];
       body.innerHTML = `<div class="actions" style="margin-bottom:12px"><button class="btn" id="cpNew">＋ New coupon</button><button class="btn ghost" id="bnNew">＋ New banner</button></div><div class="box bnform" id="bnForm" hidden><b>New banner</b><label class="field"><span>Make it for a coupon</span><select id="bn_cp"><option value="">Choose a coupon (optional)</option>${d.coupons.map(c => `<option value="${c.id}">${esc(c.code)} | ${esc(c.text)}${c.title ? ' | ' + esc(c.title) : ''}</option>`).join('')}</select></label><div id="bn_pbox" hidden><span class="by">Banner prompt:</span><textarea id="bn_prompt" readonly></textarea><div class="actions" style="padding:6px 0 10px"><button class="btn small" id="bnGen" type="button">✨ Make banner</button><button class="btn ghost small" id="bnCopy" type="button">Copy prompt</button></div><div class="by">The banner is drawn right here, free. Or copy the prompt, make it in any AI tool, and pick the image below.</div></div><label class="field"><span>Title *</span><input id="bn_title" maxlength="80"></label><label class="field"><span>Text (optional)</span><input id="bn_body" maxlength="300"></label><label class="field"><span>Banner image (a wide thin strip works best)</span><input id="bn_file" type="file" accept="image/*"></label><img id="bn_prev" alt="" hidden><div class="actions" style="padding:8px 0 0"><button class="btn" id="bnSave" type="button">Add banner</button><button class="btn ghost" id="bnCancel" type="button">Cancel</button></div><div class="by" style="margin-top:8px">Choose a coupon above to get its ready-made image prompt and an automatic title.</div></div>` +
         (d.coupons.map(c => `<div class="mrow"><h4>${esc(c.code)} <span class="tag ${c.state === 'active' ? 'live' : ''}">${esc(c.state)}</span>${c.listed ? '' : ' <span class="tag">private</span>'}</h4>
           <div class="by">${esc(c.text)}${c.title ? ' | ' + esc(c.title) : ''}</div>
-          <div class="by">Used ${c.used}${c.usage_limit ? ' of ' + c.usage_limit : ''} | per member ${c.per_user_limit || 'no limit'} | min order ${money(c.min_order_value)}${c.min_stories ? ' | min ' + c.min_stories + ' stories' : ''}${c.story_title ? ' | only for ' + esc(c.story_title) : ''}${(c.statuses || []).length ? ' | ' + esc(c.statuses.join('/')) + ' stories' : ''}${(c.sections || []).length ? ' | Section ' + c.sections.join('/') + ' plans' : ''}${c.discount_cost ? ' | discount given ' + money(c.discount_cost) : ''}${c.expires_at ? ' | valid till ' + new Date(c.expires_at * 1000).toLocaleDateString() : ''}</div>
+          <div class="by">Used ${c.used}${c.usage_limit ? ' of ' + c.usage_limit : ''} | per member ${c.per_user_limit || 'no limit'} | min order ${money(c.min_order_value)}${c.order_mode ? ' | ' + (c.order_mode === 'exact' ? 'order no. ' + c.order_no + ' only' : 'order no. ' + c.order_no + ' and later') : ''}${c.min_stories ? ' | min ' + c.min_stories + ' stories' : ''}${c.story_title ? ' | only for ' + esc(c.story_title) : ''}${(c.statuses || []).length ? ' | ' + esc(c.statuses.join('/')) + ' stories' : ''}${(c.sections || []).length ? ' | Section ' + c.sections.join('/') + ' plans' : ''}${c.discount_cost ? ' | discount given ' + money(c.discount_cost) : ''}${c.expires_at ? ' | valid till ' + new Date(c.expires_at * 1000).toLocaleDateString() : ''}</div>
           <div class="actions" style="padding:8px 0 0"><button class="btn small" data-cpedit="${c.id}">Edit</button><button class="btn ghost small" data-cpbanner="${c.id}">Create banner</button><button class="btn ghost small" data-cptog="${c.id}">${c.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-cpdel="${c.id}">Delete</button></div></div>`).join('') || '<div class="empty">No coupons yet. Tap New coupon.</div>') +
         `<h3 class="h3" style="font-size:20px">Offer banners</h3>` +
         (bn.banners.map(x => `<div class="mrow"><h4>${esc(x.title)} <span class="tag ${x.live ? 'live' : ''}">${x.live ? 'live' : 'hidden'}</span></h4>${x.body ? `<div class="by">${esc(x.body)}</div>` : ''}
@@ -3104,7 +3164,7 @@ function optRow(o = {}, removable = true, kind){
   const rent = kind === 'rental', full = kind === 'full', auto = !!o.auto, ro = auto ? ' readonly' : '';
   const flags = (full ? `<label class="field check"><input type="checkbox" class="o-snap"${o.scope === 'snapshot' ? ' checked' : ''}><span style="margin:0">Till date: only the episodes available when access is granted (no future episodes)</span></label>` : '') + `<label class="field check"><input type="checkbox" class="o-fwd"${o.fwd ? ' checked' : ''}><span style="margin:0">Forwarding allowed: episodes sent to chat can be forwarded and saved</span></label>`;
   const ph = rent ? 'Rental name, e.g. 30-day rental' : full ? 'Plan name, e.g. Full Story' : 'Pack name, e.g. Episodes 1-50';
-  const custom = !!(o.badge || o.note || o.hidden || o.order || o.fwd || o.scope || o.nonote);
+  const custom = !!(o.badge || o.note || o.hidden || o.order || o.fwd || o.scope || o.nonote || o.mrp);
   return `<div class="optrow${o.hidden ? ' hid' : ''}" data-id="${esc(o.id || '')}" data-kind="${kind}"${auto ? ' data-auto="1"' : ''}><input class="o-label" placeholder="${ph}" value="${esc(o.label || '')}" aria-label="Plan name"${ro}>
     ${auto ? '<div class="oauto">Made by the pack rule. You can change its price, badge, note, position and visibility.</div>' : ''}
     <div class="${full ? 'o3' : 'o4'}"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price">
@@ -3112,6 +3172,7 @@ function optRow(o = {}, removable = true, kind){
     <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="${rent ? 'From ep (blank = all)' : 'From ep'}" value="${o.from ?? ''}" aria-label="From episode"${ro}><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"${ro}></div>
     ${full ? `<label class="field check"><input type="checkbox" class="o-notetick"${o.nonote ? '' : ' checked'}><span style="margin:0">Show the "we don't guarantee upcoming episodes" note on this plan</span></label>` : ''}
     <details class="oextra"${custom ? ' open' : ''}><summary>Customise${custom ? ' &#10003;' : ''}</summary>
+      <label class="field"><span>MRP / original price (shown small and struck through, with the % saved; empty = none)</span><input class="o-mrp" type="number" min="0" inputmode="decimal" placeholder="e.g. 499" value="${o.mrp ?? ''}" aria-label="MRP"></label>
       <div class="o2"><label class="field"><span>Badge (e.g. Best value)</span><input class="o-badge" maxlength="24" value="${esc(o.badge || '')}"></label><label class="field"><span>Position (1 = first)</span><input class="o-order" type="number" min="1" max="9999" inputmode="numeric" value="${o.order || ''}"></label></div>
       <label class="field"><span>Short note shown on the plan</span><input class="o-note" maxlength="140" value="${esc(o.note || '')}"></label>
       <label class="field"><span>Section (moves after you save)</span><select class="o-kind">${['full', 'pack', 'rental'].map(k => `<option value="${k}"${k === kind ? ' selected' : ''}>${KINDS[k][1]}</option>`).join('')}</select></label>
@@ -3147,7 +3208,7 @@ function planSummary(opts){
     <div>&#128230; <b>Episode packs:</b> ${pack.length ? `${pack.length} pack${pack.length > 1 ? 's' : ''}, ${money(Math.min(...pp))}${Math.max(...pp) > Math.min(...pp) ? ' - ' + money(Math.max(...pp)) : ''}${pack.filter(o => o.hidden).length ? ' (' + pack.filter(o => o.hidden).length + ' hidden)' : ''}` : none}</div>
     <div>&#9203; <b>Rentals:</b> ${rent.length ? rent.map(o => o.days + ' days ' + money(o.price) + tag(o)).join(' | ') : none}</div>`;
 }
-const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order, scope: o.scope, fwd: o.fwd, nonote: o.nonote});
+const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order, scope: o.scope, fwd: o.fwd, nonote: o.nonote, mrp: o.mrp});
 function planProblem(list, needFrom){
   for (const p of list){
     if (p.kind === 'rental' && !(p.days >= 1)) return `Rental "${p.label}": enter the days (1 or more)`;
@@ -3217,7 +3278,7 @@ function paintPhoto(){
 function readPlans(sel = '#e_opts', auto = false){          // auto = true reads the hand edits of rule-made packs instead
   return $$(sel + ' .optrow').filter(r => !!r.dataset.auto === auto).map(r => { const q = k => r.querySelector(k);
     return {id: r.dataset.id || '', label: q('.o-label').value.trim(), price: q('.o-price').value === '' ? 0 : Number(q('.o-price').value), days: parseInt(q('.o-days').value) || 0,
-      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: !!(q('.o-fwd') && q('.o-fwd').checked), nonote: !!(q('.o-notetick') && !q('.o-notetick').checked)}; }).filter(o => o.label);
+      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: !!(q('.o-fwd') && q('.o-fwd').checked), nonote: !!(q('.o-notetick') && !q('.o-notetick').checked), mrp: q('.o-mrp') && q('.o-mrp').value !== '' ? Number(q('.o-mrp').value) : 0}; }).filter(o => o.label);
 }
 function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
   const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
@@ -3827,6 +3888,7 @@ document.addEventListener('change', async e => {
   if (id === 'aost'){ A.ostatus = e.target.value; return loadAdmin(); }
   if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
   if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 1200); paintRqPhoto(); }catch(err){ toast(err.message); } }
+  if (id === 'cp_ordmode'){ const n = $('#cp_ordno'); if (n){ n.disabled = !e.target.value; if (e.target.value && !n.value) n.value = 1; } return; }
   if (id === 'bn_cp') return fillBn();
   if (id === 'bn_file' && e.target.files[0]){ try{ const u = await downscale(e.target.files[0], 1200), im = $('#bn_prev'); im.src = u; im.hidden = false; BN.gen = ''; }catch(err){ toast(err.message); } }
   if (id === 'b_file' && e.target.files[0]){ const f = e.target.files[0]; e.target.value = ''; return once('bnadd', async () => { try{ const img = await downscale(f, 1600); if (await bannerCall('/api/admin/story/banner', {story_id: E.id, image: img}, 'Banner added')) loadBanners(); }catch(err){ toast(err.message); } }); }
