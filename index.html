@@ -208,7 +208,8 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .sinfo{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 12px;background:linear-gradient(transparent,rgba(8,12,22,.92));color:#f3ecda;display:flex;flex-direction:column;gap:2px}
 .sinfo b{font-family:var(--serif);font-size:22px;line-height:1.05}.sinfo small{color:#cfd6e6}.sinfo .btn{align-self:flex-start;margin-top:6px;min-height:36px;padding:7px 14px}
 .flash{margin:6px 0 10px;padding:6px 0 2px;background:linear-gradient(120deg,rgba(var(--gold-rgb),.14),transparent);border-block:1px solid var(--gold)}
-.card s{opacity:.55;margin-right:5px;font-weight:400}.card .cd{color:var(--warn);font-weight:700}
+.card s{opacity:.55;margin-right:5px;font-weight:400}
+.card .prx s{margin-right:0}.card .cd{color:var(--warn);font-weight:700}
 .contw{flex:none;position:relative;scroll-snap-align:start}
 .cx{position:absolute;top:-6px;right:-6px;width:28px;height:28px;min-height:28px;padding:0;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:17px;line-height:1;z-index:2}
 .card.up{position:relative}
@@ -465,7 +466,7 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .plc.rental{border-style:dashed}
 /* plan editor (admin): three sections */
 .pe{padding:0 16px}.psec{margin:0 0 18px}.ph{display:flex;flex-direction:column;gap:2px;margin:6px 0 8px}.ph b{font-size:15px}.ph small{color:var(--muted);font-size:12.5px}
-.o3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.o3 input{padding:8px 6px;font-size:13px}.o2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.o3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.o3 input{padding:8px 6px;font-size:13px}.o2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.optrow .o2{gap:6px;margin:8px 0}.optrow .o2 input{padding:8px 6px;font-size:13px}
 .oextra{margin:2px 0 8px}.oextra summary{cursor:pointer;font-size:13px;color:var(--gold-2);font-weight:700;min-height:36px;display:flex;align-items:center}
 .optrow.hid{opacity:.6}.optrow .oauto{font-size:12px;color:var(--muted);margin:2px 0 6px}
 .ppv{margin-top:10px;padding:10px 0;border:1px dashed var(--line);border-radius:12px}.ppv:empty{display:none}
@@ -573,7 +574,7 @@ input,textarea,select{border-color:var(--line)}
 .sechead{margin-top:22px;margin-bottom:12px;gap:12px}
 .sec{font-size:clamp(23px,5vw,29px)}
 .rail{gap:14px;padding-bottom:18px}
-.rail .card{width:clamp(132px,34vw,176px)}
+.rail .card{width:clamp(124px,30.5vw,176px)}
 .grid{gap:clamp(12px,2vw,20px);padding-inline:clamp(16px,3vw,28px)}
 .cv{border-radius:16px;border-color:color-mix(in srgb,var(--gold) 62%,var(--line));box-shadow:0 7px 18px rgba(0,0,0,.09)}
 .card b{font-size:14px;line-height:1.35}
@@ -819,13 +820,38 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 #sdet .sdacts .btn{width:100%;min-width:0}
 
 /* MRP: current price on the left, "% off" on the right, the small struck-through original price below */
-.card .pr.prx{display:flex;flex-direction:column;gap:2px}
-.prx .prrow{display:flex;align-items:center;justify-content:space-between;gap:4px 6px;flex-wrap:wrap}
-.prx .prn{white-space:nowrap}
+/* card price: MRP (struck) | price | % OFF on ONE line */
+.card .pr.prx{display:block;margin-top:4px}
+.prx .prrow{display:flex;align-items:center;justify-content:flex-start;gap:3px 4px;flex-wrap:wrap}
+.prx .prn{white-space:nowrap;font-size:14px;font-weight:800;line-height:1.2}
+.prx .mrp{order:-1;font-size:10.5px}
+.prx .off{font-size:8.5px;letter-spacing:0;padding:3px 4px;color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.prx .mrp{margin:0;opacity:1}
 .off{font-style:normal;font-size:11px;font-weight:800;line-height:1;color:var(--ok);background:rgba(var(--ok-rgb),.14);padding:3px 6px;border-radius:6px;white-space:nowrap;flex:none}
 .mrp{font-size:11.5px;font-weight:500;color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
 .plc .pp .mrp,.pkd .pdp .mrp{font-size:13px;margin-left:4px}
 .plc .pp .off,.pkd .pdp .off{margin-left:4px;font-size:11.5px}
+
+/* list card (Discover / View all / search / More stories): cover left, details right */
+.grid.rows{grid-template-columns:1fr;gap:12px}
+@media (min-width:860px){.grid.rows{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card.rcard{display:grid;grid-template-columns:38% minmax(0,1fr);grid-template-rows:1fr auto;column-gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 5px 16px rgba(0,0,0,.08)}
+.rcard .rcv{grid-row:1/3;grid-column:1;display:block;min-width:0;align-self:stretch;position:relative}
+.rcard .rcv .cv{height:100%;min-height:100%;aspect-ratio:3/4;border-radius:12px}
+.rcard .rcv .cv.has-img{aspect-ratio:3/4}
+.rcard .rcv .cv.has-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.rcard .rcb{grid-row:1;grid-column:2;display:flex;flex-direction:column;gap:2px;min-width:0;text-align:left;padding:2px 0 0}
+.rcard .rcb b{margin-top:0;font-size:15.5px;line-height:1.25}
+.rcard .tlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rcard .trow{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 8px;font-size:12.5px;padding-top:6px;border-top:1px dashed var(--line)}
+.rcard .trow:first-child{border-top:0;padding-top:0}
+.rcard .tn{flex:1 1 72px;min-width:0;color:var(--soft,var(--text));font-weight:600;overflow-wrap:anywhere;line-height:1.25}
+.rcard .tv{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.rcard .prn{font-size:14.5px;font-weight:800;color:var(--gold-2)}
+.rcard .mrp{margin:0;opacity:1;font-size:11.5px}
+.rcard .off{font-size:9px;padding:3px 4px;color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.rcard .tmore{font-size:11.5px;color:var(--muted)}
+.card.rcard.cwrap .atc{grid-column:2;grid-row:2;margin-top:10px;align-self:end}
 
 /* Add to cart under a story card + Select plan sheet (one line per topic) */
 .card.cwrap .atc{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;min-height:40px;padding:6px 8px;white-space:nowrap}
@@ -1019,25 +1045,45 @@ const genreList = s => String((s && s.genre) || '').split(',').map(x => x.trim()
 const mainGenre = s => genreList(s)[0] || '';   // first genre = the main genre
 const subGenres = s => genreList(s).slice(1);   // the rest = sub genres (story page only)
 const priceMax = s => { if (s.max_price != null) return +s.max_price; if (s.options && s.options.length) return Math.max(...s.options.map(o => +o.price)); return null; };
-const priceLabel = s => {
+const dealOf = (p, s) => Math.round(+p * (100 - s.deal.pct) / 100);
+const priceLabel = s => {                                                       // ONE price, never a range: the highest plan of the story
   if (s.plans === 0) return 'Price soon';
-  if (s.deal) return 'From ' + money(s.eff_price) + ' (-' + s.deal.pct + '%)';
   const hi = priceMax(s), lo = +s.min_price;
-  if (hi != null && hi > lo) return money(lo) + ' - ' + money(hi);          // low and high price of the story's plans
+  if (hi != null && hi > 0) return money(s.deal ? dealOf(hi, s) : hi) + (s.deal ? ' (-' + s.deal.pct + '%)' : '');
   return lo === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(lo));
 };
-const mrpOn = s => !s.deal && s.min_mrp != null && s.max_mrp != null && +s.save_pct > 0;
-const priceHtml = s => {                                                       // price | % saved on the right | small struck-through MRP range below (no MRP set: just the price as before)
-  if (!mrpOn(s)) return `<span class="pr">${priceLabel(s)}</span>`;
-  const lo = +s.min_mrp, hi = +s.max_mrp, one = !s.has_free && priceMax(s) === +s.min_price;
-  return `<span class="pr prx"><span class="prn">${one ? money(s.min_price) : priceLabel(s)}</span><span class="prrow"><s class="mrp" aria-label="MRP">${hi > lo ? money(lo) + ' - ' + money(hi) : money(lo)}</s><em class="off">${s.save_var ? 'Up to ' : ''}${s.save_pct}% off</em></span></span>`;
+const priceHtml = s => {                                                       // struck-through MRP | highest price | % OFF, all on one line (no MRP / deal: just the price)
+  const hi = priceMax(s); let cur, old, pct;
+  if (s.plans > 0 && hi > 0 && s.deal){ cur = dealOf(hi, s); old = hi; pct = s.deal.pct; }
+  else if (s.plans > 0 && hi > 0){
+    const m = s.top_mrp !== undefined ? s.top_mrp : (hi === +s.max_price ? s.max_mrp : null);           // MRP of the highest plan
+    if (m != null && +m > hi){ cur = hi; old = +m; pct = s.top_pct !== undefined ? s.top_pct : Math.round((old - hi) * 100 / old); }
+  }
+  if (cur == null) return `<span class="pr">${priceLabel(s)}</span>`;
+  return `<span class="pr prx"><span class="prrow"><s class="mrp" aria-label="MRP">${money(old)}</s><span class="prn">${money(cur)}</span><em class="off">${pct}% OFF</em></span></span>`;
 };
 const atcShow = s => s.plans > 0 && (+s.min_price > 0 || (priceMax(s) || 0) > 0 || !!s.deal);          // a story with at least one paid plan gets the button
 const atcBtn = s => atcShow(s) ? `<button class="btn small atc" data-atc="${esc(s.id)}" aria-label="Add ${esc(s.title)} to cart">&#128722; Add to cart</button>` : '';
 const card = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
   <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small>${priceHtml(s)}</button>${atcBtn(s)}</div>`;
+
+/* list card: cover on the left (full height) | title, genre, one line per topic "price | MRP | OFF", Add to cart */
+const tpRows = s => {
+  if (s.plans === 0) return [];
+  let rows = Array.isArray(s.tprice) ? s.tprice.slice() : null;
+  if (!rows){ const hi = priceMax(s); if (!(hi > 0)) return []; const m = s.top_mrp !== undefined ? s.top_mrp : (hi === +s.max_price ? s.max_mrp : null); rows = [{name: 'Full Story', price: hi, mrp: +m > hi ? +m : null, pct: +m > hi ? Math.round((m - hi) * 100 / m) : 0}]; }
+  return rows.map(r => s.deal && r.price > 0 ? {name: r.name, price: dealOf(r.price, s), mrp: r.price, pct: s.deal.pct} : r);
+};
+const rowCard = s => {
+  const rows = tpRows(s), shown = rows.slice(0, 4), more = rows.length - shown.length;
+  const lines = shown.map(r => `<span class="trow"><span class="tn">${esc(r.name)}</span><span class="tv">${r.price > 0 ? `<span class="prn">${money(r.price)}</span>${r.mrp ? `<s class="mrp" aria-label="MRP">${money(r.mrp)}</s><em class="off">${r.pct}% OFF</em>` : ''}` : '<span class="prn">Free</span>'}</span></span>`).join('')
+    + (more > 0 ? `<span class="tmore">+${more} more topic${more === 1 ? '' : 's'}</span>` : '');
+  const sub = [mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | ');
+  return `<div class="card rcard cwrap"><button class="plain rcv" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}</button>
+  <button class="plain rcb" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><b>${esc(s.title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}<span class="tlist">${lines || `<span class="trow"><span class="tn">${esc(priceLabel(s))}</span></span>`}</span></button>${atcBtn(s)}</div>`;
+};
 const homeCard = card;                                    // no list shows an episode count any more
-const tierCard = s => homeCard(s).replace(/<span class="pr">.*?<\/span>/, `<span class="pr">${s.deal ? `<s>${money(s.max_price)}</s>` : ''}${money(s.last_price)}</span>`);      // Super deals show the last (highest) plan price only
+const tierCard = s => homeCard(s);                 // Super deals: same card, highest plan price with its MRP and % OFF
 const cardSk = n => Array.from({length: n}, () => '<div class="sk card-sk"></div>').join('');
 const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button class="btn" id="${id}">Try again</button></div>`;
 
@@ -1175,9 +1221,9 @@ function renderResults(){
 function paintResults(){
   const r = $('#sresBody'); if (!r) return;
   if (SR.state === 'error' && !SR.items.length){ r.innerHTML = retryBox(SR.err, 'sresRetry'); return; }
-  if (SR.state === 'loading' && !SR.items.length){ r.innerHTML = `<div class="grid">${Array.from({length: 6}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>`; return; }
+  if (SR.state === 'loading' && !SR.items.length){ r.innerHTML = `<div class="grid rows">${Array.from({length: 4}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>`; return; }
   if (!SR.items.length){ r.innerHTML = `<div class="empty">No stories match \u201C${esc(SR.q)}\u201D.<br>Try another title, author, genre or language.</div>`; return; }
-  r.innerHTML = `<div class="by" style="margin:2px 16px 12px" aria-live="polite">${SR.total} ${SR.total === 1 ? 'result' : 'results'} for \u201C${esc(SR.q)}\u201D</div><div class="grid">${SR.items.map(card).join('')}</div>
+  r.innerHTML = `<div class="by" style="margin:2px 16px 12px" aria-live="polite">${SR.total} ${SR.total === 1 ? 'result' : 'results'} for \u201C${esc(SR.q)}\u201D</div><div class="grid rows">${SR.items.map(rowCard).join('')}</div>
     <div class="browse-tail">${SR.items.length < SR.total ? `<button class="btn ghost block" id="sresMore"${SR.state === 'loading' ? ' disabled' : ''}>${SR.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${SR.state === 'error' ? `<div class="msg bad">${esc(SR.err)} <button class="link" id="sresRetry">Retry</button></div>` : ''}</div>`;
 }
 async function loadResults(reset){
@@ -1248,8 +1294,8 @@ function renderHome(){
 }
 function paintFeed(){
   const f = $('#feed'), F = S.feed; if (!f) return;
-  f.innerHTML = (F.items.length ? `<div class="sechead"><h2 class="sec">${tr('more')}</h2></div><div class="grid">${F.items.map(homeCard).join('')}</div>` : '') +
-    (F.state === 'loading' ? `<div class="grid">${Array.from({length: 3}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>` : '') +
+  f.innerHTML = (F.items.length ? `<div class="sechead"><h2 class="sec">${tr('more')}</h2></div><div class="grid rows">${F.items.map(rowCard).join('')}</div>` : '') +
+    (F.state === 'loading' ? `<div class="grid rows">${Array.from({length: 2}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>` : '') +
     (F.state === 'error' ? retryBox(F.err, 'retryFeed') : '') + (F.done && F.items.length ? `<div class="empty"><small>${tr('caught')}</small></div>` : '');
 }
 async function loadFeed(){
@@ -2082,9 +2128,9 @@ function browseChips(){
 function browseResults(){
   const r = $('#bres'); if (!r) return;
   if (B.state === 'error' && !B.items.length){ r.innerHTML = retryBox(B.err, 'retryBrowse'); return; }
-  if (B.state === 'loading' && !B.items.length){ r.innerHTML = `<div class="grid">${Array.from({length: 6}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>`; return; }
+  if (B.state === 'loading' && !B.items.length){ r.innerHTML = `<div class="grid rows">${Array.from({length: 4}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>`; return; }
   if (!B.items.length){ r.innerHTML = `<div class="empty">No stories match${B.q ? ` "${esc(B.q)}"` : ' these filters'}.${browseActive() ? '<br><button class="btn ghost small" id="bclear2">Clear search and filters</button>' : ''}</div>`; return; }
-  r.innerHTML = `<div class="grid">${B.items.map(card).join('')}</div><div class="browse-tail"><div class="by" id="browseCount" aria-live="polite">${B.items.length} of ${B.total}</div>
+  r.innerHTML = `<div class="grid rows">${B.items.map(rowCard).join('')}</div><div class="browse-tail"><div class="by" id="browseCount" aria-live="polite">${B.items.length} of ${B.total}</div>
     ${B.items.length < B.total ? `<div id="browseEnd" class="browse-end" aria-hidden="true"></div><button class="btn ghost block" id="bmore"${B.state === 'loading' ? ' disabled' : ''}>${B.state === 'loading' ? 'Loading more stories…' : 'Load more stories ↓'}</button>` : `<div class="browse-finished">You’re all caught up ✨</div>`}
     ${B.state === 'error' ? `<div class="msg bad">${esc(B.err)} <button class="link" id="retryBrowse">Retry</button></div>` : ''}</div>`;
   watchBrowse();
@@ -2127,9 +2173,9 @@ function viewAll(key){                                   // "View all" on Home o
 function paintVall(){
   const r = $('#vallBody'); if (!r) return;
   if (VA.state === 'error' && !VA.items.length){ r.innerHTML = retryBox(VA.err, 'vallRetry'); return; }
-  if (VA.state === 'loading' && !VA.items.length){ r.innerHTML = `<div class="grid">${Array.from({length: 6}, () => '<div class="sk" style="aspect-ratio:3/4"></div>').join('')}</div>`; return; }
+  if (VA.state === 'loading' && !VA.items.length){ r.innerHTML = `<div class="grid rows">${Array.from({length: 4}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>`; return; }
   if (!VA.items.length){ r.innerHTML = '<div class="empty">No stories here yet.</div>'; return; }
-  r.innerHTML = `<div class="grid">${VA.items.map(card).join('')}</div><div class="browse-tail">${!VA.done ? `<button class="btn ghost block" id="vallMore"${VA.state === 'loading' ? ' disabled' : ''}>${VA.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${VA.state === 'error' ? `<div class="msg bad">${esc(VA.err)} <button class="link" id="vallRetry">Retry</button></div>` : ''}</div>`;
+  r.innerHTML = `<div class="grid rows">${VA.items.map(rowCard).join('')}</div><div class="browse-tail">${!VA.done ? `<button class="btn ghost block" id="vallMore"${VA.state === 'loading' ? ' disabled' : ''}>${VA.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${VA.state === 'error' ? `<div class="msg bad">${esc(VA.err)} <button class="link" id="vallRetry">Retry</button></div>` : ''}</div>`;
 }
 async function loadVall(reset){
   const sig = fresh('vall'); if (reset) VA.items = [];
@@ -3264,15 +3310,13 @@ function optRow(o = {}, removable = true, kind){
   const rent = kind === 'rental', full = kind === 'full', auto = !!o.auto, ro = auto ? ' readonly' : '';
   const flags = (full ? `<label class="field check"><input type="checkbox" class="o-snap"${o.scope === 'snapshot' ? ' checked' : ''}><span style="margin:0">Till date: only the episodes available when access is granted (no future episodes)</span></label>` : '') + `<label class="field check"><input type="checkbox" class="o-fwd"${o.fwd ? ' checked' : ''}><span style="margin:0">Forwarding allowed: episodes sent to chat can be forwarded and saved</span></label>`;
   const ph = rent ? 'Rental name, e.g. 30-day rental' : full ? 'Plan name, e.g. Full Story' : 'Pack name, e.g. Episodes 1-50';
-  const custom = !!(o.badge || o.note || o.hidden || o.order || o.fwd || o.scope || o.nonote || o.mrp);
+  const custom = !!(o.badge || o.note || o.hidden || o.order || o.fwd || o.scope || o.nonote);
   return `<div class="optrow${o.hidden ? ' hid' : ''}" data-id="${esc(o.id || '')}" data-kind="${kind}"${auto ? ' data-auto="1"' : ''}><input class="o-label" placeholder="${ph}" value="${esc(o.label || '')}" aria-label="Plan name"${ro}>
     ${auto ? '<div class="oauto">Made by the pack rule. You can change its price, badge, note, position and visibility.</div>' : ''}
-    <div class="${full ? 'o3' : 'o4'}"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price">
-    ${full ? '<input class="o-days" type="hidden" value="0">' : `<input class="o-days" type="number" min="${rent ? 1 : 0}" inputmode="numeric" placeholder="${rent ? 'Days *' : 'Days (0 = keep)'}" value="${o.days ?? ''}" aria-label="Days of access">`}
-    <input class="o-from" type="number" min="1" inputmode="numeric" placeholder="${rent ? 'From ep (blank = all)' : 'From ep'}" value="${o.from ?? ''}" aria-label="From episode"${ro}><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"${ro}></div>
+    <div class="o2 omp"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-mrp" type="number" min="0" inputmode="decimal" placeholder="MRP (original price)" value="${o.mrp ?? ''}" aria-label="MRP, the original price. Other plans of this story or topic get the same % off"></div>
+    <div class="${full ? 'o2' : 'o3'}">${full ? '<input class="o-days" type="hidden" value="0">' : `<input class="o-days" type="number" min="${rent ? 1 : 0}" inputmode="numeric" placeholder="${rent ? 'Days *' : 'Days (0 = keep)'}" value="${o.days ?? ''}" aria-label="Days of access">`}<input class="o-from" type="number" min="1" inputmode="numeric" placeholder="${rent ? 'From ep (blank = all)' : 'From ep'}" value="${o.from ?? ''}" aria-label="From episode"${ro}><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"${ro}></div>
     ${full ? `<label class="field check"><input type="checkbox" class="o-notetick"${o.nonote ? '' : ' checked'}><span style="margin:0">Show the "we don't guarantee upcoming episodes" note on this plan</span></label>` : ''}
     <details class="oextra"${custom ? ' open' : ''}><summary>Customise${custom ? ' &#10003;' : ''}</summary>
-      <label class="field"><span>MRP / original price (shown small and struck through, with the % saved; empty = none)</span><input class="o-mrp" type="number" min="0" inputmode="decimal" placeholder="e.g. 499" value="${o.mrp ?? ''}" aria-label="MRP"></label>
       <div class="o2"><label class="field"><span>Badge (e.g. Best value)</span><input class="o-badge" maxlength="24" value="${esc(o.badge || '')}"></label><label class="field"><span>Position (1 = first)</span><input class="o-order" type="number" min="1" max="9999" inputmode="numeric" value="${o.order || ''}"></label></div>
       <label class="field"><span>Short note shown on the plan</span><input class="o-note" maxlength="140" value="${esc(o.note || '')}"></label>
       <label class="field"><span>Section (moves after you save)</span><select class="o-kind">${['full', 'pack', 'rental'].map(k => `<option value="${k}"${k === kind ? ' selected' : ''}>${KINDS[k][1]}</option>`).join('')}</select></label>
@@ -3978,6 +4022,18 @@ document.addEventListener('input', e => {
   if (id === 'rSlide') setRate(parseFloat(e.target.value));
 });
 const epSearch = deb(() => loadStoryPage(1), 350), adminSearch = deb(() => loadAdmin(), 350), manageSearch = deb(() => loadManage(), 350);
+/* MRP on one plan -> every other paid plan of the same story / topic editor gets an MRP with the SAME % off */
+function syncMrp(inp){
+  const row = inp.closest('.optrow'), box = inp.closest('.pe'); if (!row || !box) return;
+  const price = Number(row.querySelector('.o-price').value), mrp = Number(inp.value);
+  if (inp.value === '' || !(price > 0)) return;
+  if (!(mrp > price)){ toast('MRP must be higher than the price'); return; }
+  const ratio = price / mrp; let n = 0;
+  $$('.optrow', box).forEach(r => { if (r === row) return; const pi = r.querySelector('.o-price'), mi = r.querySelector('.o-mrp'), p = Number(pi.value);
+    if (!mi || !(p > 0)) return; mi.value = Math.round(p / ratio); n++; });
+  toast(n ? `${Math.round((1 - ratio) * 100)}% off set on ${n} other plan${n === 1 ? '' : 's'}` : `${Math.round((1 - ratio) * 100)}% off`);
+}
+document.addEventListener('change', e => { if (e.target && e.target.classList && e.target.classList.contains('o-mrp')) syncMrp(e.target); });
 document.addEventListener('change', async e => {
   const id = e.target.id;
   if (id === 'bsort'){ B.sort = e.target.value; return loadBrowse(true); }
