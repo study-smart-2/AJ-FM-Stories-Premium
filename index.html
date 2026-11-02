@@ -1486,14 +1486,14 @@ const CP_FIX = ['story', 'status', 'section', 'min_stories', 'min_order'];      
 function partyPop(el){                                            // two party poppers shoot confetti from the bottom corners
   if (!document.body.contains(el)) return;
   const W = innerWidth, H = innerHeight, cols = ['#f6c453','#ff6b9a','#4fd1a1','#5aa9ff','#a98bff','#ffffff','#ff9f43'], r = (a, b) => a + Math.random() * (b - a);
-  let h = '<b class="l">&#x1F389;</b><b class="r">&#x1F389;</b>';
-  for (let i = 0; i < 90; i++){
+  let h = '';
+  for (let i = 0; i < 260; i++){
     const side = i % 2, dir = side ? -1 : 1, up = r(.35, .85) * H;
-    h += `<i class="${i % 4 === 0 ? 'rd' : ''}" style="--sx:${side ? W - 34 : 34}px;--sy:${H - 40}px;--w:${r(6, 11).toFixed(1)}px;--h:${r(4, 14).toFixed(1)}px;--c:${cols[i % cols.length]};--x:${Math.round(dir * r(.08, .75) * W)}px;--uy:${-Math.round(up)}px;--fy:${Math.round(-up + r(.25, .6) * H)}px;--r:${Math.round(r(-720, 720))}deg;--t:${r(1.9, 3).toFixed(2)}s;--dl:${r(0, .25).toFixed(2)}s"></i>`;
+    h += `<i class="${i % 4 === 0 ? 'rd' : ''}" style="--sx:${side ? W - 34 : 34}px;--sy:${H - 40}px;--w:${r(5, 10).toFixed(1)}px;--h:${r(4, 13).toFixed(1)}px;--c:${cols[i % cols.length]};--x:${Math.round(dir * r(.08, .75) * W)}px;--uy:${-Math.round(up)}px;--fy:${Math.round(-up + r(.25, .6) * H)}px;--r:${Math.round(r(-720, 720))}deg;--t:${r(2, 3.4).toFixed(2)}s;--dl:${r(0, .45).toFixed(2)}s"></i>`;
   }
   const c = document.createElement('div'); c.className = 'cw-conf'; c.setAttribute('aria-hidden', 'true'); c.innerHTML = h; el.appendChild(c);
   try{ navigator.vibrate && navigator.vibrate([25, 40, 25]); }catch(e){}
-  setTimeout(() => c.remove(), 3600);
+  setTimeout(() => c.remove(), 4300);
 }
 function showCouponWin(o){                                        // o = {code, text, saved, sub, total}
   const old = $('#cw'); if (old) old.remove();
