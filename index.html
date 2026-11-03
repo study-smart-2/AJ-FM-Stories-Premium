@@ -38,6 +38,10 @@ h1,h2,h3,h4{margin:0}
 .sechead{display:flex;align-items:baseline;justify-content:space-between;margin:10px 16px 8px}
 .sec{font-family:var(--serif);font-size:24px;line-height:1.1}
 .link{background:none;border:0;color:var(--gold-2);padding:6px 0;font-size:13.5px;min-height:36px}
+.rv-sum{display:flex;align-items:center;gap:8px;margin:-4px 16px 10px;color:var(--muted);font-size:13px}.rv-sum b{color:var(--gold-2);font-size:18px;font-family:var(--serif)}
+.rv-card{flex:none;width:78%;max-width:290px;scroll-snap-align:start;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;text-align:left}
+.rv-card.feat{border-color:var(--gold)}.rv-st{color:var(--gold);letter-spacing:2px;font-size:15px}.rv-msg{color:var(--text);font-size:14px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.rv-by{color:var(--muted);font-size:12px;margin-top:auto}.rv-by b{color:var(--soft);font-weight:600}
 .rail{display:flex;gap:12px;overflow-x:auto;padding:0 16px 12px;scroll-snap-type:x proximity;scroll-padding:0 16px;scrollbar-width:none;align-items:flex-start}
 .rail::-webkit-scrollbar{display:none}
 .rail .card{flex:none;width:136px;scroll-snap-align:start}
@@ -1387,6 +1391,13 @@ const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="
 const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
 
 const awayBanner = () => { const a = S.away; return a && a.away ? `<div class="awaybar" role="status"><b>&#128680; Admin is unavailable</b><span>&#128221; ${esc(a.reason)}</span><span>&#9203; Back: ${new Date(a.until * 1000).toLocaleString()}</span><small>&#128179; Payments and messages wait until the admin is back. &#127911; Your stories keep working.</small></div>` : ''; };
+function reviewsSection(){
+  const R = S.reviews; if (!R || !R.items || !R.items.length) return '';
+  const a = R.summary && R.summary.average, n = R.summary && R.summary.count;
+  return `<div class="sechead"><h2 class="sec">&#128172; What listeners say</h2></div>` +
+    (a ? `<div class="rv-sum"><b>&#9733; ${esc(a)}</b><span>${esc(n)} rating${n === 1 ? '' : 's'}</span></div>` : '') +
+    `<div class="rail">${R.items.map(r => `<div class="rv-card${r.featured ? ' feat' : ''}"><div class="rv-st" aria-label="${r.stars} stars">${'&#9733;'.repeat(r.stars)}</div><div class="rv-msg">${esc(r.message)}</div><div class="rv-by"><b>${esc(r.name)} ne</b>${r.title ? ' &middot; ' + esc(r.title) : ''}</div></div>`).join('')}</div>`;
+}
 function renderHome(){
   const v = $('#view'); renderHeader();
   if (S.homeState === 'error' && !S.home){ v.innerHTML = retryBox(S.homeErr, 'retryHome'); return; }
@@ -1400,6 +1411,7 @@ function renderHome(){
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
     tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
     offersStrip(),                                                                            // between Super deals and Recently added
+    reviewsSection(),                                                                         // good reviews from listeners (promotion)
     secRail(tr('recent'), h.recent, 'recent'), dailyCombosSection(), secRail(tr('ongoing'), h.ongoing, 'ongoing'),
     offersStrip(),                                                                            // between Ongoing and Completed
     secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
@@ -2235,7 +2247,7 @@ function paintBrowse(){
   if (B.state === 'idle') loadBrowse(true);
 }
 /* ---- discover: 1 row = 1 card, tap to preview 3 stories, See all opens the full list ---- */
-const GENRE_ICON = [[/romanc|love/i,'\u2764\uFE0F'],[/horror|ghost|haunt/i,'\uD83D\uDC7B'],[/thrill|crime|detect/i,'\uD83D\uDD75\uFE0F'],[/mystery/i,'\uD83D\uDD0E'],[/fantas|magic/i,'\uD83E\uDDD9'],[/action|war/i,'\u2694\uFE0F'],[/comed|humou?r/i,'\uD83D\uDE02'],[/drama|family/i,'\uD83C\uDFAD'],[/sci|space/i,'\uD83D\uDE80'],[/mytholog|devot|spirit/i,'\uD83D\uDD49\uFE0F'],[/kid|child/i,'\uD83E\uDDF8']];
+const GENRE_ICON = [[/romanc|love/i,'\u2764\uFE0F'],[/horror|ghost|haunt/i,'\uD83D\uDC7B'],[/thrill|crime|detect/i,'\uD83D\uDD75\uFE0F'],[/mystery/i,'\uD83D\uDD0E'],[/adventur|journey|explor/i,'\uD83E\uDDED'],[/fantas|magic/i,'\uD83E\uDDD9'],[/action|war/i,'\u2694\uFE0F'],[/comed|humou?r/i,'\uD83D\uDE02'],[/drama|family/i,'\uD83C\uDFAD'],[/sci|space/i,'\uD83D\uDE80'],[/mytholog|devot|spirit/i,'\uD83D\uDD49\uFE0F'],[/kid|child/i,'\uD83E\uDDF8']];
 const STATUS_ICON = {Completed:'\u2705', Ongoing:'\u26A1', Upcoming:'\uD83D\uDD52', Stopped:'\u23F8\uFE0F', Paused:'\u23F8\uFE0F'};
 function discoverRows(){
   const all = B.all || [], f = B.facets || {}, byUpd = (a, b) => b.updated - a.updated;
@@ -2984,12 +2996,12 @@ function planDetailHtml(o, s, a){                            // every detail of 
   s = s || V.story; a = a === undefined ? V.access : a;
   const kind = planKind(o), tn = topicNameOf(s, o), owned = planOwnedIn(a, o), free = Number(o.price) === 0, n = o.from && o.to ? o.to - o.from + 1 : 0;
   const row = (k, v, cls = '') => `<div${cls ? ` class="${cls}"` : ''}><span>${k}</span><span>${v}</span></div>`;
-  const eps = o.from ? (o.ongoing ? `${o.from} to Ongoing` : o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : (isSnap(o) ? esc(snapEps(o, s).replace(/^Episodes? /, '')) : 'All episodes');
+  const eps = isSnap(o) ? (esc(snapEps(o, s).replace(/^Episodes? /, '')) || 'All episodes') : o.from ? (o.ongoing ? `${o.from} to Ongoing` : o.to ? `${o.from} to ${o.to} (${n} episode${n === 1 ? '' : 's'})` : `${o.from} onwards (ongoing)`) : (isSnap(o) ? esc(snapEps(o, s).replace(/^Episodes? /, '')) : 'All episodes');
   const warn = kind === 'full' && !storyDone(s) && !o.nonote ? (isSnap(o) ? 'Includes every episode available on the day your access starts. Episodes uploaded later are not included.' : 'We do not guarantee to supply all upcoming episodes. Uploading of episodes can stop any day for this story.') : '';
   return `<div class="pkd" id="pkDetail">${row('Plan', esc(o.label))}${row('Type', kind === 'rental' ? 'Rental' : kind === 'pack' ? 'Episode pack' : (isSnap(o) ? 'Full story (till date)' : 'Full story'))}${tn ? row('Topic', esc(tn)) : ''}${row('Episodes', eps)}
     ${o.badge ? row('Highlight', '&#9733; ' + esc(o.badge)) : ''}${o.note ? row('About', esc(o.note)) : ''}
     ${row('Access', Number(o.days) > 0 ? `${o.days} days` : esc(tr('lkeep')))}${kind === 'rental' ? row('Starts', 'When your payment is approved') : ''}
-    ${o.ongoing ? row('Note', `Ongoing series: only ${n} episodes can be added in this range, so episodes till ${Number(o.to).toLocaleString('en-IN')} are covered. New episodes are added as they release, but we do not guarantee that every ongoing episode will be updated.`) : (o.from && !o.to ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
+    ${o.ongoing ? row('Note', `Ongoing series: only ${n} episodes can be added in this range, so episodes till ${Number(o.to).toLocaleString('en-IN')} are covered. New episodes are added as they release, but we do not guarantee that every ongoing episode will be updated.`) : (o.from && !o.to && !isSnap(o) ? row('Note', 'Ongoing: new episodes are included as they are added') : '')}
     ${warn ? row('Note', warn) : ''}${free ? '' : row('Forwarding', o.fwd ? 'Forwarding &amp; saving allowed' : '&#128274; Protected: no forwarding')}
     ${row('Price', owned ? 'Owned' : planPrice(o) + (o.credit && !free ? ` (upgrade credit -${money(o.credit)})` : ''), 'pdp')}
     ${free && !owned ? `<button class="btn block" data-free="${o.from || 1}">Listen free</button>` : ''}</div>`;
@@ -4312,6 +4324,7 @@ function splashInit(){
   api('/api/terms').then(t => { if (t.user && !t.accepted) showTerms(); }).catch(() => {});
   api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(e => { if (e.network || !navigator.onLine) offlineBoot(); });
   applyTheme(); applyLang(); renderHeader();
+  api('/api/reviews?limit=12').then(d => { S.reviews = d; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/notices').then(d => { S.notices = d.items; renderHeader(); }).catch(() => {});
   setTab(S.tab);
