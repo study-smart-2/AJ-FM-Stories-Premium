@@ -1024,6 +1024,7 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
 <section class="sheet" id="epman" aria-label="Episode manager"></section>
 <section class="sheet" id="topiced" aria-label="Topic editor"></section>
 <section class="sheet" id="cpedit" aria-label="Coupon editor"></section>
+<section class="sheet" id="coledit" aria-label="Collection editor"></section>
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="combopage" aria-label="Story combinations"></section>
 <section class="sheet" id="couponed" aria-label="Coupon editor"></section>
@@ -1388,7 +1389,7 @@ const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data
 const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}" aria-label="Continue ${esc(i.story.title)}, episode ${i.episode.no}">${cover(i.story.cover)}
   <div style="min-width:0;flex:1"><b>${esc(i.story.title)}</b><small>Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}</small>
   <div class="bar"><i style="width:${i.episode.duration ? Math.min(100, i.pos / i.episode.duration * 100) : 0}%"></i></div></div></button>`);
-const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
+const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.collections || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
 
 const awayBanner = () => { const a = S.away; return a && a.away ? `<div class="awaybar" role="status"><b>&#128680; Admin is unavailable</b><span>&#128221; ${esc(a.reason)}</span><span>&#9203; Back: ${new Date(a.until * 1000).toLocaleString()}</span><small>&#128179; Payments and messages wait until the admin is back. &#127911; Your stories keep working.</small></div>` : ''; };
 function reviewsSection(){
@@ -1410,6 +1411,7 @@ function renderHome(){
     secRail(tr('trending'), hero, heroKey, slide),
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
     tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
+    ...(h.collections || []).map(c => secRail(esc((c.emoji ? c.emoji + ' ' : '') + c.name), c.items, null)),   // collections: the stories the admin picked, in the admin's order
     offersStrip(),                                                                            // between Super deals and Recently added
     reviewsSection(),                                                                         // good reviews from listeners (promotion)
     secRail(tr('recent'), h.recent, 'recent'), dailyCombosSection(), secRail(tr('ongoing'), h.ongoing, 'ongoing'),
@@ -3141,7 +3143,7 @@ function renderAdmin(){
       <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
       <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
     </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['combos', '🔥 Combinations'], ['updates', '\uD83D\uDCE3 Updates'], ['feedback', '💡 Feedback'], ['index', '🗂 Index Bot'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
+    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['collections', '📚 Collections'], ['combos', '🔥 Combinations'], ['updates', '\uD83D\uDCE3 Updates'], ['feedback', '💡 Feedback'], ['index', '🗂 Index Bot'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
   loadAdmin();
 }
 function openCouponEditor(id){
@@ -3175,6 +3177,35 @@ async function saveCoupon(){
     const body = {id: CPA.id, story_id: sPick ? sPick.id : '', min_stories: g('mins').value || 0, order_mode: g('ordmode').value, order_no: g('ordno').value || 0, headline: g('head').value.trim(), statuses: $$('.cp_st:checked').map(x => x.value), sections: $$('.cp_sec:checked').map(x => +x.value), code: g('code').value.trim(), title: g('title').value.trim(), discount_type: g('type').value, discount_value: g('value').value, min_order_value: g('min').value || 0,
       usage_limit: g('use').value || 0, per_user_limit: g('per').value || 0, starts_at: dt(g('start').value), expires_at: dt(g('end').value), is_active: g('active').checked, listed: g('listed').checked};
     try{ await api('/api/admin/coupon', {method: 'POST', retry: false, body: JSON.stringify(body)}); toast('Coupon saved'); closeSheet('cpedit'); loadAdmin(); loadOffers(); }
+    catch(e){ toast(adminErr(e), 5000); }
+  });
+}
+/* ---------- admin: Collections (a named group of specific stories, shown as a row on Home) ---------- */
+const COL = {list: [], stories: [], id: null, sel: [], q: ''};
+const colTitle = id => { const s = COL.stories.find(x => x.id === id); return s ? s.title : id; };
+function colPaint(){
+  const box = $('#col_sel'); if (!box) return;
+  box.innerHTML = COL.sel.map((id, i) => `<div class="mrow" style="display:flex;align-items:center;gap:6px;padding:8px 10px"><span style="flex:1;min-width:0">${i + 1}. ${esc(colTitle(id))}</span><button class="btn ghost small" data-colmv="${i}:-1" type="button"${i ? '' : ' disabled'}>▲</button><button class="btn ghost small" data-colmv="${i}:1" type="button"${i < COL.sel.length - 1 ? '' : ' disabled'}>▼</button><button class="btn danger small" data-colrm="${i}" type="button">✕</button></div>`).join('') || '<div class="hint" style="padding:0 16px">No story yet. Search below and tap a story to add it.</div>';
+  const q = COL.q.trim().toLowerCase();
+  const found = COL.stories.filter(s => !COL.sel.includes(s.id) && (!q || s.title.toLowerCase().includes(q))).slice(0, 30);
+  $('#col_res').innerHTML = found.map(s => `<button class="chip" data-colpick="${esc(s.id)}" type="button">＋ ${esc(s.title)}</button>`).join('') || '<span class="hint">No other story matches.</span>';
+}
+function openCollectionEditor(id){
+  const c = COL.list.find(x => x.id === id) || {active: true, emoji: '📚', story_ids: []}; COL.id = c.id || null; COL.sel = (c.story_ids || []).slice(); COL.q = '';
+  $('#coledit').innerHTML = `<div class="top"><button class="btn ghost small" id="colClose">Back</button><strong>${c.id ? 'Edit collection' : 'New collection'}</strong></div>
+    <div class="two"><label class="field"><span>Name *</span><input id="col_name" value="${esc(c.name || '')}" maxlength="40" placeholder="Weekend binge"></label><label class="field"><span>Emoji</span><input id="col_emoji" value="${esc(c.emoji || '')}" maxlength="4" placeholder="🔥"></label></div>
+    <div class="field"><span>Stories in this collection (members see them in this order)</span><div id="col_sel"></div></div>
+    <label class="field"><span>Add a story: type part of its name</span><input id="col_q" placeholder="Search stories" autocomplete="off"></label>
+    <div id="col_res" style="display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px"></div>
+    <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="col_active"${c.active ? ' checked' : ''}> <span>Show on Home (untick to hide it)</span></label>
+    <div class="actions"><button class="btn" id="colSave">Save collection</button><button class="btn ghost" id="colClose2">Cancel</button></div>`;
+  $('#col_q').addEventListener('input', e => { COL.q = e.target.value; colPaint(); });
+  colPaint(); openSheet('coledit');
+}
+async function saveCollection(){
+  await once('colsave', async () => {
+    const name = $('#col_name').value.trim(); if (!name) return toast('Give the collection a name.', 4000);
+    try{ await api('/api/admin/collection', {method: 'POST', retry: false, body: JSON.stringify({id: COL.id, name, emoji: $('#col_emoji').value.trim(), active: $('#col_active').checked, story_ids: COL.sel})}); toast('Collection saved'); closeSheet('coledit'); loadAdmin(); S.home = null; S.homeState = 'idle'; }
     catch(e){ toast(adminErr(e), 5000); }
   });
 }
@@ -3431,6 +3462,13 @@ async function loadAdmin(){
         `<h3 class="h3" style="font-size:20px">Offer banners</h3>` +
         (bn.banners.map(x => `<div class="mrow"><h4>${esc(x.title)} <span class="tag ${x.live ? 'live' : ''}">${x.live ? 'live' : 'hidden'}</span></h4>${x.body ? `<div class="by">${esc(x.body)}</div>` : ''}
           <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-bntog="${x.id}">${x.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-bndel="${x.id}">Delete</button></div></div>`).join('') || '<div class="empty">No banners.</div>');
+    } else if (tab === 'collections'){
+      const d = await api('/api/admin/collections', {signal: sig}); if (A.tab !== tab) return;
+      COL.list = d.collections; COL.stories = d.stories || [];
+      body.innerHTML = `<div class="actions" style="margin-bottom:12px"><button class="btn" id="colNew">＋ New collection</button></div><p class="note" style="margin:0 0 12px">A collection is a named row on the Home page. You pick the specific stories that go under it, and the order they show in.</p>` +
+        (d.collections.map(c => `<div class="mrow"><h4>${esc((c.emoji ? c.emoji + ' ' : '') + c.name)} <span class="tag ${c.active ? 'live' : ''}">${c.active ? 'live' : 'hidden'}</span></h4>
+          <div class="by">${c.story_ids.length} stor${c.story_ids.length === 1 ? 'y' : 'ies'}${c.story_ids.length ? ': ' + esc(c.story_ids.slice(0, 6).map(colTitle).join(', ')) + (c.story_ids.length > 6 ? '…' : '') : ''}</div>
+          <div class="actions" style="padding:8px 0 0"><button class="btn small" data-coledit="${c.id}">Edit</button><button class="btn ghost small" data-colact="${c.id}:up">▲</button><button class="btn ghost small" data-colact="${c.id}:down">▼</button><button class="btn ghost small" data-colact="${c.id}:toggle">${c.active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-colact="${c.id}:delete">Delete</button></div></div>`).join('') || '<div class="empty">No collections yet. Tap New collection.</div>');
     } else if (tab === 'combos'){
       const selectedDate = $('#cbd_date') ? $('#cbd_date').value : ''; const dailyUrl = '/api/admin/combos/daily?preview=1' + (selectedDate ? '&date=' + encodeURIComponent(selectedDate) : ''); const [d, daily] = await Promise.all([api('/api/admin/combos', {signal: sig}), api(dailyUrl, {signal: sig})]); if (A.tab !== tab) return;
       body.innerHTML = cbaHtml(d) + cbdHtml(daily);
@@ -4120,6 +4158,15 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-tedit]'))) return openTopicEditor(m.dataset.tedit);
   if ((m = c('[data-tplan]'))) return openPlanAdd(m.dataset.tplan);
   if (c('#cpNew')) return openCouponEditor(0);
+  if (c('#colNew')) return openCollectionEditor(0);
+  if ((m = c('[data-coledit]'))) return openCollectionEditor(+m.dataset.coledit);
+  if (c('#colSave')) return saveCollection();
+  if (c('#colClose') || c('#colClose2')) return closeSheet('coledit');
+  if ((m = c('[data-colpick]'))){ COL.sel.push(m.dataset.colpick); return colPaint(); }
+  if ((m = c('[data-colrm]'))){ COL.sel.splice(+m.dataset.colrm, 1); return colPaint(); }
+  if ((m = c('[data-colmv]'))){ const [i, d] = m.dataset.colmv.split(':').map(Number), j = i + d; if (j >= 0 && j < COL.sel.length) [COL.sel[i], COL.sel[j]] = [COL.sel[j], COL.sel[i]]; return colPaint(); }
+  if ((m = c('[data-colact]'))){ const [id, act] = m.dataset.colact.split(':'); if (act === 'delete' && !confirm('Delete this collection? The stories stay.')) return;
+    return once('colact' + id + act, async () => { try{ await api('/api/admin/collection/action', {method: 'POST', retry: false, body: JSON.stringify({id: +id, action: act})}); S.home = null; S.homeState = 'idle'; }catch(e){ toast(adminErr(e), 5000); } loadAdmin(); }); }
   if (c('#cbaNew')) return cbaOpenForm(0);
   if ((m = c('[data-cbaedit]'))) return cbaOpenForm(+m.dataset.cbaedit);
   if (c('#cbaSave')) return cbaSave();
