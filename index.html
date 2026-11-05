@@ -979,6 +979,72 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
 .cmb-daily-list.cmb-slide::-webkit-scrollbar{display:none}
 .cmb-daily-list.cmb-slide>.cmb-daily-card{flex:0 0 100%;scroll-snap-align:start;box-sizing:border-box}
 .cmb-daily-sec .pl-dots{padding-bottom:10px}
+/* collection banner: first tile of the row, same size as a story card, slides along with the stories */
+.rail.hasart{--aw:clamp(124px,30.5vw,176px);scroll-padding-left:calc(16px + var(--aw) + 14px)}
+.rail .colart{position:sticky;left:0;z-index:3;flex:none;width:var(--aw,clamp(124px,30.5vw,176px));padding:0;border:0;background:none;display:block;text-align:left;scroll-snap-align:none;cursor:pointer}
+.rail .colart .cv{box-shadow:8px 0 16px rgba(0,0,0,.38)}
+.cvhero{display:flex;justify-content:center;padding:14px 16px 4px}
+.cvhero img{width:min(62%,260px);aspect-ratio:3/4;object-fit:cover;border-radius:16px;border:1px solid var(--gold);box-shadow:0 10px 26px rgba(0,0,0,.3)}
+.cvname{padding:10px 16px 0;margin:0}.cvmeta{padding:2px 16px 14px}
+#colview .cvgrid{padding-bottom:110px}
+.rail .colart .cv.has-img{display:block;aspect-ratio:3/4}.rail .colart .cv.has-img img{width:100%;height:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.col-artprev{display:block;width:120px;aspect-ratio:3/4;object-fit:cover;border-radius:12px;border:1px solid var(--gold);margin:8px 0}
+.asubs{padding-left:0;padding-right:0}.asubs .chip small{opacity:.7;margin-left:4px}
+.col-thumb{width:44px;height:58px;object-fit:cover;border-radius:8px;flex:none}
+/* ===== admin v2: home (banner + 2-card grid), card banner with sub tabs row, menu drawer, animations ===== */
+#admin .ax-hbanner{position:relative;overflow:hidden;padding:18px 16px 16px;background:linear-gradient(135deg,var(--panel),var(--ink) 85%);border-bottom:1px solid var(--line)}
+#admin .ax-hbanner:before{content:"";position:absolute;right:-40px;top:-50px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(var(--gold-rgb),.22),transparent 70%);pointer-events:none}
+.ax-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.ax-pill{background:rgba(var(--gold-rgb),.08);border:1px solid var(--line);border-radius:14px;padding:9px 8px;text-align:center;min-width:0}
+.ax-pill b{display:block;font-size:19px;color:var(--gold-2);line-height:1.2}.ax-pill small{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.ax-label{margin:18px 16px 10px;color:var(--muted);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
+.ax-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 16px 24px}
+.ax-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;min-height:132px;border-radius:18px;background:var(--panel);border:1px solid var(--line);color:var(--text);box-shadow:0 5px 18px rgba(0,0,0,.1);overflow:hidden;cursor:pointer}
+.ax-card b{font-size:16px;line-height:1.2}.ax-card small{color:var(--muted);font-size:12px;line-height:1.35}
+.ax-cic{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:22px;margin-bottom:6px;background:linear-gradient(145deg,rgba(var(--gold-rgb),.28),rgba(var(--gold-rgb),.08));border:1px solid rgba(var(--gold-rgb),.35)}
+.ax-card.danger{border-color:color-mix(in srgb,var(--bad) 55%,var(--line))}.ax-card.danger .ax-cic{background:color-mix(in srgb,var(--bad) 18%,transparent);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+.ax-cbadge{position:absolute;right:10px;top:10px;min-width:22px;padding:2px 8px;border-radius:99px;background:var(--gold);color:var(--on-gold);font-size:11px;font-weight:800;text-align:center}
+.ax-banner{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--panel),var(--ink) 88%);border-bottom:1px solid var(--line);backdrop-filter:blur(14px);padding-top:env(safe-area-inset-top,0px)}
+.ax-brow{display:flex;align-items:center;gap:12px;padding:12px 16px 10px}
+.ax-circle{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:20px;line-height:1;background:var(--panel);color:var(--gold-2);border:1px solid var(--gold);box-shadow:0 3px 12px rgba(0,0,0,.18);cursor:pointer}
+.ax-btitle{flex:1;min-width:0;text-align:center}.ax-btitle b{display:block;font-family:var(--serif);font-size:23px;line-height:1.1;color:var(--gold-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ax-btitle small{display:block;margin-top:4px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ax-btitle small:before{content:"";display:block;width:34px;height:2px;margin:0 auto 5px;border-radius:2px;background:var(--gold)}
+.ax-subs{position:relative;padding:0 16px 10px;margin:0}.ax-subs[hidden]{display:none}
+.ax-subs .chip{min-height:38px;padding:7px 14px;background:var(--panel);font-weight:700;white-space:nowrap}.ax-subs .chip.on{background:rgba(var(--gold-rgb),.16);box-shadow:inset 0 0 0 1px var(--gold)}.ax-subs .chip small{opacity:.7;margin-left:6px}
+.ax-menu{position:fixed;inset:0;z-index:30;visibility:hidden;pointer-events:none}.ax-menu.open{visibility:visible;pointer-events:auto}
+.ax-scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0}.ax-menu.open .ax-scrim{opacity:1}
+.ax-panel{position:absolute;top:0;right:0;bottom:0;width:min(88%,380px);display:flex;flex-direction:column;background:var(--ink);border-left:1px solid var(--gold);box-shadow:-14px 0 40px rgba(0,0,0,.4);transform:translateX(104%);padding-top:env(safe-area-inset-top,0px)}.ax-menu.open .ax-panel{transform:none}
+.ax-mhead{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}.ax-mhead b{font-family:var(--serif);font-size:23px;color:var(--gold-2)}
+.ax-mscroll{flex:1;overflow:auto;padding:6px 14px calc(18px + env(safe-area-inset-bottom,0px))}
+.ax-mlabel{margin:14px 4px 8px;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
+.ax-acc{border:1px solid var(--line);border-radius:16px;background:var(--panel);margin-bottom:8px;overflow:hidden}.ax-acc.cur{border-color:var(--gold);background:rgba(var(--gold-rgb),.1)}
+.ax-accb{width:100%;display:flex;align-items:center;gap:12px;padding:11px 12px;background:none;border:0;color:var(--text);text-align:left;cursor:pointer}
+.ax-accb .ax-cic{width:38px;height:38px;font-size:19px;margin:0;border-radius:12px}.ax-accb b{flex:1;min-width:0;font-size:15px}
+.ax-chev{font-size:22px;color:var(--gold-2);line-height:1}.ax-acc.open .ax-chev{transform:rotate(90deg)}
+.ax-accp{display:grid;grid-template-rows:0fr}.ax-acc.open .ax-accp{grid-template-rows:1fr}.ax-accp>div{overflow:hidden;min-height:0}
+.ax-sub{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 14px 10px 62px;background:none;border:0;border-top:1px solid var(--line);color:var(--text);text-align:left;font-size:14px;cursor:pointer}
+.ax-sub small{color:var(--muted)}.ax-sub.on{color:var(--gold-2);font-weight:800}.ax-sub.on:before{content:"●";position:absolute;margin-left:-16px;font-size:9px}
+.ax-mfoot{display:grid;gap:8px;margin-top:14px}.ax-mfoot .btn{width:100%}
+@media (min-width:720px){.ax-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:920px){#admin .ax-hbanner,#admin .ax-brow,#admin .ax-subs,#admin .ax-label,#admin .ax-grid{padding-left:max(16px,calc((100% - 900px)/2));padding-right:max(16px,calc((100% - 900px)/2))}.ax-label{margin-left:0;margin-right:0}}
+@media (prefers-reduced-motion:no-preference){
+  #admin.open{animation:axSheet .34s cubic-bezier(.2,.8,.2,1)}@keyframes axSheet{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  .ax-fwd{animation:axFwd .3s cubic-bezier(.2,.8,.2,1)}@keyframes axFwd{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+  .ax-back{animation:axBack .3s cubic-bezier(.2,.8,.2,1)}@keyframes axBack{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
+  .ax-card{animation:axRise .45s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*45ms + 90ms);transition:transform .16s,border-color .2s,box-shadow .2s}
+  @keyframes axRise{from{opacity:0;transform:translateY(18px) scale(.95)}to{opacity:1;transform:none}}
+  .ax-card:active{transform:scale(.95)}.ax-card:hover{border-color:var(--gold);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .ax-circle{transition:transform .16s,background .2s}.ax-circle:active{transform:scale(.88)}
+  .ax-pill{animation:axRise .5s cubic-bezier(.2,.8,.2,1) backwards}.ax-pill:nth-child(2){animation-delay:.07s}.ax-pill:nth-child(3){animation-delay:.14s}
+  .ax-subs .chip{transition:background .22s,box-shadow .22s,transform .16s}.ax-subs .chip:active{transform:scale(.94)}.ax-subs .chip.on{animation:axPop .28s cubic-bezier(.3,1.5,.5,1)}@keyframes axPop{from{transform:scale(.9)}to{transform:none}}
+  .ax-in>*{animation:axBody .34s cubic-bezier(.2,.8,.2,1) backwards}@keyframes axBody{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .ax-in>*:nth-child(2){animation-delay:.04s}.ax-in>*:nth-child(3){animation-delay:.08s}.ax-in>*:nth-child(4){animation-delay:.12s}.ax-in>*:nth-child(5){animation-delay:.16s}.ax-in>*:nth-child(6){animation-delay:.2s}.ax-in>*:nth-child(7){animation-delay:.24s}.ax-in>*:nth-child(n+8){animation-delay:.28s}
+  .ax-menu{transition:visibility 0s .34s}.ax-menu.open{transition-delay:0s}
+  .ax-scrim{transition:opacity .3s ease}.ax-panel{transition:transform .34s cubic-bezier(.2,.8,.2,1)}
+  .ax-menu.open .ax-acc{animation:axRise .4s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*30ms + 120ms)}
+  .ax-chev{transition:transform .25s}.ax-accp{transition:grid-template-rows .28s ease}.ax-sub{transition:background .15s}.ax-sub:active{background:rgba(var(--gold-rgb),.12)}
+}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -1025,6 +1091,7 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
 <section class="sheet" id="topiced" aria-label="Topic editor"></section>
 <section class="sheet" id="cpedit" aria-label="Coupon editor"></section>
 <section class="sheet" id="coledit" aria-label="Collection editor"></section>
+<section class="sheet" id="colview" aria-label="Collection"></section>
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="combopage" aria-label="Story combinations"></section>
 <section class="sheet" id="couponed" aria-label="Coupon editor"></section>
@@ -1138,7 +1205,7 @@ const stack = [];
 function syncSheetStack(){ stack.forEach((id, i) => { const el = $('#' + id); if (el) el.style.zIndex = String(6 + i); }); }
 function openSheet(id){ const el = $('#' + id); if (!el) return; const old = stack.indexOf(id); if (old >= 0) stack.splice(old, 1); stack.push(id); el.classList.add('open'); syncSheetStack(); if (tg) tg.BackButton.show(); }
 function closeSheet(id){ const el = $('#' + id); if (el){ el.classList.remove('open'); el.style.zIndex = ''; } const i = stack.indexOf(id); if (i >= 0) stack.splice(i, 1); syncSheetStack(); if (tg && !stack.length) tg.BackButton.hide(); }
-function goBack(){ const id = stack[stack.length - 1]; if (id === 'story' && typeof storyBack === 'function') return storyBack(); if (id) closeSheet(id); }
+function goBack(){ const id = stack[stack.length - 1]; if (id === 'admin' && typeof adminBack === 'function' && adminBack()) return; if (id === 'story' && typeof storyBack === 'function') return storyBack(); if (id) closeSheet(id); }
 
 function goBot(payload){
   const contact = payload === 'help' && S.home && S.home.contact;                 // Help & support opens the Contact Bot; if none is added, the store bot's help like before
@@ -1377,8 +1444,8 @@ async function loadHome(){
   loadCombos(); loadDailyCombos();
   if (S.tab === 'home') renderHome();
 }
-const secRail = (title, items, key, render = homeCard) => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>
-  <div class="rail">${items.map(render).join('')}</div>` : '';
+const secRail = (title, items, key, render = homeCard, lead = '') => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>
+  <div class="rail${lead ? ' hasart' : ''}">${lead}${items.map(render).join('')}</div>` : '';
 const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
 const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
 const big = u => typeof u === 'string' ? u.replace('size=thumb', 'size=full') : u;      // the large home cards use the full-size picture
@@ -1411,7 +1478,7 @@ function renderHome(){
     secRail(tr('trending'), hero, heroKey, slide),
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
     tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
-    ...(h.collections || []).map(c => secRail(esc((c.emoji ? c.emoji + ' ' : '') + c.name), c.items, null)),   // collections: the stories the admin picked, in the admin's order
+    ...(h.collections || []).map(c => secRail(esc((c.emoji ? c.emoji + ' ' : '') + c.name), c.items, null, undefined, c.art ? `<button class="card colart" data-colopen="${esc(String(c.id))}" aria-label="Open collection ${esc(c.name)}"><div class="cv has-img"><img src="${esc(c.art)}" alt="" loading="lazy" decoding="async"></div></button>` : '')),   // collections: the stories the admin picked, in the admin's order
     offersStrip(),                                                                            // between Super deals and Recently added
     reviewsSection(),                                                                         // good reviews from listeners (promotion)
     secRail(tr('recent'), h.recent, 'recent'), dailyCombosSection(), secRail(tr('ongoing'), h.ongoing, 'ongoing'),
@@ -3122,7 +3189,7 @@ async function playFirst(from, demo){
 }
 
 /* ---------- admin ---------- */
-const A = {tab:'stories', sq:'', pub:'', sort:'az', oq:'', ostatus:'', list:[]};
+const A = {tab:'stories', sq:'', pub:'', sort:'az', oq:'', ostatus:'', list:[], sub:'ongoing', cols:[], view:'home', csub:'coupons', cbsub:'rules', colsLoaded:false};
 const M = {sid:null, title:'', topic:'', tname:'', scope:'', page:1, q:'', eps:[], total:0, state:'idle', edit:null, fileName:''};
 const E = {id:null, cover:'', photo:''};
 const INFO = {};                                       // remembers cards so a tap can start playback without another request
@@ -3137,14 +3204,107 @@ async function paintAway(){
         <div class="two"><label class="field"><span>Days</span><input id="away_days" type="number" min="1" max="90" inputmode="numeric" placeholder="3"></label><label class="field"><span>Reason (users see it)</span><input id="away_reason" maxlength="200" placeholder="Family emergency"></label></div>
         <button class="btn small" id="awayOn" type="button">Go away and tell users</button></div>`;
 }
-function renderAdmin(){
-  $('#admin').innerHTML = `<header class="admin-head">
-      <div class="admin-headrow"><div class="admin-brand"><div class="admin-mark" aria-hidden="true">♛</div><div><div class="admin-title">Control Centre</div><small class="admin-sub">AJ'S FM STORIES · ADMIN WORKSPACE</small></div></div>
-      <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
-      <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div>
-    </header>
-    <div class="seg" role="tablist" aria-label="Admin sections">${[['stories', '▤ Stories'], ['orders', '₹ Orders'], ['rooms', '◉ Deliveries'], ['coupons', '🏷 Coupons'], ['collections', '📚 Collections'], ['combos', '🔥 Combinations'], ['updates', '\uD83D\uDCE3 Updates'], ['feedback', '💡 Feedback'], ['index', '🗂 Index Bot'], ['stats', '▥ Analytics'], ['audit', '☷ Audit log'], ['reset', '⚠ Reset data']].map(([k, t]) => `<button class="chip${A.tab === k ? ' on' : ''}" data-atab="${k}" role="tab" aria-selected="${A.tab === k}" id="admin-tab-${k}">${t}</button>`).join('')}</div><div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div>`;
-  loadAdmin();
+const ATABS = [
+  {k:'stories', ic:'📖', t:'Stories', d:'Add, edit and organise stories'},
+  {k:'orders', ic:'💳', t:'Orders', d:'Payments, approvals and refunds'},
+  {k:'rooms', ic:'📨', t:'Deliveries', d:'Episodes sent to member chats'},
+  {k:'coupons', ic:'🏷️', t:'Coupons', d:'Discount codes and offer banners'},
+  {k:'collections', ic:'📚', t:'Collections', d:'Home rows with their own banner'},
+  {k:'combos', ic:'🔥', t:'Combinations', d:'Bundle discounts and daily combos'},
+  {k:'updates', ic:'📣', t:'Updates', d:'Daily reports and away mode'},
+  {k:'feedback', ic:'💡', t:'Feedback', d:'Ideas and suggestions from members'},
+  {k:'index', ic:'🗂️', t:'Index Bot', d:'Auto-publish files into stories'},
+  {k:'stats', ic:'📊', t:'Analytics', d:'Sales, users and listeners'},
+  {k:'audit', ic:'🧾', t:'Audit log', d:'Every admin action recorded'},
+  {k:'reset', ic:'⚠️', t:'Reset data', d:'Danger zone. Handle with care', danger:true}
+];
+const atab = k => ATABS.find(x => x.k === k) || ATABS[0];
+function adminSubs(k){                                           // [key, label, count?] for the sub tabs row and the menu
+  if (k === 'stories') return [['ongoing', 'Ongoing'], ['completed', 'Completed'], ['other', 'Other status'], ...(A.cols || []).map(c => ['c:' + c.id, (c.emoji ? c.emoji + ' ' : '') + c.name])].map(([key, t]) => [key, t, A.list.length ? A.list.filter(s => inSub(s, key)).length : null]);
+  if (k === 'orders') return [['', 'All'], ...['pending', 'approved', 'rejected', 'revoked', 'refunded', 'cancelled'].map(s => [s, STATUS[s][0]])];
+  if (k === 'coupons') return [['coupons', 'Coupons'], ['banners', 'Offer banners']];
+  if (k === 'combos') return [['rules', 'Combination rules'], ['daily', 'Daily combos']];
+  if (k === 'index') return IX_VIEWS;
+  return [];
+}
+const getSub = k => k === 'stories' ? A.sub : k === 'orders' ? A.ostatus : k === 'coupons' ? A.csub : k === 'combos' ? A.cbsub : k === 'index' ? IX.view : '';
+function setSubState(k, v){ if (k === 'stories') A.sub = v; else if (k === 'orders') A.ostatus = v; else if (k === 'coupons') A.csub = v; else if (k === 'combos') A.cbsub = v; else if (k === 'index'){ IX.view = v; IX.edit = null; } }
+function axIn(el){ if (!el) return; el.classList.remove('ax-in'); void el.offsetWidth; el.classList.add('ax-in'); }
+function axCount(el, n){ n = +n || 0; if (!el) return; if (n < 2 || (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)){ el.textContent = n; return; } const t0 = performance.now(); const f = t => { const p = Math.min(1, (t - t0) / 650); el.textContent = Math.round(n * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
+function paintSubRow(){
+  const bar = $('#asubs'); if (!bar) return; const subs = adminSubs(A.tab), cur = getSub(A.tab), keep = bar.scrollLeft;
+  bar.hidden = !subs.length;
+  bar.innerHTML = subs.map(([k, t, n]) => `<button class="chip${cur === k ? ' on' : ''}" data-asub="${esc(k)}" role="tab" aria-selected="${cur === k}" type="button">${esc(t)}${n != null ? `<small>${n}</small>` : ''}</button>`).join('');
+  bar.scrollLeft = keep; const on = bar.querySelector('.chip.on'); if (on) bar.scrollTo({left: on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2, behavior: 'smooth'});
+}
+function bannerLine(){ const el = $('#aLine'); if (!el) return; const s = adminSubs(A.tab).find(x => x[0] === getSub(A.tab)); el.textContent = s ? s[1] + (s[2] != null ? ' · ' + s[2] : '') : atab(A.tab).d; }
+function applyPanes(){ const cur = getSub(A.tab); $$('#abody .apane').forEach(p => { const was = p.hidden; p.hidden = p.dataset.pane !== cur; if (was && !p.hidden) axIn(p); }); }
+function adminAfterLoad(tab){ if (A.tab !== tab || A.view !== 'tab') return; paintSubRow(); bannerLine(); applyPanes(); axIn($('#abody')); }
+function adminSetSub(tab, k){
+  if (A.view !== 'tab' || A.tab !== tab) return adminGo(tab, k);
+  setSubState(tab, k);
+  if (tab === 'stories') paintAdminStories(); else if (tab === 'orders' || tab === 'index') loadAdmin(); else applyPanes();
+  paintSubRow(); bannerLine();
+}
+function adminGo(tab, sub){
+  const same = A.view === 'tab' && A.tab === tab; A.view = 'tab'; A.tab = tab;
+  if (same){ if (sub != null) adminSetSub(tab, sub); return; }
+  if (sub != null) setSubState(tab, sub);
+  renderAdmin('fwd');
+}
+function adminHome(){ A.view = 'home'; renderAdmin('back'); }
+function adminBack(){ const m = $('#amenu'); if (m && m.classList.contains('open')){ adminMenu(false); return true; } if (A.view === 'tab'){ adminHome(); return true; } return false; }
+function paintMenu(){
+  const box = $('#amscroll'); if (!box) return;
+  const acc = (t, i, cur) => { const subs = adminSubs(t.k), on = getSub(t.k);
+    const head = `<span class="ax-cic">${t.ic}</span><b>${t.t}</b>` + (subs.length ? '<span class="ax-chev">›</span>' : '');
+    return `<div class="ax-acc${cur ? ' cur open' : ''}" data-acc="${t.k}" style="--i:${i}">` + (subs.length
+      ? `<button class="ax-accb" data-accbtn="${t.k}" aria-expanded="${!!cur}" type="button">${head}</button><div class="ax-accp"><div>${subs.map(([k, l, n]) => `<button class="ax-sub${cur && on === k ? ' on' : ''}" data-gotab="${t.k}" data-gosub="${esc(k)}" type="button"><span>${esc(l)}</span>${n != null ? `<small>${n}</small>` : ''}</button>`).join('')}</div></div>`
+      : `<button class="ax-accb" data-gotab="${t.k}" type="button">${head}</button>`) + `</div>`; };
+  const cur = atab(A.tab);
+  box.innerHTML = `<div class="ax-mlabel">Current tab</div>${acc(cur, 0, true)}<div class="ax-mlabel">Other tabs</div>${ATABS.filter(t => t.k !== cur.k).map((t, i) => acc(t, i + 1, false)).join('')}
+    <div class="ax-mfoot"><button class="btn ghost" id="aHome" type="button">🏠 Admin home</button><button class="btn ghost" id="refreshAdmin" type="button">↻ Refresh data</button></div>`;
+}
+function adminMenu(open){
+  const m = $('#amenu'); if (!m) return;
+  if (!open){ m.classList.remove('open'); m.setAttribute('aria-hidden', 'true'); return; }
+  paintMenu(); m.classList.add('open'); m.setAttribute('aria-hidden', 'false');
+  if (!A.colsLoaded){ A.colsLoaded = true; api('/api/admin/collections').then(d => { A.cols = d.collections || []; if (m.classList.contains('open')) paintMenu(); paintSubRow(); }).catch(() => { A.colsLoaded = false; }); }
+}
+function adminAcc(k){
+  const el = $(`.ax-acc[data-acc="${k}"]`); if (!el) return; const open = !el.classList.contains('open');
+  $$('#amenu .ax-acc').forEach(x => { if (x !== el && !x.classList.contains('cur')){ x.classList.remove('open'); const b = x.querySelector('[data-accbtn]'); if (b) b.setAttribute('aria-expanded', 'false'); } });
+  el.classList.toggle('open', open); const b = el.querySelector('[data-accbtn]'); if (b) b.setAttribute('aria-expanded', String(open));
+}
+async function adminHomeStats(){
+  try{ const d = await api('/api/admin/stats'); if (A.view !== 'home') return;
+    axCount($('#axs_stories'), d.stories); axCount($('#axs_pending'), d.pending_orders); axCount($('#axs_users'), d.users);
+    const bo = $('[data-badge="orders"]'), bs = $('[data-badge="stories"]');
+    if (bo && d.pending_orders > 0){ bo.textContent = d.pending_orders + ' pending'; bo.hidden = false; } if (bs){ bs.textContent = d.stories; bs.hidden = false; }
+  }catch(e){}
+}
+function renderAdmin(dir){
+  const root = $('#admin'), cls = dir === 'back' ? 'ax-back' : dir === 'fwd' ? 'ax-fwd' : '';
+  if (A.view === 'home'){
+    root.innerHTML = `<div class="ax-view ${cls}"><header class="ax-hbanner">
+        <div class="admin-headrow"><div class="admin-brand"><div class="admin-mark" aria-hidden="true">♛</div><div><div class="admin-title">Control Centre</div><small class="admin-sub">AJ'S FM STORIES · ADMIN WORKSPACE</small></div></div>
+        <button class="btn ghost small" id="closeAdmin" aria-label="Close admin panel">Close</button></div>
+        <div class="ax-stats"><div class="ax-pill"><b id="axs_stories">–</b><small>Stories</small></div><div class="ax-pill"><b id="axs_pending">–</b><small>Pending</small></div><div class="ax-pill"><b id="axs_users">–</b><small>Users</small></div></div>
+        <div class="admin-tools"><button class="btn ghost small" id="refreshAdmin" type="button">↻ Refresh data</button><button class="btn small" id="newStory" type="button">＋ Add story</button></div></header>
+      <div class="ax-label">Manage</div>
+      <div class="ax-grid">${ATABS.map((t, i) => `<button class="ax-card${t.danger ? ' danger' : ''}" data-acard="${t.k}" style="--i:${i}" type="button"><span class="ax-cic" aria-hidden="true">${t.ic}</span><b>${t.t}</b><small>${t.d}</small><span class="ax-cbadge" data-badge="${t.k}" hidden></span></button>`).join('')}</div></div>`;
+    adminHomeStats(); return;
+  }
+  const t = atab(A.tab);
+  root.innerHTML = `<div class="ax-view ${cls}"><header class="ax-banner">
+      <div class="ax-brow"><button class="ax-circle" id="aBack" aria-label="Back to admin home" type="button">←</button>
+        <div class="ax-btitle"><b>${t.ic} ${t.t}</b><small id="aLine">${esc(t.d)}</small></div>
+        <button class="ax-circle" id="aMenu" aria-label="Open menu" aria-haspopup="dialog" type="button">☰</button></div>
+      <div class="chips ax-subs" id="asubs" role="tablist" aria-label="Sub tabs" hidden></div></header>
+    <div id="abody" role="region" aria-live="polite" aria-label="Admin content"></div></div>
+    <div class="ax-menu" id="amenu" aria-hidden="true"><div class="ax-scrim" data-amenuclose="1"></div>
+      <aside class="ax-panel" role="dialog" aria-label="Admin menu"><div class="ax-mhead"><button class="ax-circle" data-amenuclose="1" aria-label="Close menu" type="button">←</button><b>Menu</b></div><div class="ax-mscroll" id="amscroll"></div></aside></div>`;
+  paintSubRow(); loadAdmin();
 }
 function openCouponEditor(id){
   const c = CPA.list.find(x => x.id === id) || {discount_type: 'percentage', is_active: true, listed: true}; CPA.id = c.id || null;
@@ -3180,8 +3340,48 @@ async function saveCoupon(){
     catch(e){ toast(adminErr(e), 5000); }
   });
 }
+/* ---------- user: a collection page (banner on top, name, the stories, price of the whole collection at the bottom) ---------- */
+const CV = {id: null};
+const colItem = id => ((S.home && S.home.collections) || []).find(x => String(x.id) === String(id));
+const colTotal = items => items.reduce((n, s) => { if (!atcShow(s)) return n; const hi = priceMax(s) || 0; return n + (hi > 0 ? (s.deal ? dealOf(hi, s) : hi) : 0); }, 0);
+function openCollection(id){
+  const c = colItem(id); if (!c) return; CV.id = String(c.id);
+  const items = c.items || [], title = (c.emoji ? c.emoji + ' ' : '') + c.name, buyable = items.filter(atcShow), total = colTotal(items);
+  $('#colview').innerHTML = `<div class="sdtop"><button class="btn ghost small" id="cvBack" aria-label="Back">&larr; Back</button></div>
+    ${c.art ? `<div class="cvhero"><img src="${esc(c.art)}" alt=""></div>` : ''}
+    <h2 class="sec cvname">${esc(title)}</h2><div class="by cvmeta">${items.length} stor${items.length === 1 ? 'y' : 'ies'}</div>
+    <div class="grid cvgrid">${items.map(homeCard).join('')}</div>
+    ${buyable.length && total > 0 ? `<div class="sbar"><div class="sb-row"><div class="sb-plan"><small>Whole collection | ${buyable.length} stor${buyable.length === 1 ? 'y' : 'ies'}</small><b>${money(total)}</b></div></div><div class="sb-btns"><span></span><button class="btn" id="cvBuy">&#128722; BUY COLLECTION</button></div></div>` : ''}`;
+  openSheet('colview'); $('#colview').scrollTop = 0;
+}
+async function buyCollection(){
+  const c = colItem(CV.id); if (!c) return;
+  await once('colbuy', async () => {
+    const btn = $('#cvBuy'); if (btn) btn.disabled = true;
+    let added = 0, had = 0, skipped = 0;
+    try{
+      const list = c.items.filter(atcShow);
+      const res = await Promise.all(list.map(s => api(`/api/story/${encodeURIComponent(s.id)}?limit=1`, {timeout: 30000}).catch(() => null)));
+      res.forEach((d, i) => {
+        if (!d || !d.story){ skipped++; return; }
+        const sid = list[i].id, st = d.story, a = d.access || {};
+        if (a.full && !a.admin){ had++; return; }
+        const opts = (st.options || []).filter(o => !o.hidden && Number(o.price) > 0).sort((x, y) => payOf(y) - payOf(x));   // the story's highest plan: the price shown on its card
+        const o = opts[0]; if (!o){ skipped++; return; }
+        if (cartHas(sid, o.id)){ had++; return; }
+        if (cartBlock(sid, st, o, a)){ skipped++; return; }
+        CART.push({sid, oid: o.id, title: st.title, cover: st.cover, label: o.label, topic: o.topic || '', topicName: topicNameOf(st, o), price: payOf(o), from: o.from || 0, to: o.to || 0, days: o.days || 0, eps: isSnap(o) ? snapEps(o, st) : '', kind: planKind(o), span: planSpan(o, st)}); added++;
+      });
+      cartSave();
+    } finally { if (btn) btn.disabled = false; }
+    if (!added && !had) return toast('Could not add this collection. Please try again.', 4500);
+    toast(added ? `${added} stor${added === 1 ? 'y' : 'ies'} added to cart${had ? ', ' + had + ' already yours or in cart' : ''}` : 'Everything here is already yours or in your cart', 4000);
+    closeSheet('colview'); setTab('cart');
+  });
+}
 /* ---------- admin: Collections (a named group of specific stories, shown as a row on Home) ---------- */
-const COL = {list: [], stories: [], id: null, sel: [], q: ''};
+const COL = {list: [], stories: [], id: null, sel: [], q: '', art: '', artUrl: '', artClear: false};
+function colArtPaint(){ const b = $('#col_artbox'); if (!b) return; const u = COL.art || (COL.artClear ? '' : COL.artUrl); b.innerHTML = u ? `<img class="col-artprev" src="${esc(u)}" alt="Banner preview"><button class="btn danger small" data-colartrm type="button">Remove banner</button>` : '<div class="hint">No banner. The row starts with the first story.</div>'; }
 const colTitle = id => { const s = COL.stories.find(x => x.id === id); return s ? s.title : id; };
 function colPaint(){
   const box = $('#col_sel'); if (!box) return;
@@ -3191,21 +3391,22 @@ function colPaint(){
   $('#col_res').innerHTML = found.map(s => `<button class="chip" data-colpick="${esc(s.id)}" type="button">＋ ${esc(s.title)}</button>`).join('') || '<span class="hint">No other story matches.</span>';
 }
 function openCollectionEditor(id){
-  const c = COL.list.find(x => x.id === id) || {active: true, emoji: '📚', story_ids: []}; COL.id = c.id || null; COL.sel = (c.story_ids || []).slice(); COL.q = '';
+  const c = COL.list.find(x => x.id === id) || {active: true, emoji: '📚', story_ids: []}; COL.id = c.id || null; COL.sel = (c.story_ids || []).slice(); COL.q = ''; COL.art = ''; COL.artUrl = c.art || ''; COL.artClear = false;
   $('#coledit').innerHTML = `<div class="top"><button class="btn ghost small" id="colClose">Back</button><strong>${c.id ? 'Edit collection' : 'New collection'}</strong></div>
     <div class="two"><label class="field"><span>Name *</span><input id="col_name" value="${esc(c.name || '')}" maxlength="40" placeholder="Weekend binge"></label><label class="field"><span>Emoji</span><input id="col_emoji" value="${esc(c.emoji || '')}" maxlength="4" placeholder="🔥"></label></div>
+    <div class="field"><span>Banner / artwork (optional, portrait 3:4 looks best). It sits first in the row; the stories slide after it.</span><input id="col_art" type="file" accept="image/*"><div id="col_artbox"></div></div>
     <div class="field"><span>Stories in this collection (members see them in this order)</span><div id="col_sel"></div></div>
     <label class="field"><span>Add a story: type part of its name</span><input id="col_q" placeholder="Search stories" autocomplete="off"></label>
     <div id="col_res" style="display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px"></div>
     <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="col_active"${c.active ? ' checked' : ''}> <span>Show on Home (untick to hide it)</span></label>
     <div class="actions"><button class="btn" id="colSave">Save collection</button><button class="btn ghost" id="colClose2">Cancel</button></div>`;
   $('#col_q').addEventListener('input', e => { COL.q = e.target.value; colPaint(); });
-  colPaint(); openSheet('coledit');
+  colPaint(); colArtPaint(); openSheet('coledit');
 }
 async function saveCollection(){
   await once('colsave', async () => {
     const name = $('#col_name').value.trim(); if (!name) return toast('Give the collection a name.', 4000);
-    try{ await api('/api/admin/collection', {method: 'POST', retry: false, body: JSON.stringify({id: COL.id, name, emoji: $('#col_emoji').value.trim(), active: $('#col_active').checked, story_ids: COL.sel})}); toast('Collection saved'); closeSheet('coledit'); loadAdmin(); S.home = null; S.homeState = 'idle'; }
+    try{ await api('/api/admin/collection', {method: 'POST', retry: false, body: JSON.stringify({id: COL.id, name, emoji: $('#col_emoji').value.trim(), active: $('#col_active').checked, story_ids: COL.sel, art: COL.art, clear_art: COL.artClear})}); toast('Collection saved'); closeSheet('coledit'); loadAdmin(); S.home = null; S.homeState = 'idle'; }
     catch(e){ toast(adminErr(e), 5000); }
   });
 }
@@ -3310,7 +3511,6 @@ const ixSize = n => { n = +n || 0; return n >= 1048576 ? (n / 1048576).toFixed(1
 async function indexAdmin(body, sig, tab){
   if (!body.dataset.ixbound){ body.dataset.ixbound = '1'; body.addEventListener('click', ixClick); }
   const d = await api('/api/admin/index/state?view=' + IX.view, {signal: sig}); if (A.tab !== tab) return;
-  const nav = `<div class="seg" role="tablist" aria-label="Index Bot sections">${IX_VIEWS.map(([k, t]) => `<button class="chip${IX.view === k ? ' on' : ''}" data-ixv="${k}" type="button">${t}</button>`).join('')}</div>`;
   let h = '';
   if (IX.view === 'overview'){
     const o = d.overview, card = (t, v) => `<div class="mrow" style="margin:0"><div class="by">${t}</div><b style="font-size:22px">${v}</b></div>`;
@@ -3353,7 +3553,7 @@ async function indexAdmin(body, sig, tab){
       <label class="field"><span>Report chat id (blank = admin)</span><input id="ix_rc" inputmode="numeric" value="${s.report_chat || ''}"></label>
       <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="savesettings" type="button">Save settings</button></div><small class="note">Timezone: ${esc(d.tz)}. At 02:00 the bot makes the daily summary and tidies the queue; it indexes only if the box above is ticked.</small></div>`;
   }
-  $('#abody').innerHTML = nav + h;
+  $('#abody').innerHTML = h;
 }
 function ixTopicOpts(stories, sid, cur){
   const s = stories.find(x => x.id === sid);
@@ -3389,9 +3589,13 @@ const secLine = c => `Section 1 plans <b>${c[0]}</b> | Section 2 plans <b>${c[1]
 const gapLine = s => ((s.adm || {}).topics || []).filter(t => t.gaps).map(t => (t.name && (s.adm.topics.length > 1) ? t.name + ': ' : '') + t.gaps).join(' | ');
 const storyBtns = s => `<button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-atop="${esc(s.id)}" data-title="${esc(s.title)}">Topics</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
   <button class="btn ghost small" data-apub="${esc(s.id)}" data-to="${s.published ? 0 : 1}">${s.published ? 'Unpublish' : 'Publish'}</button>${String(s.status || '').toLowerCase() === 'ongoing' ? `<button class="btn ok small" data-acomplete="${esc(s.id)}" data-title="${esc(s.title)}">&#10003; Mark as complete</button>` : ''}<button class="btn danger small" data-adel="${esc(s.id)}" data-title="${esc(s.title)}">Delete</button>`;
+const stNorm = s => String(s.status || 'Ongoing').trim().toLowerCase();
+const inSub = (s, k) => k === 'ongoing' ? stNorm(s) === 'ongoing' : k === 'completed' ? stNorm(s) === 'completed' : k === 'other' ? !['ongoing', 'completed'].includes(stNorm(s)) : ((A.cols.find(c => 'c:' + c.id === k) || {story_ids: []}).story_ids.map(String).includes(String(s.id)));
 function paintAdminStories(){
   const box = $('#astories'); if (!box) return;
-  const list = A.list.slice().sort(SORTS[A.sort] || SORTS.az);
+  if (!adminSubs('stories').some(x => x[0] === A.sub)) A.sub = 'ongoing';
+  paintSubRow(); bannerLine();
+  const list = A.list.filter(s => inSub(s, A.sub)).sort(SORTS[A.sort] || SORTS.az);
   box.innerHTML = list.map(s => { const tp = (s.adm || {}).topics || [], gl = gapLine(s);
     return `<div class="mrow scard" data-sopen="${esc(s.id)}" role="button" tabindex="0" aria-label="Open details of ${esc(s.title)}" style="cursor:pointer">
       <div style="display:flex;gap:12px;align-items:flex-start">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" style="width:76px;height:76px;object-fit:cover;border-radius:12px;flex:none;background:var(--panel)">` : `<div style="width:76px;height:76px;border-radius:12px;flex:none;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:26px">${esc(s.cover || '?')}</div>`}
@@ -3399,7 +3603,7 @@ function paintAdminStories(){
           <div>${s.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${s.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${esc(s.status || 'Ongoing')}</span> <span class="tag">${s.episodes} eps</span></div>
           ${gl ? `<div class="by" style="color:var(--warn);margin-top:4px">&#9888; Missing episodes: ${esc(gl)}</div>` : ''}</div></div>
       <div style="margin:10px 0 0">${tp.map(t => `<div class="by" style="margin:6px 0 0">${t.name ? `<b>${esc(t.name)}</b><br>` : ''}${secLine(t.s)}</div>`).join('')}</div>
-      <div class="actions" style="padding:10px 0 0">${storyBtns(s)}</div></div>`; }).join('') || '<div class="empty">No stories found.</div>';
+      <div class="actions" style="padding:10px 0 0">${storyBtns(s)}</div></div>`; }).join('') || '<div class="empty">No stories in this tab.</div>'; axIn(box);
 }
 async function adminComplete(id, title){
   if (!confirm(`Mark "${title}" as Completed? It stops from the daily update reports and shows in the Completed row.`)) return;
@@ -3435,8 +3639,8 @@ async function loadAdmin(){
   try{
     if (tab === 'stories'){
       const qs = new URLSearchParams({q: A.sq}); if (A.pub) qs.set('published', A.pub);
-      const d = await api('/api/admin/stories?' + qs, {signal: sig}); if (A.tab !== tab) return;
-      A.list = d.stories;
+      const [d, cd] = await Promise.all([api('/api/admin/stories?' + qs, {signal: sig}), api('/api/admin/collections', {signal: sig}).catch(() => ({collections: []}))]); if (A.tab !== tab) return;
+      A.list = d.stories; A.cols = cd.collections || []; A.colsLoaded = true;
       body.innerHTML = `<div class="ctl"><input id="asq" type="search" placeholder="Search stories" value="${esc(A.sq)}" aria-label="Search stories"><select id="apub" aria-label="Visibility"><option value="">All</option><option value="1">Published</option><option value="0">Hidden</option></select></div>
         <div class="ctl"><select id="asort" aria-label="Sort stories"><option value="az">A &rarr; Z</option><option value="za">Z &rarr; A</option><option value="eplow">Episodes 1 &rarr; &infin;</option><option value="ephigh">Episodes &infin; &rarr; 1</option><option value="newest">Newest first</option></select></div>
         <div class="actions" style="margin-bottom:12px"><button class="btn" id="newStory">Add a story</button></div><div id="astories"></div>`;
@@ -3444,34 +3648,33 @@ async function loadAdmin(){
     } else if (tab === 'orders'){
       const qs = new URLSearchParams({limit: 40}); if (A.ostatus) qs.set('status', A.ostatus); if (A.oq) qs.set('q', A.oq);
       const d = await api('/api/admin/orders?' + qs, {signal: sig}); if (A.tab !== tab) return;
-      body.innerHTML = `<div class="ctl"><input id="aoq" type="search" placeholder="Order ID, user ID, @username or UTR" value="${esc(A.oq)}" aria-label="Search orders"><select id="aost" aria-label="Status"><option value="">All statuses</option>${Object.keys(STATUS).filter(k => k !== 'expired').map(k => `<option value="${k}">${STATUS[k][0]}</option>`).join('')}</select></div>
+      body.innerHTML = `<div class="ctl" style="grid-template-columns:1fr"><input id="aoq" type="search" placeholder="Order ID, user ID, @username or UTR" value="${esc(A.oq)}" aria-label="Search orders"></div>
         <div class="by" style="margin:0 16px 8px">${d.total} orders</div>` + (d.orders.map(o => `<div class="mrow"><h4>${esc(o.code || o.id)} ${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to || 'Ongoing'}` : ''}</div>
           <div style="margin:6px 0">${statusPill(o.status)}${o.has_proof ? ' <span class="tag">Screenshot</span>' : ''}${o.utr_reused ? ' <span class="tag bad">UTR used on another order</span>' : ''}</div>
           <div class="by">${esc(o.name || '')} ${o.username ? '@' + esc(o.username) : ''} | ID ${o.user_id}</div><div class="by">UTR: ${esc(o.utr || 'not given')} | ${dateStr(o.created)}${o.expires ? ' | until ' + dateStr(o.expires) : ''}</div>
           <div class="actions" style="padding:8px 0 0">${o.status === 'pending' ? `<button class="btn ok small" data-oact="approve" data-oid="${o.id}">Approve</button><button class="btn danger small" data-oact="reject" data-oid="${o.id}">Reject</button><button class="btn ghost small" data-oact="cancel" data-oid="${o.id}">Cancel</button>` : ''}
           ${o.status === 'approved' ? `<button class="btn danger small" data-oact="revoke" data-oid="${o.id}">Revoke</button><button class="btn danger small" data-oact="refund" data-oid="${o.id}">Mark refunded</button>` : ''}</div></div>`).join('') || '<div class="empty">No orders found.</div>');
-      $('#aost').value = A.ostatus;
     } else if (tab === 'coupons'){
       const [d, bn] = await Promise.all([api('/api/admin/coupons', {signal: sig}), api('/api/admin/banners', {signal: sig})]); if (A.tab !== tab) return;
       CPA.list = d.coupons; CPA.stories = d.stories || []; CPA.statuses = d.statuses || [];
-      body.innerHTML = `<div class="actions" style="margin-bottom:12px"><button class="btn" id="cpNew">＋ New coupon</button><button class="btn ghost" id="bnNew">＋ New banner</button></div><div class="box bnform" id="bnForm" hidden><b>New banner</b><label class="field"><span>Make it for a coupon</span><select id="bn_cp"><option value="">Choose a coupon (optional)</option>${d.coupons.map(c => `<option value="${c.id}">${esc(c.code)} | ${esc(c.text)}${c.title ? ' | ' + esc(c.title) : ''}</option>`).join('')}</select></label><div id="bn_pbox" hidden><span class="by">Banner prompt:</span><textarea id="bn_prompt" readonly></textarea><div class="actions" style="padding:6px 0 10px"><button class="btn small" id="bnGen" type="button">✨ Make banner</button><button class="btn ghost small" id="bnCopy" type="button">Copy prompt</button></div><div class="by">The banner is drawn right here, free. Or copy the prompt, make it in any AI tool, and pick the image below.</div></div><label class="field"><span>Title *</span><input id="bn_title" maxlength="80"></label><label class="field"><span>Text (optional)</span><input id="bn_body" maxlength="300"></label><label class="field"><span>Banner image (a wide thin strip works best)</span><input id="bn_file" type="file" accept="image/*"></label><img id="bn_prev" alt="" hidden><div class="actions" style="padding:8px 0 0"><button class="btn" id="bnSave" type="button">Add banner</button><button class="btn ghost" id="bnCancel" type="button">Cancel</button></div><div class="by" style="margin-top:8px">Choose a coupon above to get its ready-made image prompt and an automatic title.</div></div>` +
+      body.innerHTML = `<div class="apane" data-pane="coupons"><div class="actions" style="margin-bottom:12px"><button class="btn" id="cpNew">＋ New coupon</button></div>` +
         (d.coupons.map(c => `<div class="mrow"><h4>${esc(c.code)} <span class="tag ${c.state === 'active' ? 'live' : ''}">${esc(c.state)}</span>${c.listed ? '' : ' <span class="tag">private</span>'}</h4>
           <div class="by">${esc(c.text)}${c.title ? ' | ' + esc(c.title) : ''}</div>
           <div class="by">Used ${c.used}${c.usage_limit ? ' of ' + c.usage_limit : ''} | per member ${c.per_user_limit || 'no limit'} | min order ${money(c.min_order_value)}${c.order_mode ? ' | ' + (c.order_mode === 'exact' ? 'order no. ' + c.order_no + ' only' : 'order no. ' + c.order_no + ' and later') : ''}${c.min_stories ? ' | min ' + c.min_stories + ' stories' : ''}${c.story_title ? ' | only for ' + esc(c.story_title) : ''}${(c.statuses || []).length ? ' | ' + esc(c.statuses.join('/')) + ' stories' : ''}${(c.sections || []).length ? ' | Section ' + c.sections.join('/') + ' plans' : ''}${c.discount_cost ? ' | discount given ' + money(c.discount_cost) : ''}${c.expires_at ? ' | valid till ' + new Date(c.expires_at * 1000).toLocaleDateString() : ''}</div>
           <div class="actions" style="padding:8px 0 0"><button class="btn small" data-cpedit="${c.id}">Edit</button><button class="btn ghost small" data-cpbanner="${c.id}">Create banner</button><button class="btn ghost small" data-cptog="${c.id}">${c.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-cpdel="${c.id}">Delete</button></div></div>`).join('') || '<div class="empty">No coupons yet. Tap New coupon.</div>') +
-        `<h3 class="h3" style="font-size:20px">Offer banners</h3>` +
+        `</div><div class="apane" data-pane="banners"><div class="actions" style="margin-bottom:12px"><button class="btn ghost" id="bnNew">＋ New banner</button></div><div class="box bnform" id="bnForm" hidden><b>New banner</b><label class="field"><span>Make it for a coupon</span><select id="bn_cp"><option value="">Choose a coupon (optional)</option>${d.coupons.map(c => `<option value="${c.id}">${esc(c.code)} | ${esc(c.text)}${c.title ? ' | ' + esc(c.title) : ''}</option>`).join('')}</select></label><div id="bn_pbox" hidden><span class="by">Banner prompt:</span><textarea id="bn_prompt" readonly></textarea><div class="actions" style="padding:6px 0 10px"><button class="btn small" id="bnGen" type="button">✨ Make banner</button><button class="btn ghost small" id="bnCopy" type="button">Copy prompt</button></div><div class="by">The banner is drawn right here, free. Or copy the prompt, make it in any AI tool, and pick the image below.</div></div><label class="field"><span>Title *</span><input id="bn_title" maxlength="80"></label><label class="field"><span>Text (optional)</span><input id="bn_body" maxlength="300"></label><label class="field"><span>Banner image (a wide thin strip works best)</span><input id="bn_file" type="file" accept="image/*"></label><img id="bn_prev" alt="" hidden><div class="actions" style="padding:8px 0 0"><button class="btn" id="bnSave" type="button">Add banner</button><button class="btn ghost" id="bnCancel" type="button">Cancel</button></div><div class="by" style="margin-top:8px">Choose a coupon above to get its ready-made image prompt and an automatic title.</div></div>` +
         (bn.banners.map(x => `<div class="mrow"><h4>${esc(x.title)} <span class="tag ${x.live ? 'live' : ''}">${x.live ? 'live' : 'hidden'}</span></h4>${x.body ? `<div class="by">${esc(x.body)}</div>` : ''}
-          <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-bntog="${x.id}">${x.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-bndel="${x.id}">Delete</button></div></div>`).join('') || '<div class="empty">No banners.</div>');
+          <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-bntog="${x.id}">${x.is_active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-bndel="${x.id}">Delete</button></div></div>`).join('') || '<div class="empty">No banners.</div>') + '</div>';
     } else if (tab === 'collections'){
       const d = await api('/api/admin/collections', {signal: sig}); if (A.tab !== tab) return;
       COL.list = d.collections; COL.stories = d.stories || [];
       body.innerHTML = `<div class="actions" style="margin-bottom:12px"><button class="btn" id="colNew">＋ New collection</button></div><p class="note" style="margin:0 0 12px">A collection is a named row on the Home page. You pick the specific stories that go under it, and the order they show in.</p>` +
-        (d.collections.map(c => `<div class="mrow"><h4>${esc((c.emoji ? c.emoji + ' ' : '') + c.name)} <span class="tag ${c.active ? 'live' : ''}">${c.active ? 'live' : 'hidden'}</span></h4>
+        (d.collections.map(c => `<div class="mrow">${c.art ? `<img class="col-thumb" src="${esc(c.art)}" alt="" style="float:right;margin-left:8px">` : ''}<h4>${esc((c.emoji ? c.emoji + ' ' : '') + c.name)} <span class="tag ${c.active ? 'live' : ''}">${c.active ? 'live' : 'hidden'}</span></h4>
           <div class="by">${c.story_ids.length} stor${c.story_ids.length === 1 ? 'y' : 'ies'}${c.story_ids.length ? ': ' + esc(c.story_ids.slice(0, 6).map(colTitle).join(', ')) + (c.story_ids.length > 6 ? '…' : '') : ''}</div>
           <div class="actions" style="padding:8px 0 0"><button class="btn small" data-coledit="${c.id}">Edit</button><button class="btn ghost small" data-colact="${c.id}:up">▲</button><button class="btn ghost small" data-colact="${c.id}:down">▼</button><button class="btn ghost small" data-colact="${c.id}:toggle">${c.active ? 'Hide' : 'Show'}</button><button class="btn danger small" data-colact="${c.id}:delete">Delete</button></div></div>`).join('') || '<div class="empty">No collections yet. Tap New collection.</div>');
     } else if (tab === 'combos'){
       const selectedDate = $('#cbd_date') ? $('#cbd_date').value : ''; const dailyUrl = '/api/admin/combos/daily?preview=1' + (selectedDate ? '&date=' + encodeURIComponent(selectedDate) : ''); const [d, daily] = await Promise.all([api('/api/admin/combos', {signal: sig}), api(dailyUrl, {signal: sig})]); if (A.tab !== tab) return;
-      body.innerHTML = cbaHtml(d) + cbdHtml(daily);
+      body.innerHTML = `<div class="apane" data-pane="rules">${cbaHtml(d)}</div><div class="apane" data-pane="daily">${cbdHtml(daily)}</div>`;
     } else if (tab === 'rooms'){
       const d = await api('/api/admin/rooms', {signal: sig}); if (A.tab !== tab) return;
       body.innerHTML = `<div class="box"><b>Episodes sent to members' bot chats</b>
@@ -3512,6 +3715,7 @@ async function loadAdmin(){
       const d = await api('/api/admin/audit?limit=60', {signal: sig}); if (A.tab !== tab) return;
       body.innerHTML = d.items.map(a => `<div class="mrow"><b>${esc(a.action)}</b> <span class="by">on ${esc(a.target)}</span><div class="by">${new Date(a.ts * 1000).toLocaleString()} | admin ${a.admin_id}</div>${a.detail ? `<div class="by">${esc(a.detail)}</div>` : ''}</div>`).join('') || '<div class="empty">Nothing recorded yet.</div>';
     }
+    adminAfterLoad(tab);
   }catch(e){ if (!e.aborted && $('#abody')) $('#abody').innerHTML = retryBox(adminErr(e), 'retryAdmin'); }
 }
 async function orderAction(oid, action){
@@ -4126,7 +4330,7 @@ document.addEventListener('click', async e => {
   }
   if (c('#mNext')) return goNeighbor('after');
   /* admin */
-  if (c('#adminBtn')){ renderAdmin(); return openSheet('admin'); }
+  if (c('#adminBtn')){ A.view = 'home'; renderAdmin(); return openSheet('admin'); }
   if (c('#uTimeSave')) return once('upd', async () => { try{ await cpPost('/api/admin/updates', {default_time: $('#u_time').value}); toast('Report time saved'); loadAdmin(); }catch(e){ toast(adminErr(e), 5000); } });
   if ((m = c('[data-usave]'))) return once('upd', async () => { const row = m.closest('.mrow'); try{ await cpPost('/api/admin/updates', {story: {id: m.dataset.usave, days: row.querySelector('.u_days').value, time: row.querySelector('.u_t').value}}); toast('Saved'); loadAdmin(); }catch(e){ toast(adminErr(e), 5000); } });
   if ((m = c('[data-usend]'))) return once('upd', async () => { try{ const r = await cpPost('/api/admin/updates/send', {id: m.dataset.usend}); toast(r.note || 'Sent', 4000); }catch(e){ toast(adminErr(e), 5000); } });
@@ -4140,8 +4344,14 @@ document.addEventListener('click', async e => {
     try{ const r = await api('/api/admin/away', {method: 'POST', retry: false, body: JSON.stringify({off: true})}); S.away = null; toast(r.note || 'Away mode ended', 5000); paintAway(); }catch(e){ toast(adminErr(e), 5000); }
   });
   if (c('#closeAdmin')) return closeSheet('admin');
-  if (c('#refreshAdmin')) return loadAdmin();
-  if ((m = c('[data-atab]'))){ A.tab = m.dataset.atab; $$('[data-atab]').forEach(b => b.classList.toggle('on', b === m)); return loadAdmin(); }
+  if (c('#refreshAdmin')){ adminMenu(false); if (A.view === 'home'){ toast('Refreshed'); return adminHomeStats(); } return loadAdmin(); }
+  if ((m = c('[data-acard]'))) return adminGo(m.dataset.acard);
+  if (c('#aBack')) return adminHome();
+  if (c('#aHome')){ adminMenu(false); return adminHome(); }
+  if (c('#aMenu')) return adminMenu(true);
+  if (c('[data-amenuclose]')) return adminMenu(false);
+  if ((m = c('[data-accbtn]'))) return adminAcc(m.dataset.accbtn);
+  if ((m = c('[data-gotab]'))){ adminMenu(false); return adminGo(m.dataset.gotab, m.dataset.gosub); }
   if ((m = c('[data-areset]'))) return resetFlow(m.dataset.areset);
   if (c('#newStory')) return openEditor(null);
   if ((m = c('[data-aedit]'))) return openEditor(m.dataset.aedit);
@@ -4158,10 +4368,15 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-tedit]'))) return openTopicEditor(m.dataset.tedit);
   if ((m = c('[data-tplan]'))) return openPlanAdd(m.dataset.tplan);
   if (c('#cpNew')) return openCouponEditor(0);
+  if (c('[data-colartrm]')){ COL.art = ''; COL.artUrl = ''; COL.artClear = true; const f = $('#col_art'); if (f) f.value = ''; return colArtPaint(); }
+  if ((m = c('[data-asub]'))) return adminSetSub(A.tab, m.dataset.asub);
   if (c('#colNew')) return openCollectionEditor(0);
   if ((m = c('[data-coledit]'))) return openCollectionEditor(+m.dataset.coledit);
   if (c('#colSave')) return saveCollection();
   if (c('#colClose') || c('#colClose2')) return closeSheet('coledit');
+  if ((m = c('[data-colopen]'))) return openCollection(m.dataset.colopen);
+  if (c('#cvBack')) return closeSheet('colview');
+  if (c('#cvBuy')) return buyCollection();
   if ((m = c('[data-colpick]'))){ COL.sel.push(m.dataset.colpick); return colPaint(); }
   if ((m = c('[data-colrm]'))){ COL.sel.splice(+m.dataset.colrm, 1); return colPaint(); }
   if ((m = c('[data-colmv]'))){ const [i, d] = m.dataset.colmv.split(':').map(Number), j = i + d; if (j >= 0 && j < COL.sel.length) [COL.sel[i], COL.sel[j]] = [COL.sel[j], COL.sel[i]]; return colPaint(); }
@@ -4191,7 +4406,7 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-cpdel]'))){ const id = +m.dataset.cpdel; if (!confirm('Delete this coupon?')) return; return once('cpdel' + id, async () => { try{ await cpPost('/api/admin/coupon/action', {id, action: 'delete'}); toast('Coupon deleted'); }catch(e){ toast(adminErr(e), 5000); } loadAdmin(); loadOffers(); }); }
   if (c('#bnNew')){ const f = $('#bnForm'); if (f){ f.hidden = !f.hidden; if (!f.hidden) $('#bn_title').focus(); } return; }
   if (c('#bnCancel')){ $('#bnForm').hidden = true; return; }
-  if ((m = c('[data-cpbanner]'))){ const f = $('#bnForm'); if (!f) return; f.hidden = false; $('#bn_cp').value = m.dataset.cpbanner; fillBn(); return f.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+  if ((m = c('[data-cpbanner]'))){ adminSetSub('coupons', 'banners'); const f = $('#bnForm'); if (!f) return; f.hidden = false; $('#bn_cp').value = m.dataset.cpbanner; fillBn(); return f.scrollIntoView({behavior: 'smooth', block: 'start'}); }
   if (c('#bnCopy')) return copyText($('#bn_prompt').value, 'Prompt copied');
   if (c('#bnGen')){ const cid = +$('#bn_cp').value; if (!cid) return toast('Choose a coupon first');
     return once('bngen', async () => { const b = $('#bnGen'); b.disabled = true; b.textContent = 'Generating... (up to a minute)';
@@ -4318,6 +4533,7 @@ document.addEventListener('change', async e => {
   if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
   if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 1200); paintRqPhoto(); }catch(err){ toast(err.message); } }
   if (id === 'cp_ordmode'){ const n = $('#cp_ordno'); if (n){ n.disabled = !e.target.value; if (e.target.value && !n.value) n.value = 1; } return; }
+  if (id === 'col_art' && e.target.files[0]){ try{ COL.art = await downscale(e.target.files[0], 1200); COL.artClear = false; colArtPaint(); }catch(err){ toast(err.message); } return; }
   if (id === 'bn_cp') return fillBn();
   if (id === 'bn_file' && e.target.files[0]){ try{ const u = await downscale(e.target.files[0], 1200), im = $('#bn_prev'); im.src = u; im.hidden = false; BN.gen = ''; }catch(err){ toast(err.message); } }
   if (id === 'b_file' && e.target.files[0]){ const f = e.target.files[0]; e.target.value = ''; return once('bnadd', async () => { try{ const img = await downscale(f, 1600); if (await bannerCall('/api/admin/story/banner', {story_id: E.id, image: img}, 'Banner added')) loadBanners(); }catch(err){ toast(err.message); } }); }
