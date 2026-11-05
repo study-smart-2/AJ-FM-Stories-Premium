@@ -1023,8 +1023,8 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
 .ax-accb .ax-cic{width:38px;height:38px;font-size:19px;margin:0;border-radius:12px}.ax-accb b{flex:1;min-width:0;font-size:15px}
 .ax-chev{font-size:22px;color:var(--gold-2);line-height:1}.ax-acc.open .ax-chev{transform:rotate(90deg)}
 .ax-accp{display:grid;grid-template-rows:0fr}.ax-acc.open .ax-accp{grid-template-rows:1fr}.ax-accp>div{overflow:hidden;min-height:0}
-.ax-sub{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 14px 10px 62px;background:none;border:0;border-top:1px solid var(--line);color:var(--text);text-align:left;font-size:14px;cursor:pointer}
-.ax-sub small{color:var(--muted)}.ax-sub.on{color:var(--gold-2);font-weight:800}.ax-sub.on:before{content:"●";position:absolute;margin-left:-16px;font-size:9px}
+.ax-sub{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:10px 14px 10px 62px;background:none;border:0;border-top:1px solid var(--line);color:var(--text);text-align:left;font-size:14px;cursor:pointer}
+.ax-sub small{color:var(--muted)}.ax-sub.on{color:var(--gold-2);font-weight:800}.ax-sub.on:before{content:"";position:absolute;left:44px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--gold-2)}
 .ax-mfoot{display:grid;gap:8px;margin-top:14px}.ax-mfoot .btn{width:100%}
 @media (min-width:720px){.ax-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (min-width:920px){#admin .ax-hbanner,#admin .ax-brow,#admin .ax-subs,#admin .ax-label,#admin .ax-grid{padding-left:max(16px,calc((100% - 900px)/2));padding-right:max(16px,calc((100% - 900px)/2))}.ax-label{margin-left:0;margin-right:0}}
@@ -1044,6 +1044,51 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
   .ax-scrim{transition:opacity .3s ease}.ax-panel{transition:transform .34s cubic-bezier(.2,.8,.2,1)}
   .ax-menu.open .ax-acc{animation:axRise .4s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*30ms + 120ms)}
   .ax-chev{transition:transform .25s}.ax-accp{transition:grid-template-rows .28s ease}.ax-sub{transition:background .15s}.ax-sub:active{background:rgba(var(--gold-rgb),.12)}
+}
+/* collection banner v2: full-height poster tile with title overlay */
+.rail .colart{align-self:stretch;display:flex;background:transparent;box-shadow:none;border-radius:20px;transition:transform .18s}
+.rail .colart:active{transform:scale(.97)}
+.rail .colart .cv.has-img{position:relative;display:block;flex:1;width:100%;height:auto;min-height:250px;aspect-ratio:auto;border-radius:20px;overflow:hidden;border:1px solid rgba(var(--gold-rgb),.55);box-shadow:10px 0 22px rgba(0,0,0,.32),0 8px 22px rgba(0,0,0,.28)}
+.rail .colart .cv.has-img img{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.rail .colart:hover img{transform:scale(1.05)}
+.colart-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,6,14,.92) 0%,rgba(8,6,14,.55) 38%,rgba(8,6,14,0) 68%)}
+.colart-info{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.colart-info b{font-family:var(--serif);font-size:18px;line-height:1.15;font-weight:700}
+.colart-info small{font-size:12px;opacity:.85}
+.colart-info i{margin-top:8px;padding:6px 12px;border-radius:99px;background:var(--gold);color:var(--on-gold);font-style:normal;font-weight:800;font-size:12px;text-shadow:none;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+/* collection banner v3: 3:4 like the story covers, name only, highlighted */
+.rail .colart{align-self:flex-start;display:block}
+.rail .colart .cv.has-img{flex:none;height:auto;min-height:0;aspect-ratio:3/4;border:2px solid var(--gold);box-shadow:10px 0 22px rgba(0,0,0,.3),0 0 18px rgba(var(--gold-rgb),.5)}
+.rail .colart .cv.has-img:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.38) 50%,transparent 62%);transform:translateX(-130%);pointer-events:none}
+.colart-shade{background:linear-gradient(to top,rgba(8,6,14,.9) 0%,rgba(8,6,14,.5) 30%,rgba(8,6,14,0) 58%)}
+.colart-info{left:10px;right:10px;bottom:11px;align-items:center;text-align:center}
+.colart-info b{font-size:19px;line-height:1.15;letter-spacing:.01em}
+@media (prefers-reduced-motion:no-preference){
+  .rail .colart .cv.has-img{animation:colGlow 2.8s ease-in-out infinite}
+  @keyframes colGlow{0%,100%{box-shadow:10px 0 22px rgba(0,0,0,.3),0 0 12px rgba(var(--gold-rgb),.35)}50%{box-shadow:10px 0 22px rgba(0,0,0,.3),0 0 28px 4px rgba(var(--gold-rgb),.85)}}
+  .rail .colart .cv.has-img:after{animation:colShine 3.8s ease-in-out infinite}
+  @keyframes colShine{0%,55%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+}
+/* ===== user app motion: tab entrance, staggered cards, sheets, press feedback, nav pop, cart badge bump ===== */
+.card,.btn,.chip,.bnav button,.link{-webkit-tap-highlight-color:transparent}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes uRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  @keyframes uCard{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
+  @keyframes uSheet{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+  @keyframes uFade{from{opacity:0}to{opacity:1}}
+  @keyframes uNav{0%{transform:translateX(-50%) scale(.55)}60%{transform:translateX(-50%) scale(1.14)}100%{transform:translateX(-50%) scale(1)}}
+  @keyframes uBump{0%{transform:scale(1)}40%{transform:scale(1.7)}100%{transform:scale(1)}}
+  #view.u-in>*{animation:uRise .52s cubic-bezier(.2,.8,.2,1) backwards}
+  #view.u-in>*:nth-child(2){animation-delay:0.06s}#view.u-in>*:nth-child(3){animation-delay:0.12s}#view.u-in>*:nth-child(4){animation-delay:0.18s}#view.u-in>*:nth-child(5){animation-delay:0.24s}#view.u-in>*:nth-child(6){animation-delay:0.30s}#view.u-in>*:nth-child(7){animation-delay:0.36s}#view.u-in>*:nth-child(8){animation-delay:0.42s}#view.u-in>*:nth-child(n+9){animation-delay:.48s}
+  #view.u-in .rail .card,#view.u-in .grid .card{animation:uCard .52s cubic-bezier(.2,.8,.2,1) backwards}
+  #view.u-in .rail .card:nth-child(1),#view.u-in .grid .card:nth-child(1){animation-delay:0.12s}#view.u-in .rail .card:nth-child(2),#view.u-in .grid .card:nth-child(2){animation-delay:0.19s}#view.u-in .rail .card:nth-child(3),#view.u-in .grid .card:nth-child(3){animation-delay:0.26s}#view.u-in .rail .card:nth-child(4),#view.u-in .grid .card:nth-child(4){animation-delay:0.33s}#view.u-in .rail .card:nth-child(5),#view.u-in .grid .card:nth-child(5){animation-delay:0.40s}#view.u-in .rail .card:nth-child(6),#view.u-in .grid .card:nth-child(6){animation-delay:0.47s}#view.u-in .rail .card:nth-child(n+7),#view.u-in .grid .card:nth-child(n+7){animation-delay:.6s}
+  .sheet.open:not(#admin){animation:uSheet .34s cubic-bezier(.2,.8,.2,1)}
+  .cv img{animation:uFade .55s ease-out}
+  .card{transition:transform .16s cubic-bezier(.2,.8,.2,1)}.card:active{transform:scale(.97)}
+  .btn{transition:transform .14s cubic-bezier(.2,.8,.2,1),filter .2s,box-shadow .2s}.btn:active{transform:scale(.96)}
+  .chip{transition:transform .14s,background .2s,box-shadow .2s}.chip:active{transform:scale(.93)}
+  .bnav button.on svg{animation:uNav .45s cubic-bezier(.3,1.5,.5,1)}
+  .bnav .nbadge.bump{animation:uBump .46s cubic-bezier(.3,1.5,.5,1)}
 }
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
@@ -1437,12 +1482,12 @@ async function openNotif(){
 /* ---------- home ---------- */
 async function loadHome(){
   if (S.homeState === 'loading') return;
-  S.homeState = 'loading'; if (S.tab === 'home') renderHome();
+  const firstLoad = !S.home; S.homeState = 'loading'; if (S.tab === 'home') renderHome();
   try{ S.home = await api('/api/home', {timeout: 60000, signal: fresh('home')}); S.homeState = 'ok'; }
   catch(e){ if (e.aborted) return; S.homeState = 'error'; S.homeErr = errText(e); }
   if (window.splashDone) splashDone();
   loadCombos(); loadDailyCombos();
-  if (S.tab === 'home') renderHome();
+  if (S.tab === 'home'){ renderHome(); if (firstLoad && S.home) uIn(); }
 }
 const secRail = (title, items, key, render = homeCard, lead = '') => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>
   <div class="rail${lead ? ' hasart' : ''}">${lead}${items.map(render).join('')}</div>` : '';
@@ -1478,7 +1523,7 @@ function renderHome(){
     secRail(tr('trending'), hero, heroKey, slide),
     h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
     tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
-    ...(h.collections || []).map(c => secRail(esc((c.emoji ? c.emoji + ' ' : '') + c.name), c.items, null, undefined, c.art ? `<button class="card colart" data-colopen="${esc(String(c.id))}" aria-label="Open collection ${esc(c.name)}"><div class="cv has-img"><img src="${esc(c.art)}" alt="" loading="lazy" decoding="async"></div></button>` : '')),   // collections: the stories the admin picked, in the admin's order
+    ...(h.collections || []).map(c => secRail(esc((c.emoji ? c.emoji + ' ' : '') + c.name), c.items, null, undefined, c.art ? `<button class="card colart" data-colopen="${esc(String(c.id))}" aria-label="Open collection ${esc(c.name)}"><div class="cv has-img"><img src="${esc(c.art)}" alt="" loading="lazy" decoding="async"><span class="colart-shade"></span><span class="colart-info"><b>${esc((c.emoji ? c.emoji + " " : "") + c.name)}</b></span></div></button>` : '')),   // collections: the stories the admin picked, in the admin's order
     offersStrip(),                                                                            // between Super deals and Recently added
     reviewsSection(),                                                                         // good reviews from listeners (promotion)
     secRail(tr('recent'), h.recent, 'recent'), dailyCombosSection(), secRail(tr('ongoing'), h.ongoing, 'ongoing'),
@@ -1501,7 +1546,7 @@ async function loadFeed(){
   F.state = 'loading'; paintFeed();
   try{
     for (let guard = 0; guard < 4; guard++){                                  // keep going until a page brings something not already on Home
-      const d = await api(`/api/catalog?limit=24&offset=${F.offset}&sort=updated`, {timeout: 60000});
+      const d = await api(`/api/catalog?limit=24&offset=${F.offset}&sort=updated&nocol=1`, {timeout: 60000});
       F.offset += d.stories.length; const seen = shownIds(), add = [];
       for (const story of (d.stories || [])){ const id = String(story.id); if (story.episodes > 0 && story.title && !seen.has(id)){ add.push(story); seen.add(id); } } // unique across Home rails and every feed page
       F.items.push(...add);
@@ -2024,7 +2069,9 @@ const cartHas = (sid, oid) => CART.some(i => i.sid === sid && String(i.oid) === 
 function updateCartBadge(){
   const b = $('.bnav [data-tab=cart]'); if (!b) return; let n = b.querySelector('.nbadge');
   if (!n){ n = document.createElement('i'); n.className = 'nbadge'; b.appendChild(n); }
+  const prev = +n.dataset.c || 0; n.dataset.c = CART.length;
   n.hidden = !CART.length; n.textContent = CART.length;
+  if (CART.length > prev){ n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump'); }
 }
 const topicNameOf = (s, o) => { const t = o && o.topic && ((s && s.topics) || []).find(x => x.id === o.topic); return t ? t.name : ''; };
 function cartToggle(oid){
@@ -2470,7 +2517,7 @@ async function loadLibrary(){
         lines: [esc(s.ranges.map(rangeText).join(', ')), seg === 'owned' ? tr('lkeep') : esc(tr('luntil', {d: dateStr(s.expires)})) + ' | ' + esc(tr('lleft', {t: leftText(s.expires)})), s.available ? '' : `<span style="color:var(--warn)">This story is no longer in the store. Your purchase is kept.</span>`],
         actions: `<button class="lbtn" data-story="${esc(s.id)}" ${s.available ? '' : 'data-avail="0"'}>${tr('lopen')}</button>`})).join('') : libEmpty(seg === 'owned' ? 'leo' : 'ler');
     } else if (seg === 'wishlist'){
-      const [w, cat] = await Promise.all([api('/api/wishlist', {signal: sig}), B.all ? Promise.resolve({stories: B.all}) : api('/api/catalog?limit=500&sort=updated', {signal: sig})]); if (L.seg !== seg) return;
+      const [w, cat] = await Promise.all([api('/api/wishlist', {signal: sig}), api('/api/catalog?limit=500&sort=updated', {signal: sig})]); if (L.seg !== seg) return;
       const by = new Map((cat.stories || []).map(s => [s.id, s])); S.wish = new Set(w.ids);
       const list = w.ids.map(id => by.get(id)).filter(Boolean);
       body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([mainGenre(s), s.status, s.episodes ? '' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
@@ -3189,7 +3236,7 @@ async function playFirst(from, demo){
 }
 
 /* ---------- admin ---------- */
-const A = {tab:'stories', sq:'', pub:'', sort:'az', oq:'', ostatus:'', list:[], sub:'ongoing', cols:[], view:'home', csub:'coupons', cbsub:'rules', colsLoaded:false};
+const A = {tab:'stories', sq:'', pub:'', sort:'az', oq:'', ostatus:'', list:[], sub:'all', cols:[], view:'home', csub:'coupons', cbsub:'rules', colsLoaded:false};
 const M = {sid:null, title:'', topic:'', tname:'', scope:'', page:1, q:'', eps:[], total:0, state:'idle', edit:null, fileName:''};
 const E = {id:null, cover:'', photo:''};
 const INFO = {};                                       // remembers cards so a tap can start playback without another request
@@ -3220,7 +3267,7 @@ const ATABS = [
 ];
 const atab = k => ATABS.find(x => x.k === k) || ATABS[0];
 function adminSubs(k){                                           // [key, label, count?] for the sub tabs row and the menu
-  if (k === 'stories') return [['ongoing', 'Ongoing'], ['completed', 'Completed'], ['other', 'Other status'], ...(A.cols || []).map(c => ['c:' + c.id, (c.emoji ? c.emoji + ' ' : '') + c.name])].map(([key, t]) => [key, t, A.list.length ? A.list.filter(s => inSub(s, key)).length : null]);
+  if (k === 'stories') return [['all', 'All'], ['ongoing', 'Ongoing'], ['completed', 'Completed'], ['other', 'Other status'], ...(A.cols || []).map(c => ['c:' + c.id, (c.emoji ? c.emoji + ' ' : '') + c.name])].map(([key, t]) => [key, t, A.list.length ? A.list.filter(s => inSub(s, key)).length : null]);
   if (k === 'orders') return [['', 'All'], ...['pending', 'approved', 'rejected', 'revoked', 'refunded', 'cancelled'].map(s => [s, STATUS[s][0]])];
   if (k === 'coupons') return [['coupons', 'Coupons'], ['banners', 'Offer banners']];
   if (k === 'combos') return [['rules', 'Combination rules'], ['daily', 'Daily combos']];
@@ -3590,10 +3637,10 @@ const gapLine = s => ((s.adm || {}).topics || []).filter(t => t.gaps).map(t => (
 const storyBtns = s => `<button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-atop="${esc(s.id)}" data-title="${esc(s.title)}">Topics</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
   <button class="btn ghost small" data-apub="${esc(s.id)}" data-to="${s.published ? 0 : 1}">${s.published ? 'Unpublish' : 'Publish'}</button>${String(s.status || '').toLowerCase() === 'ongoing' ? `<button class="btn ok small" data-acomplete="${esc(s.id)}" data-title="${esc(s.title)}">&#10003; Mark as complete</button>` : ''}<button class="btn danger small" data-adel="${esc(s.id)}" data-title="${esc(s.title)}">Delete</button>`;
 const stNorm = s => String(s.status || 'Ongoing').trim().toLowerCase();
-const inSub = (s, k) => k === 'ongoing' ? stNorm(s) === 'ongoing' : k === 'completed' ? stNorm(s) === 'completed' : k === 'other' ? !['ongoing', 'completed'].includes(stNorm(s)) : ((A.cols.find(c => 'c:' + c.id === k) || {story_ids: []}).story_ids.map(String).includes(String(s.id)));
+const inSub = (s, k) => k === 'all' ? true : k === 'ongoing' ? stNorm(s) === 'ongoing' : k === 'completed' ? stNorm(s) === 'completed' : k === 'other' ? !['ongoing', 'completed'].includes(stNorm(s)) : ((A.cols.find(c => 'c:' + c.id === k) || {story_ids: []}).story_ids.map(String).includes(String(s.id)));
 function paintAdminStories(){
   const box = $('#astories'); if (!box) return;
-  if (!adminSubs('stories').some(x => x[0] === A.sub)) A.sub = 'ongoing';
+  if (!adminSubs('stories').some(x => x[0] === A.sub)) A.sub = 'all';
   paintSubRow(); bannerLine();
   const list = A.list.filter(s => inSub(s, A.sub)).sort(SORTS[A.sort] || SORTS.az);
   box.innerHTML = list.map(s => { const tp = (s.adm || {}).topics || [], gl = gapLine(s);
@@ -4160,12 +4207,15 @@ async function runImport(dry){
 }
 
 /* ---------- navigation ---------- */
+let _uInT;
+function uIn(){ const v = $('#view'); if (!v) return; clearTimeout(_uInT); v.classList.remove('u-in'); void v.offsetWidth; v.classList.add('u-in'); _uInT = setTimeout(() => v.classList.remove('u-in'), 1700); }   // plays the entrance animation once; later re-renders stay still
 function setTab(t){
   GSEED = String(Math.random());                       // a new tab / screen: stories with several main genres may show another one
   S.tab = t; $$('.bnav button').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false'); });
   [...stack].forEach(closeSheet); $('#view').scrollTop = 0; window.scrollTo(0, 0);
   if (t === 'home'){ if (S.home) renderHome(); else loadHome(); if (S.home && S.homeState !== 'loading') loadHome(); }
   else if (t === 'browse') renderBrowse(); else if (t === 'library') renderLibrary(); else if (t === 'cart') renderCart(); else renderMe();
+  uIn();
 }
 
 /* ---------- events ---------- */
