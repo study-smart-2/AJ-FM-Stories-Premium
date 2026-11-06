@@ -1090,6 +1090,13 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
   .bnav button.on svg{animation:uNav .45s cubic-bezier(.3,1.5,.5,1)}
   .bnav .nbadge.bump{animation:uBump .46s cubic-bezier(.3,1.5,.5,1)}
 }
+/* collection banner v4: the name lives inside the artwork (no separate heading) */
+.rail.hasart{margin-top:22px}
+.colart-info b{font-size:21px}
+/* admin headings styled like a Telegram quote block: tinted box, accent bar on the left, quote mark in the corner */
+#admin :is(h3,h2.sec,.ax-label):not(.vtitle){position:relative;display:block;margin:16px 16px 10px;padding:8px 40px 8px 13px;background:rgba(var(--gold-rgb),.11);border-left:3px solid var(--gold);border-radius:4px 12px 12px 4px;line-height:1.25}
+#admin :is(h3,h2.sec):not(.vtitle){font-size:clamp(18px,4.8vw,22px);color:var(--text)}
+#admin :is(h3,h2.sec,.ax-label):not(.vtitle)::after{content:"\201D";position:absolute;right:11px;top:3px;font:700 30px/1 var(--serif);color:var(--gold);opacity:.3;pointer-events:none}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -1489,7 +1496,12 @@ async function loadHome(){
   loadCombos(); loadDailyCombos();
   if (S.tab === 'home'){ renderHome(); if (firstLoad && S.home) uIn(); }
 }
-const secRail = (title, items, key, render = homeCard, lead = '') => items && items.length ? `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>
+function fitColArt(){                         // the collection banner is exactly as tall as the story covers beside it (covers follow their own artwork ratio)
+  $$('.rail.hasart').forEach(r => { const cv = r.querySelector('.card:not(.colart) .cv'), a = r.querySelector('.colart .cv'); if (!cv || !a) return; const hg = cv.getBoundingClientRect().height; if (hg > 40) a.style.height = Math.round(hg) + 'px'; });
+}
+document.addEventListener('load', e => { if (e.target && e.target.tagName === 'IMG' && e.target.closest && e.target.closest('.rail.hasart')) fitColArt(); }, true);
+window.addEventListener('resize', fitColArt);
+const secRail = (title, items, key, render = homeCard, lead = '') => items && items.length ? (lead ? '' : `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>`) + `
   <div class="rail${lead ? ' hasart' : ''}">${lead}${items.map(render).join('')}</div>` : '';
 const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
 const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
@@ -1533,7 +1545,7 @@ function renderHome(){
   ].join('');
   v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
     (S.homeState === 'error' ? `<div class="msg bad">Could not refresh: ${esc(S.homeErr)} <button class="link" id="retryHome">Retry</button></div>` : '');
-  paintFeed(); watchFeed(); watchCombos(); watchDailyCombos(); watchSliders();
+  paintFeed(); watchFeed(); watchCombos(); watchDailyCombos(); watchSliders(); fitColArt();
 }
 function paintFeed(){
   const f = $('#feed'), F = S.feed; if (!f) return;
@@ -2073,7 +2085,7 @@ function updateCartBadge(){
   n.hidden = !CART.length; n.textContent = CART.length;
   if (CART.length > prev){ n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump'); }
 }
-const topicNameOf = (s, o) => { const t = o && o.topic && ((s && s.topics) || []).find(x => x.id === o.topic); return t ? t.name : ''; };
+const topicNameOf = (s, o) => { const nm = id => { const t = id && ((s && s.topics) || []).find(x => x.id === id); return t ? t.name : ''; }; const a = nm(o && o.topic), b = nm(o && o.topic2); return a && b ? a + ' + ' + b : a || b; };      // a plan can cover two topics: Season 1 + Season 2
 function cartToggle(oid){
   const s = V.story, o = s && s.options.find(x => String(x.id) === String(oid)); if (!o) return false;
   if (cartHas(V.id, oid)){ CART = CART.filter(i => !(i.sid === V.id && String(i.oid) === String(oid))); cartSave(); toast(tr('cremd')); return false; }
@@ -3024,7 +3036,7 @@ function ownedSummary(a){
 }
 const planOwnedIn = (a, o, s) => !!(a && ((a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)) || ownedCover(a, o, s || V.story)));
 const planOwned = o => planOwnedIn(V.access, o);
-const scopeOf = o => o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes';
+const scopeOf = o => (o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes') + (o.topic2 && o.from2 ? ` + ${o.to2 ? `Episodes ${o.from2} to ${o.to2}` : `Episode ${o.from2} onwards`}` : '');
 const accessOf = o => Number(o.days) > 0 ? o.days + ' days' : tr('lkeep');
 const isSnap = o => o && o.scope === 'snapshot' && planKind(o) === 'full';
 const epRange = (f, l, n) => f && l ? (f === l ? `Episode ${f}` : `Episodes ${f} to ${l}`) : (n ? `${n} episodes` : '');      // 1 to 1117, not the count 1067
@@ -3199,9 +3211,13 @@ function renderTopicPage(){
     <h3 class="h3">Episodes</h3><div id="epBox"></div>${full ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
   renderEps();
 }
+function freeLeft(ts){                                    // time left of a free window: "3d left", "5h left"
+  const s = Math.max(0, +ts - Date.now() / 1000), d = Math.floor(s / 86400), hr = Math.ceil((s % 86400) / 3600);
+  return d >= 1 ? d + 'd left' : Math.max(1, hr) + 'h left';
+}
 function epRow(e){
   const adm = V.access && V.access.admin;
-  const tagHtml = e.locked ? '<span class="pill lock">Locked</span>' : adm ? '' : (e.kind === 'free' ? '<span class="pill free">Free</span>' : '<span class="pill owned">Owned</span>');
+  const tagHtml = e.locked ? '<span class="pill lock">Locked</span>' : adm ? '' : (e.kind === 'free' ? `<span class="pill free">${e.free_until && !e.free ? 'Free \u00b7 ' + freeLeft(e.free_until) : 'Free'}</span>` : '<span class="pill owned">Owned</span>');
   const btn = `<button class="ep${e.locked ? ' lock' : ''}${P.ep && P.ep.id === e.id && P.sid === V.id ? ' on' : ''}" data-ep="${e.id}" aria-label="Episode ${epn(e)}, ${esc(e.title)}${e.locked ? ', locked' : ''}">
     <span class="n">${epn(e)}</span><span class="t">${esc(e.title)}</span>${e.published === false ? '<span class="pill lock">Hidden</span>' : ''}${tagHtml}<small>${clock(e.duration)}</small></button>`;
   if (e.locked) return btn;
@@ -3732,7 +3748,10 @@ async function loadAdmin(){
     } else if (tab === 'updates'){
       const d = await api('/api/admin/updates', {signal: sig}); if (A.tab !== tab) return;
       const when = t => t ? new Date(t * 1000).toLocaleString() : '-';
+      let fd = {days: 5}; try{ fd = await api('/api/admin/free-days', {signal: sig}); }catch(e){}
       body.innerHTML = `<div id="awayCard"></div>
+        <div class="box"><b>&#127873; Free latest episodes</b><p class="note" style="margin:6px 0 8px">Every new episode is free for this many days after it goes live, then it needs a plan. You can change it for one story (Edit story) or one episode (Edit episode). 0 = new episodes are not free.</p>
+          <div class="two"><label class="field"><span>Free for (days)</span><input id="fd_days" type="number" min="0" max="365" inputmode="numeric" value="${+fd.days}"></label><button class="btn small" id="fdSave" type="button" style="align-self:end">Save</button></div></div>
         <div class="box"><b>&#128227; Story update reports</b><p class="note" style="margin:6px 0 8px">Every Ongoing story is reported to your bot chat every day at the time below. Change a story's days or time in its row. The bot lists the new episodes added, or warns you when none were.</p>
           <div class="two"><label class="field"><span>Report time for all stories (${esc(d.tz)})</span><input id="u_time" type="time" value="${esc(d.default_time)}"></label><button class="btn small" id="uTimeSave" type="button" style="align-self:end">Save time</button></div></div>
         ${d.stories.map(st => `<div class="mrow"><b>${esc(st.title)}</b> <span class="by">${esc(st.status)}</span>
@@ -3817,6 +3836,7 @@ async function resetFlow(scope){
 
 /* ---- story editor (metadata only) ---- */
 const KINDS = {full: ['&#128081;', 'Full Story plans', 'Members see one plan card at a time and slide for the next.'], pack: ['&#128230;', 'Episode packs', 'Small cards named only "Episode _ to _". Tapping one shows the full details.'], rental: ['&#9203;', 'Rental plans', 'Access ends after the days you set. Rentals get no upgrade credit.']};
+let PT = [];                                              // the other topics of the story being edited: a plan row may add one as its second topic
 function optRow(o = {}, removable = true, kind){
   kind = kind || planKind(o);
   const rent = kind === 'rental', full = kind === 'full', auto = !!o.auto, ro = auto ? ' readonly' : '';
@@ -3828,6 +3848,8 @@ function optRow(o = {}, removable = true, kind){
     <div class="o2 omp"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-mrp" type="number" min="0" inputmode="decimal" placeholder="MRP (original price)" value="${o.mrp ?? ''}" aria-label="MRP, the original price. Other plans of this story or topic get the same % off"></div>
     <div class="${full ? 'o2' : 'o3'}">${full ? '<input class="o-days" type="hidden" value="0">' : `<input class="o-days" type="number" min="${rent ? 1 : 0}" inputmode="numeric" placeholder="${rent ? 'Days *' : 'Days (0 = keep)'}" value="${o.days ?? ''}" aria-label="Days of access">`}<input class="o-from" type="number" min="1" inputmode="numeric" placeholder="${rent ? 'From ep (blank = all)' : 'From ep'}" value="${o.from ?? ''}" aria-label="From episode"${ro}><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"${ro}></div>
     ${full ? `<label class="field check"><input type="checkbox" class="o-notetick"${o.nonote ? '' : ' checked'}><span style="margin:0">Show the "we don't guarantee upcoming episodes" note on this plan</span></label>` : ''}
+    ${PT.length && !auto ? `<div class="box" style="margin:8px 0;grid-column:1/-1"><label class="field" style="margin:0"><span>Also include a 2nd topic in this plan (optional). Its episodes are filled here, the first topic uses From / To above</span><select class="o-t2"><option value="">None, this topic only</option>${PT.map(t => `<option value="${esc(t.id)}"${o.topic2 === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
+      <div class="o2"><input class="o-from2" type="number" min="1" inputmode="numeric" placeholder="2nd topic: From ep" value="${o.from2 ?? ''}" aria-label="From episode of the second topic"><input class="o-to2" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to2 ?? ''}" aria-label="To episode of the second topic"></div></div>` : ''}
     <details class="oextra"${custom ? ' open' : ''}><summary>Customise${custom ? ' &#10003;' : ''}</summary>
       <div class="o2"><label class="field"><span>Badge (e.g. Best value)</span><input class="o-badge" maxlength="24" value="${esc(o.badge || '')}"></label><label class="field"><span>Position (1 = first)</span><input class="o-order" type="number" min="1" max="9999" inputmode="numeric" value="${o.order || ''}"></label></div>
       <label class="field"><span>Short note shown on the plan</span><input class="o-note" maxlength="140" value="${esc(o.note || '')}"></label>
@@ -3864,7 +3886,7 @@ function planSummary(opts){
     <div>&#128230; <b>Episode packs:</b> ${pack.length ? `${pack.length} pack${pack.length > 1 ? 's' : ''}, ${money(Math.min(...pp))}${Math.max(...pp) > Math.min(...pp) ? ' - ' + money(Math.max(...pp)) : ''}${pack.filter(o => o.hidden).length ? ' (' + pack.filter(o => o.hidden).length + ' hidden)' : ''}` : none}</div>
     <div>&#9203; <b>Rentals:</b> ${rent.length ? rent.map(o => o.days + ' days ' + money(o.price) + tag(o)).join(' | ') : none}</div>`;
 }
-const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order, scope: o.scope, fwd: o.fwd, nonote: o.nonote, mrp: o.mrp});
+const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order, scope: o.scope, fwd: o.fwd, nonote: o.nonote, mrp: o.mrp, topic2: o.topic2, from2: o.from2, to2: o.to2});
 function planProblem(list, needFrom){
   for (const p of list){
     if (p.kind === 'rental' && !(p.days >= 1)) return `Rental "${p.label}": enter the days (1 or more)`;
@@ -3904,13 +3926,14 @@ async function openEditor(id){
     <div class="field" id="e_banners"><span>More banners (sources change them: keep the old ones)</span>${id ? '<div id="bnList"><div class="sk line"></div></div><input id="b_file" type="file" accept="image/*"><small class="note">Add a banner, then tap Make main to show it to members. The old main banner stays in this list.</small>' : '<small class="note">Save the story first, then add more banners here.</small>'}</div>
     <label class="field"><span>Description (shown to everyone)</span><textarea id="e_preview">${esc(s.preview || '')}</textarea></label>
     <label class="field"><span>Upgrade credit cut % for this story (0 to 10, blank = default)</span><input id="e_ucut" type="number" min="0" max="10" step="0.5" inputmode="decimal" value="${s.upgrade_cut ?? ''}"></label>
+    <label class="field"><span>New episodes of this story are free for how many days? (blank = app default, 0 = never free)</span><input id="e_fdays" type="number" min="0" max="365" inputmode="numeric" placeholder="app default" value="${s.free_days ?? ''}"></label>
     <div class="field"><span>Bot update reports for this story: every how many days? (blank = daily, 0 = off)</span><input id="e_udays" type="number" min="0" max="365" inputmode="numeric" placeholder="daily (default)" value="${s.update_days ?? ''}">
       <div class="chips wrap" style="padding:8px 0 0">${[['', 'Daily (default)'], [0, 'Off'], [7, '7 days'], [8, '8 days'], [10, '10 days'], [20, '20 days'], [30, '30 days']].map(([d, t]) => `<button type="button" class="chip" data-udays="${d}">${t}</button>`).join('')}</div>
       <label class="field" style="margin:10px 0 0"><span>Time of day for the report (blank = your default time)</span><input id="e_utime" type="time" value="${esc(s.update_time || '')}"></label>
       <small class="note">Every Ongoing story is reported daily unless you change it here. The bot messages you at that fixed time: the new episodes added, or a warning when none were.${s.update_next ? ' Next report: ' + new Date(s.update_next * 1000).toLocaleString() + '.' : ''} All schedules are also in the Updates section of the admin dashboard.</small></div>
     <label class="field"><span>Notes (shown below the topic cards)</span><textarea id="e_notes" maxlength="2000">${esc(s.notes || '')}</textarea></label>
     <h3 class="h3" style="font-size:20px">Plans and prices</h3><p class="note">Three sections: full story plans, episode packs and rentals. Price 0 means free for everyone. Fill From and To to sell a range of episodes. Existing purchases are never changed.</p>
-    ${planEditorHtml('e_opts', (s.options || []).filter(o => !o.topic), 'sg_', {auto: true})}
+    ${(PT = [], planEditorHtml('e_opts', (s.options || []).filter(o => !o.topic), 'sg_', {auto: true}))}
     <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
   $('#e_status').value = s.status || 'Ongoing'; paintPhoto(); if (id) loadBanners();
@@ -3935,7 +3958,7 @@ function paintPhoto(){
 function readPlans(sel = '#e_opts', auto = false){          // auto = true reads the hand edits of rule-made packs instead
   return $$(sel + ' .optrow').filter(r => !!r.dataset.auto === auto).map(r => { const q = k => r.querySelector(k);
     return {id: r.dataset.id || '', label: q('.o-label').value.trim(), price: q('.o-price').value === '' ? 0 : Number(q('.o-price').value), days: parseInt(q('.o-days').value) || 0,
-      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: !!(q('.o-fwd') && q('.o-fwd').checked), nonote: !!(q('.o-notetick') && !q('.o-notetick').checked), mrp: q('.o-mrp') && q('.o-mrp').value !== '' ? Number(q('.o-mrp').value) : 0}; }).filter(o => o.label);
+      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: !!(q('.o-fwd') && q('.o-fwd').checked), nonote: !!(q('.o-notetick') && !q('.o-notetick').checked), mrp: q('.o-mrp') && q('.o-mrp').value !== '' ? Number(q('.o-mrp').value) : 0, topic2: q('.o-t2') ? q('.o-t2').value : '', from2: q('.o-from2') ? (parseInt(q('.o-from2').value) || null) : null, to2: q('.o-to2') ? (parseInt(q('.o-to2').value) || null) : null}; }).filter(o => o.label);
 }
 function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
   const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
@@ -3953,7 +3976,7 @@ async function saveEditor(){
     const title = $('#e_title').value.trim();
     if (!title) return toast('Add a title first');
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: splitGenres($('#e_genre').value).join(', '), sub_genre: splitGenres($('#e_sub').value).join(', '), language: $('#e_lang').value.trim(),
-      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '',
+      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '', free_days: $('#e_fdays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_fdays').value) || 0)),
       aliases: $('#e_aliases').value.split('\n').map(x => x.trim()).filter(Boolean),
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts')};
     const sBox = $('#sg_auto'), sAuto = !!sBox && sBox.checked && !!($('#sg_start').value || $('#sg_size').value), sPack = sAuto ? {start: parseInt($('#sg_start').value), size: parseInt($('#sg_size').value), price: Number($('#sg_price').value) || 0, days: 0} : null;
@@ -4027,7 +4050,7 @@ async function topicCall(body){
 }
 function openTopicEditor(tid){
   const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
-  TE.id = tid;
+  TE.id = tid; PT = (s.topics || []).filter(x => x.id !== tid);
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Edit topic</strong></div>
     <label class="field"><span>Topic name *</span><input id="te_name" value="${esc(t.name)}" maxlength="60"></label>
     <label class="field"><span>Note shown on the topic card (optional)</span><textarea id="te_note" maxlength="300" style="min-height:70px">${esc(t.note || '')}</textarea></label>
@@ -4039,7 +4062,7 @@ function openTopicEditor(tid){
 }
 function openPlanAdd(tid){
   const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
-  TE.id = tid;
+  TE.id = tid; PT = (s.topics || []).filter(x => x.id !== tid);
   const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid && !o.auto).map(o => +o.to || 0));      // the new plan carries on after the last one
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Add plan</strong></div>
     <h3 class="h3" style="margin-top:0">${esc(t.name)}</h3>
@@ -4097,10 +4120,10 @@ function openEpisodes(sid, title, topic = '', tname = '', scope = ''){
     <div class="box"><b>Episode list</b><div class="ctl" style="padding:0"><input id="m_q" type="search" placeholder="Search number or title" aria-label="Search episodes"><div class="by" id="m_total"></div></div>
       <div id="m_bulk" style="margin-top:10px"><b style="font-size:14px">Bulk actions</b>
         <div class="by" style="margin:4px 0">This page (<span id="b_n">0</span> episodes shown)</div>
-        <div class="actions" style="padding:0" data-bulkmode="page"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
+        <div class="actions" style="padding:0" data-bulkmode="page"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="free_days">Free for days&hellip;</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
         <div class="by" style="margin:10px 0 4px">A range of episode numbers</div>
         <div class="two"><label class="field"><span>From</span><input id="b_from" type="number" min="1" inputmode="numeric" placeholder="1"></label><label class="field"><span>To</span><input id="b_to" type="number" min="1" inputmode="numeric" placeholder="100"></label></div>
-        <div class="actions" style="padding:0" data-bulkmode="range"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
+        <div class="actions" style="padding:0" data-bulkmode="range"><button class="btn ghost small" data-bulk="free">Make free</button><button class="btn ghost small" data-bulk="premium">Make premium</button><button class="btn ghost small" data-bulk="free_days">Free for days&hellip;</button><button class="btn ghost small" data-bulk="hide">Hide</button><button class="btn ghost small" data-bulk="publish">Publish</button><button class="btn danger small" data-bulk="delete">Delete</button></div>
       </div></div><div id="m_list"></div>`;
   openSheet('epman'); loadManage(); loadSaved();
 }
@@ -4137,7 +4160,7 @@ async function loadManage(){
 }
 function renderManageList(){
   const list = $('#m_list'); if (!list) return; const pages = Math.max(1, Math.ceil(M.total / 30));
-  const row = e => `<div class="mrow"><b>${epn(e)}.</b> ${esc(e.title)}<div style="margin:4px 0"><span class="pill ${e.free ? 'free' : 'owned'}">${e.free ? 'Free' : 'Premium'}</span> <span class="pill ${e.published ? 'free' : 'lock'}">${e.published ? 'Published' : 'Hidden'}</span></div>
+  const row = e => `<div class="mrow"><b>${epn(e)}.</b> ${esc(e.title)}<div style="margin:4px 0"><span class="pill ${e.free ? 'free' : 'owned'}">${e.free ? 'Free' : 'Premium'}</span>${!e.free && e.free_until ? ` <span class="pill free">Free \u00b7 ${freeLeft(e.free_until)}</span>` : ''}${e.free_days != null ? ` <span class="pill owned">Free window ${e.free_days}d</span>` : ''} <span class="pill ${e.published ? 'free' : 'lock'}">${e.published ? 'Published' : 'Hidden'}</span></div>
       ${e.fname ? `<div class="by">${esc(e.fname)}</div>` : ''}
       <div class="actions" style="padding:0"><button class="btn ghost small" data-eedit="${e.id}">Edit</button><button class="btn ghost small" data-efree="${e.id}" data-to="${e.free ? 0 : 1}">${e.free ? 'Make premium' : 'Make free'}</button>
       <button class="btn ghost small" data-epub="${e.id}" data-to="${e.published ? 0 : 1}">${e.published ? 'Hide' : 'Publish'}</button><button class="btn danger small" data-edel="${e.id}">Delete</button></div></div>`;
@@ -4145,6 +4168,7 @@ function renderManageList(){
       <label class="field"><span>File name</span><input id="x_fname" value="${esc(e.fname || '')}" maxlength="200"></label>
       <label class="field"><span>Episode link</span><input id="x_link" type="url" value="${esc(e.link || '')}" placeholder="https://t.me/c/1234567890/10"></label>
       <div class="two"><label class="field"><span>Episode no</span><input id="x_no" type="number" min="1" inputmode="numeric" value="${e.no}"></label><label class="field"><span>Ep title</span><input id="x_title" value="${esc(e.title || '')}" maxlength="200"></label></div>
+      <label class="field"><span>Free for how many days after it goes live? (blank = story / app default, 0 = never free)</span><input id="x_fdays" type="number" min="0" max="365" inputmode="numeric" placeholder="default" value="${e.free_days ?? ''}"></label>
       <div class="actions" style="padding:0"><button class="btn small" data-esave="${e.id}">Save</button><button class="btn ghost small" id="x_cancel">Cancel</button></div></div>`;
   list.innerHTML = (M.eps.map(e => M.edit === e.id ? form(e) : row(e)).join('') || '<div class="empty">No episodes yet. Import a file above.</div>') +
     (M.total > 30 ? `<div class="pager"><button class="btn ghost small" data-mpg="-1" ${M.page <= 1 ? 'disabled' : ''}>Prev</button><span>Page ${M.page} of ${pages}</span><button class="btn ghost small" data-mpg="1" ${M.page >= pages ? 'disabled' : ''}>Next</button></div>
@@ -4153,7 +4177,7 @@ function renderManageList(){
 async function saveEpisodeEdit(id){
   const title = $('#x_title').value.trim(); if (!title) return toast('The episode needs a title');
   await once('ep' + id, async () => {
-    try{ await api('/api/admin/episode', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: +id, fname: $('#x_fname').value.trim(), link: $('#x_link').value.trim(), no: $('#x_no').value, title})}); toast('Saved'); M.edit = null; }
+    try{ await api('/api/admin/episode', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({id: +id, fname: $('#x_fname').value.trim(), link: $('#x_link').value.trim(), no: $('#x_no').value, title, free_days: $('#x_fdays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#x_fdays').value) || 0))})}); toast('Saved'); M.edit = null; }
     catch(e){ toast(adminErr(e), 5000); return; }
     loadManage();
   });
@@ -4163,9 +4187,10 @@ async function deleteEpisode(id){
   if (!confirm(`Delete episode ${ep ? ep.no + ': ' + ep.title : ''}?\n\nIt is removed from the app and from the saved import. Listening history for it is removed too.`)) return;
   await once('epd' + id, async () => { try{ await api('/api/admin/episode/delete', {method: 'POST', retry: false, body: JSON.stringify({id: +id})}); toast('Episode deleted'); }catch(e){ toast(adminErr(e)); } loadManage(); loadSaved(); });
 }
-const BULK_TXT = {free: 'Make free', premium: 'Make premium', hide: 'Hide', publish: 'Publish', delete: 'DELETE'};
+const BULK_TXT = {free: 'Make free', premium: 'Make premium', hide: 'Hide', publish: 'Publish', delete: 'DELETE', free_days: 'Set the free window'};
 async function bulkAction(act, mode){
   const body = {story_id: M.sid, topic: M.scope || '', action: act};
+  if (act === 'free_days'){ const v = prompt('Free for how many days after an episode goes live?\n\nBlank = back to the story / app default, 0 = never free.', '5'); if (v === null) return; body.days = v.trim() === '' ? null : Math.max(0, Math.min(365, parseInt(v) || 0)); }
   if (mode === 'page'){
     if (!M.eps.length) return toast('No episodes on this page');
     body.ids = M.eps.map(e => e.id);
@@ -4537,6 +4562,7 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-eedit]'))){ M.edit = +m.dataset.eedit; return renderManageList(); }
   if (c('#x_cancel')){ M.edit = null; return renderManageList(); }
   if ((m = c('[data-esave]'))) return saveEpisodeEdit(m.dataset.esave);
+  if (c('#fdSave')) return once('fdsave', async () => { const n = Math.max(0, Math.min(365, parseInt($('#fd_days').value) || 0)); try{ await api('/api/admin/free-days', {method: 'POST', retry: false, body: JSON.stringify({days: n})}); toast(n ? `New episodes are free for ${n} days` : 'New episodes are no longer free'); }catch(e){ toast(adminErr(e), 5000); } });
   if ((m = c('[data-edel]'))) return deleteEpisode(m.dataset.edel);
   if ((m = c('[data-efree]'))) return editEpisode(m.dataset.efree, {free: !!+m.dataset.to});
   if ((m = c('[data-epub]'))) return editEpisode(m.dataset.epub, {published: !!+m.dataset.to});
