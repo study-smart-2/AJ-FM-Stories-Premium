@@ -1126,6 +1126,7 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
   #view.u-in>.rv{animation:none}
   .appbar,.sdtop,.sheet .top{transition:box-shadow .25s}
 }
+.bcomp select{min-width:0;width:100%;text-overflow:ellipsis}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -1530,7 +1531,7 @@ const colMore = c => `<button class="card cmore" data-colopen="${esc(String(c.id
 const colSection = c => {
   if (!c.items || !c.items.length) return '';
   const art = c.art ? `<button class="card colart" data-colopen="${esc(String(c.id))}" aria-label="Open collection ${esc(c.name)}"><div class="cv has-img"><img src="${esc(c.art)}" alt="" loading="lazy" decoding="async"></div></button>` : '';
-  return `<section class="colbox" aria-label="${esc(c.name)}"><div class="colhead"><h2 class="sec">${esc((c.emoji ? c.emoji + ' ' : '') + c.name)}</h2></div><div class="rail${c.art ? ' hasart' : ''}">${art}${c.items.map(colCard).join('')}${colMore(c)}</div></section>`;
+  return `<section class="colbox" aria-label="${esc(c.name)}"><div class="colhead"><h2 class="sec">${esc((c.emoji ? c.emoji + ' ' : '') + c.name)}</h2></div><div class="rail${c.art ? ' hasart' : ''}">${art}${c.items.map(colCard).join('')}</div></section>`;
 };
 const secRail = (title, items, key, render = homeCard, lead = '') => items && items.length ? (lead ? '' : `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>`) + `
   <div class="rail${lead ? ' hasart' : ''}">${lead}${items.map(render).join('')}</div>` : '';
@@ -2113,7 +2114,8 @@ function updateCartBadge(){
   n.hidden = !CART.length; n.textContent = CART.length;
   if (CART.length > prev){ n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump'); }
 }
-const topicNameOf = (s, o) => { const nm = id => { const t = id && ((s && s.topics) || []).find(x => x.id === id); return t ? t.name : ''; }; const a = nm(o && o.topic), b = nm(o && o.topic2); return a && b ? a + ' + ' + b : a || b; };      // a plan can cover two topics: Season 1 + Season 2
+const isBundle = o => !!(o && o.more && o.more.length);                  // a plan that sells several topics together
+const topicNameOf = (s, o) => { const nm = id => { const t = id && ((s && s.topics) || []).find(x => x.id === id); return t ? t.name : ''; }; return [o && o.topic, ...((o && o.more) || []).map(m => m.topic)].map(nm).filter(Boolean).join(' + '); };      // a plan can cover two topics: Season 1 + Season 2
 function cartToggle(oid){
   const s = V.story, o = s && s.options.find(x => String(x.id) === String(oid)); if (!o) return false;
   if (cartHas(V.id, oid)){ CART = CART.filter(i => !(i.sid === V.id && String(i.oid) === String(oid))); cartSave(); toast(tr('cremd')); return false; }
@@ -2131,10 +2133,10 @@ const atcKindSub = (o, s) => planKind(o) === 'rental' ? `${o.days}-day rental` :
 function atcRows(){                                         // Topic 1 {name} -> its plans, Topic 2 {name} -> its plans (full story plans are part of every topic)
   const s = AT.s, kinds = ['full', 'pack', 'rental'];
   const opts = (s.options || []).filter(o => !o.hidden && Number(o.price) > 0).sort((a, b) => kinds.indexOf(planKind(a)) - kinds.indexOf(planKind(b)) || byOrder(a, b));
-  const pairs = opts.filter(o => o.topic2), whole = opts.filter(o => !o.topic), tps = s.topics || [], rows = [];
+  const pairs = opts.filter(isBundle), whole = opts.filter(o => !o.topic), tps = s.topics || [], rows = [];
   if (!tps.length) return opts.length ? [{name: 'All episodes', sub: epRange(s.ep_first, s.ep_last, s.episodes), list: opts}] : [];
-  tps.forEach((tp, i) => { const l = [...opts.filter(o => o.topic === tp.id && !o.topic2), ...whole].sort((a, b) => kinds.indexOf(planKind(a)) - kinds.indexOf(planKind(b)) || byOrder(a, b)); if (l.length) rows.push({name: `Topic ${i + 1}: ${tp.name}`, sub: epRange(tp.first, tp.last, tp.episodes), list: l}); });
-  const known = new Set(tps.map(x => x.id)), rest = opts.filter(o => o.topic && !o.topic2 && !known.has(o.topic)); if (rest.length) rows.push({name: 'More plans', sub: '', list: rest});
+  tps.forEach((tp, i) => { const l = [...opts.filter(o => o.topic === tp.id && !isBundle(o)), ...whole].sort((a, b) => kinds.indexOf(planKind(a)) - kinds.indexOf(planKind(b)) || byOrder(a, b)); if (l.length) rows.push({name: `Topic ${i + 1}: ${tp.name}`, sub: epRange(tp.first, tp.last, tp.episodes), list: l}); });
+  const known = new Set(tps.map(x => x.id)), rest = opts.filter(o => o.topic && !isBundle(o) && !known.has(o.topic)); if (rest.length) rows.push({name: 'More plans', sub: '', list: rest});
   if (pairs.length) rows.push({name: 'Two topics together', sub: '', list: pairs});
   return rows;
 }
@@ -3032,14 +3034,14 @@ function topicCards(){
   if (!tps.length) list.push({id: '', name: 'All episodes', n: V.totalAll, first: s.ep_first, last: s.ep_last, note: ''});     // a story without topics shows one card
   return list;
 }
-const optsFor = id => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === id || o.topic2);
+const optsFor = id => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === id || isBundle(o));
 function rangeOf(opts){
   if (!opts.length) return 'Price soon';
   const p = opts.map(o => +o.price);
   return priceLabel({plans: opts.length, min_price: Math.min(...p), max_price: Math.max(...p), has_free: p.some(x => x === 0)});
 }
 const shownTopics = () => ((V.story && V.story.topics) || []).filter(t => t.episodes > 0 || (V.access && V.access.admin));
-const visOpts = () => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === V.topic || o.topic2);      // a two-topic plan belongs to the whole story
+const visOpts = () => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === V.topic || isBundle(o));      // a two-topic plan belongs to the whole story
 async function loadStoryPage(page){
   const sig = fresh('story'), id = V.id;
   V.page = page; V.epState = 'loading'; if (V.state === 'ok' && V.mode === 'topic') renderEps();
@@ -3064,9 +3066,10 @@ function ownedSummary(a){
   return `<div class="access"><b>You own:</b> ${a.ranges.map(r => `${rangeText(r)}${r.expires ? ' (until ' + dateStr(r.expires) + ')' : ''}`).join(', ')}</div>`;
 }
 const covRange = (r, f, t) => (r.from == null || (f != null && +r.from <= +f)) && (r.to == null || (t != null && +r.to >= +t));
-const planOwnedIn = (a, o, s) => o.topic2 ? !!(a && [[o.from, o.to], [o.from2, o.to2]].every(([f, t]) => (a.ranges || []).some(r => covRange(r, f, t)))) : !!(a && ((a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)) || ownedCover(a, o, s || V.story)));
+const covStart = (r, f) => (r.from == null || (f != null && +r.from <= +f)) && (r.to == null || (f != null && +r.to >= +f));      // a till-date part is fixed when bought: owning its start is enough
+const planOwnedIn = (a, o, s) => isBundle(o) ? !!(a && [[o.from, o.to, o.scope === 'snapshot'], ...o.more.map(m => [m.from, m.to, !!m.snap])].every(([f, t, snap]) => (a.ranges || []).some(r => snap && !t ? covStart(r, f) : covRange(r, f, t)))) : !!(a && ((a.ranges || []).some(r => (r.from || 0) === (o.from || 0) && (r.to || 0) === (o.to || 0)) || ownedCover(a, o, s || V.story)));
 const planOwned = o => planOwnedIn(V.access, o);
-const scopeOf = o => (o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes') + (o.topic2 && o.from2 ? ` + ${o.to2 ? `Episodes ${o.from2} to ${o.to2}` : `Episode ${o.from2} onwards`}` : '');
+const scopeOf = o => (o.from ? (o.to ? `Episodes ${o.from} to ${o.to}` : `Episode ${o.from} onwards (ongoing)`) : 'All episodes') + (o.more || []).map(m => ' + ' + (m.to ? `Episodes ${m.from} to ${m.to}` : `Episode ${m.from} onwards`)).join('');
 const accessOf = o => Number(o.days) > 0 ? o.days + ' days' : tr('lkeep');
 const isSnap = o => o && o.scope === 'snapshot' && planKind(o) === 'full';
 const epRange = (f, l, n) => f && l ? (f === l ? `Episode ${f}` : `Episodes ${f} to ${l}`) : (n ? `${n} episodes` : '');      // 1 to 1117, not the count 1067
@@ -3140,7 +3143,7 @@ const fullNoteHtml = o => (storyDone() || o.nonote) ? '' : isSnap(o)
   : '<span class="pn warn">\u26A0\uFE0F Note: we don\'t guarantee to supply all upcoming episodes.<br>\u{1F6D1} Uploading of episodes can stop any day for this story.</span>';
 function planCardHtml(o){
   const owned = planOwned(o), inc = owned && !planExact(V.access, o), free = Number(o.price) === 0, on = !free && String(o.id) === String(V.sel), why = !owned && !free ? cartBlock(V.id, V.story, o, V.access) : '';
-  const body = `${o.badge ? `<span class="bdg">&#9733; ${esc(o.badge)}</span>` : ''}${isRent(o) ? `<span class="rtag">&#9203; ${o.days}-day rental</span>` : ''}<b>${esc(planKind(o) === 'pack' ? packName(o) : o.label)}</b>${o.topic2 ? `<small class="pn">\u{1F4C2} ${esc(topicNameOf(V.story, o))}</small>` : ''}<small>${esc(planSub(o))}</small>${planKind(o) === 'full' ? fullNoteHtml(o) : ''}${o.fwd ? '<small class="fwdb">\u{1F4E4} Forwarding &amp; saving allowed</small>' : (Number(o.price) > 0 ? '<small class="fwdb off">\u{1F512} Protected: no forwarding</small>' : '')}${isRent(o) ? `<small>Access starts when your payment is approved</small>` : ''}${o.note ? `<span class="pn">${esc(o.note)}</span>` : ''}${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}${why ? `<small class="plwhy">&#9888;&#65039; ${esc(why)}</small>` : ''}<span class="pp">${owned ? (inc ? 'Included in your plan' : 'Owned') : planPrice(o)}</span>`;
+  const body = `${o.badge ? `<span class="bdg">&#9733; ${esc(o.badge)}</span>` : ''}${isRent(o) ? `<span class="rtag">&#9203; ${o.days}-day rental</span>` : ''}<b>${esc(planKind(o) === 'pack' ? packName(o) : o.label)}</b>${isBundle(o) ? `<small class="pn">\u{1F4C2} ${esc(topicNameOf(V.story, o))}</small>` : ''}<small>${esc(planSub(o))}</small>${planKind(o) === 'full' ? fullNoteHtml(o) : ''}${o.fwd ? '<small class="fwdb">\u{1F4E4} Forwarding &amp; saving allowed</small>' : (Number(o.price) > 0 ? '<small class="fwdb off">\u{1F512} Protected: no forwarding</small>' : '')}${isRent(o) ? `<small>Access starts when your payment is approved</small>` : ''}${o.note ? `<span class="pn">${esc(o.note)}</span>` : ''}${o.credit && !owned ? `<span class="cr">&#10003; Purchased plans credited: -${money(o.credit)}</span>` : ''}${why ? `<small class="plwhy">&#9888;&#65039; ${esc(why)}</small>` : ''}<span class="pp">${owned ? (inc ? 'Included in your plan' : 'Owned') : planPrice(o)}</span>`;
   if (owned) return `<div class="plc have${inc ? ' inc' : ''}">${body}</div>`;
   return `<button class="plc${isRent(o) ? ' rental' : ''}${free ? ' free' : ''}${on ? ' on' : ''}${why ? ' blk' : ''}" ${free ? `data-free="${o.from || 1}"` : `data-plan="${esc(o.id)}" aria-pressed="${on}"`}>${body}</button>`;
 }
@@ -3313,7 +3316,7 @@ const ATABS = [
 ];
 const atab = k => ATABS.find(x => x.k === k) || ATABS[0];
 function adminSubs(k){                                           // [key, label, count?] for the sub tabs row and the menu
-  if (k === 'stories') return [['all', 'All'], ['ongoing', 'Ongoing'], ['completed', 'Completed'], ['other', 'Other status'], ...(A.cols || []).map(c => ['c:' + c.id, (c.emoji ? c.emoji + ' ' : '') + c.name])].map(([key, t]) => [key, t, A.list.length ? A.list.filter(s => inSub(s, key)).length : null]);
+  if (k === 'stories') return [['all', 'All'], ['ongoing', 'Ongoing'], ['completed', 'Completed'], ['other', 'Soon'], ...(A.cols || []).map(c => ['c:' + c.id, (c.emoji ? c.emoji + ' ' : '') + c.name])].map(([key, t]) => [key, t, A.list.length ? A.list.filter(s => inSub(s, key)).length : null]);
   if (k === 'orders') return [['', 'All'], ...['pending', 'approved', 'rejected', 'revoked', 'refunded', 'cancelled'].map(s => [s, STATUS[s][0]])];
   if (k === 'coupons') return [['coupons', 'Coupons'], ['banners', 'Offer banners']];
   if (k === 'combos') return [['rules', 'Combination rules'], ['daily', 'Daily combos']];
@@ -3321,7 +3324,7 @@ function adminSubs(k){                                           // [key, label,
   return [];
 }
 const getSub = k => k === 'stories' ? A.sub : k === 'orders' ? A.ostatus : k === 'coupons' ? A.csub : k === 'combos' ? A.cbsub : k === 'index' ? IX.view : '';
-function setSubState(k, v){ if (k === 'stories') A.sub = v; else if (k === 'orders') A.ostatus = v; else if (k === 'coupons') A.csub = v; else if (k === 'combos') A.cbsub = v; else if (k === 'index'){ IX.view = v; IX.edit = null; } }
+function setSubState(k, v){ if (k === 'stories') A.sub = v; else if (k === 'orders') A.ostatus = v; else if (k === 'coupons') A.csub = v; else if (k === 'combos') A.cbsub = v; else if (k === 'index'){ IX.view = v; IX.edit = null; IX.step = 'list'; } }
 function axIn(el){ if (!el) return; el.classList.remove('ax-in'); void el.offsetWidth; el.classList.add('ax-in'); }
 function axCount(el, n){ n = +n || 0; if (!el) return; if (n < 2 || (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)){ el.textContent = n; return; } const t0 = performance.now(); const f = t => { const p = Math.min(1, (t - t0) / 650); el.textContent = Math.round(n * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
 function paintSubRow(){
@@ -3596,7 +3599,7 @@ const fillBn = () => {
 const bnPrompt = c => `Create an image of a coupon with the text: "Use code - ${c.code}. ${c.headline || c.auto_headline || ('Get ' + c.text)}". Wide thin strip banner, ultra-wide 21:9 shape, premium dark and gold look, big clear readable text, no other text.`;
 const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JSON.stringify(body)});
 /* ---------------- Admin → Index Bot (added section; talks only to /api/admin/index/*) ---------------- */
-const IX = {view: 'overview', edit: null, maps: null};
+const IX = {view: 'overview', edit: null, maps: null, step: 'list'};
 const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
 const ixPost = body => api('/api/admin/index/action', {method: 'POST', retry: false, body: JSON.stringify(body)});
 const ixWhen = t => t ? new Date(t * 1000).toLocaleString() : '-';
@@ -3613,17 +3616,35 @@ async function indexAdmin(body, sig, tab){
       <div class="two" style="margin:0 16px 10px;gap:10px">${card('Successfully indexed', o.indexed)}${card('Failed index jobs', o.failed)}</div>`;
   } else if (IX.view === 'mappings'){
     IX.maps = d; const e = IX.edit || {}, st = d.stories.find(s => s.id === e.story_id);
-    h = `<div class="box"><b>${e.id ? 'Edit mapping #' + e.id : 'Add mapping'}</b>
+    const step = IX.step || 'list', ixImg = c => c && c.charAt(0) === '/' ? API_URL + c : c;
+    const cov = c => isImg(ixImg(c)) ? `<img src="${esc(ixImg(c))}" alt="" loading="lazy" style="width:76px;height:76px;object-fit:cover;border-radius:12px;flex:none;background:var(--panel)">` : `<div style="width:76px;height:76px;border-radius:12px;flex:none;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:26px">${esc(c || '\u{1F4D6}')}</div>`;
+    const back = (to, title) => `<div class="actions" style="padding:0 0 10px;margin:0 16px;align-items:center"><button class="btn ghost small" data-ixa="mapback" data-to="${to}" type="button">&larr; Back</button><b style="align-self:center">${title}</b></div>`;
+    const storyCard = (s, extra, attrs) => `<div class="mrow scard" ${attrs} role="button" tabindex="0" style="cursor:pointer"><div style="display:flex;gap:12px;align-items:flex-start">${cov(s.cover)}<div style="min-width:0;flex:1"><h4 style="margin:0 0 4px">${esc(s.title)}</h4><div>${s.authorized ? '<span class="tag live">Authorized</span>' : '<span class="tag warn">Not authorized</span>'}${extra || ''}</div></div></div></div>`;
+    if (step === 'story'){
+      h = back('list', 'Choose a story') + `<label class="field"><span>Search stories</span><input id="ix_sq" type="search" placeholder="Story name" autocomplete="off"></label><div id="ix_stories">` +
+        (d.stories.map(s => storyCard(s, ` <span class="tag">${(s.topics || []).length} topics</span>${s.waiting ? ` <span class="tag">waiting: ${s.waiting}</span>` : ''}`, `data-ixa="mapstory" data-sid="${esc(s.id)}" data-ixtitle="${esc((s.title || '').toLowerCase())}"`)).join('') || '<div class="empty">No stories yet.</div>') + `</div>`;
+    } else if (step === 'topic' && st){
+      const cur = e.story_topic_id || '';
+      h = back(e.id ? 'list' : 'story', 'Select topic') + storyCard(st, '', '') +
+        `<div class="ax-mlabel" style="margin:14px 2px 8px">Which topic of this story is this mapping for?</div>` +
+        ((st.topics || []).map(t => `<div class="mrow scard" data-ixa="maptopic" data-tid="${esc(t.id)}" role="button" tabindex="0" style="cursor:pointer;${t.id === cur ? 'border-color:var(--gold)' : ''}"><h4 style="margin:0">${esc(t.name)}${t.id === cur ? ' <span class="tag gold">Current</span>' : ''}</h4></div>`).join('')) +
+        `<div class="mrow scard" data-ixa="maptopic" data-tid="" role="button" tabindex="0" style="cursor:pointer"><h4 style="margin:0">Whole story <small class="by">(no topic)</small></h4></div>`;
+    } else if (step === 'details' || (IX.edit && step !== 'list')){
+      h = back(e.id ? 'list' : 'topic', e.id ? 'Edit mapping #' + e.id : 'Add details') + `<div class="box"><b>${e.id ? 'Edit mapping #' + e.id : 'Add mapping'}</b>
       <div class="two"><label class="field"><span>Supergroup ID *</span><input id="ix_sg" inputmode="numeric" placeholder="-1001234567890" value="${esc(e.supergroup_id || '')}"></label><label class="field"><span>Supergroup Topic ID *</span><input id="ix_tp" inputmode="numeric" placeholder="e.g. 12 (General = 1)" value="${esc(e.topic_id ?? '')}" list="ix_seen"></label></div>
       <datalist id="ix_seen">${d.seen_topics.map(t => `<option value="${t.topic_id}">${esc(t.supergroup_name)} / ${esc(t.name)}</option>`).join('')}</datalist>
       <div class="two"><label class="field"><span>Supergroup name (for reports)</span><input id="ix_sgn" maxlength="100" value="${esc(e.supergroup_name || '')}"></label><label class="field"><span>Topic name (for reports)</span><input id="ix_tpn" maxlength="100" value="${esc(e.topic_name || '')}"></label></div>
       <label class="field"><span>Story *</span><select id="ix_story"><option value="">Choose a story</option>${d.stories.map(s => `<option value="${esc(s.id)}"${s.id === e.story_id ? ' selected' : ''}>${esc(s.title)} (${esc(s.id)})</option>`).join('')}</select></label>
       <label class="field"><span>Story Topic</span><select id="ix_stopic">${ixTopicOpts(d.stories, e.story_id, e.story_topic_id)}</select></label>
-      <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="mapsave" type="button">Save mapping</button>${e.id ? '<button class="btn ghost small" data-ixa="mapcancel" type="button">Cancel edit</button>' : ''}</div>
-      <small class="note">Telegram does not let a bot list a group's topics. Easiest: send <b>/mapthis &lt;story_id&gt;</b> inside the topic to the Index Bot. Topics the bot has seen (when created or posted in) appear as suggestions above.</small></div>
-      ${d.mappings.map(m => `<div class="mrow"><b>${esc(m.story_title)}</b>${m.story_topic_name ? ' / ' + esc(m.story_topic_name) : ''} <span class="by">${m.status === 'active' ? '● Active' : '○ Disabled'} · ${m.authorized ? 'Authorized' : 'Not authorized'}</span>
-        <div class="by">${esc(m.supergroup_name || m.supergroup_id)} (${m.supergroup_id}) · topic ${esc(m.topic_name || '')} #${m.topic_id} · waiting: ${m.waiting}</div><div class="by">Created ${ixWhen(m.created)} · Updated ${ixWhen(m.updated)}</div>
-        <div class="actions" style="padding:8px 0 0"><button class="btn small" data-ixa="mapedit" data-id="${m.id}" type="button">Edit</button><button class="btn ghost small" data-ixa="${m.status === 'active' ? 'mapoff' : 'mapon'}" data-id="${m.id}" type="button">${m.status === 'active' ? 'Disable' : 'Enable'}</button><button class="btn danger small" data-ixa="mapdel" data-id="${m.id}" type="button">Delete</button></div></div>`).join('') || '<div class="empty">No mappings yet.</div>'}`;
+      <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="mapsave" type="button">Save mapping</button><button class="btn ghost small" data-ixa="mapcancel" type="button">Cancel</button></div>
+      <small class="note">Telegram does not let a bot list a group's topics. Easiest: send <b>/mapthis &lt;story_id&gt;</b> inside the topic to the Index Bot. Topics the bot has seen (when created or posted in) appear as suggestions above.</small></div>`;
+    } else {
+      h = `<div class="actions" style="padding:0 0 10px;margin:0 16px"><button class="btn small" data-ixa="mapnew" type="button">＋ Add mapping</button></div>` + d.mappings.map(m => `<div class="mrow scard" data-ixa="mapcard" data-id="${m.id}" role="button" tabindex="0" style="cursor:pointer" aria-label="Open mapping of ${esc(m.story_title)}">
+        <div style="display:flex;gap:12px;align-items:flex-start">${cov(m.story_cover)}<div style="min-width:0;flex:1"><h4 style="margin:0 0 4px">${esc(m.story_title)}${m.story_topic_name ? ' / ' + esc(m.story_topic_name) : ''}</h4>
+          <div><span class="tag ${m.status === 'active' ? 'live' : 'warn'}">${m.status === 'active' ? 'Active' : 'Disabled'}</span> ${m.authorized ? '<span class="tag live">Authorized</span>' : '<span class="tag warn">Not authorized</span>'}</div></div></div>
+        <div class="by" style="margin-top:8px">${esc(m.supergroup_name || m.supergroup_id)} (${m.supergroup_id}) · topic ${esc(m.topic_name || '')} #${m.topic_id} · waiting: ${m.waiting}</div><div class="by">Created ${ixWhen(m.created)} · Updated ${ixWhen(m.updated)}</div>
+        <div class="actions" style="padding:8px 0 0"><button class="btn small" data-ixa="mapedit" data-id="${m.id}" type="button">Edit</button><button class="btn ghost small" data-ixa="${m.status === 'active' ? 'mapoff' : 'mapon'}" data-id="${m.id}" type="button">${m.status === 'active' ? 'Disable' : 'Enable'}</button><button class="btn danger small" data-ixa="mapdel" data-id="${m.id}" type="button">Delete</button></div></div>`).join('') || '<div class="empty">No mappings yet.</div>';
+    }
   } else if (IX.view === 'stories'){
     h = `<p class="note" style="margin:0 16px 10px">Only authorized stories are ever processed. Revoking stops pending work at once.</p><div class="actions" style="padding:0 16px 10px"><button class="btn small" data-ixa="indexall" type="button">Index all authorized</button><button class="btn ghost small" data-ixa="retryall" type="button">Retry all failed</button></div>` + d.stories.map(s => `<div class="mrow"><b>${esc(s.title)}</b> <span class="by">${esc(s.id)}${s.topics.length ? ' · topics: ' + s.topics.map(t => esc(t.name) + '=' + esc(t.id)).join(', ') : ''} · ${s.authorized ? '✅ Authorized' + (s.authorized_at ? ' ' + ixWhen(s.authorized_at) : '') : '⛔ Not authorized'} · waiting: ${s.waiting}</span>
       <div class="actions" style="padding:8px 0 0">${s.authorized ? `<button class="btn ghost small" data-ixa="revoke" data-sid="${esc(s.id)}" type="button">Revoke</button><button class="btn small" data-ixa="index" data-sid="${esc(s.id)}" type="button">Index Now</button><button class="btn ghost small" data-ixa="retry" data-sid="${esc(s.id)}" type="button">Retry failed</button>` : `<button class="btn small" data-ixa="authorize" data-sid="${esc(s.id)}" type="button">Authorize</button>`}</div></div>`).join('');
@@ -3655,13 +3676,18 @@ function ixTopicOpts(stories, sid, cur){
 }
 async function ixClick(ev){
   const v = ev.target.closest('[data-ixv]');
-  if (v){ IX.view = v.dataset.ixv; IX.edit = null; return loadAdmin(); }
+  if (v){ IX.view = v.dataset.ixv; IX.edit = null; IX.step = 'list'; return loadAdmin(); }
   const b = ev.target.closest('[data-ixa]'); if (!b) return;
   const a = b.dataset.ixa, id = +b.dataset.id || null, sid = b.dataset.sid;
   const run = async (body, ok) => once('ix' + a + (id || sid || ''), async () => { try{ const r = await ixPost(body); toast(ok ? ok(r) : 'Done'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
-  if (a === 'mapsave') return run({op: 'map_save', id: IX.edit && IX.edit.id, supergroup_id: $('#ix_sg').value.trim(), topic_id: $('#ix_tp').value.trim(), supergroup_name: $('#ix_sgn').value, topic_name: $('#ix_tpn').value, story_id: $('#ix_story').value, story_topic_id: $('#ix_stopic').value}, () => { IX.edit = null; return 'Mapping saved'; });
-  if (a === 'mapcancel'){ IX.edit = null; return loadAdmin(); }
-  if (a === 'mapedit'){ IX.edit = IX.maps.mappings.find(m => m.id === id); return loadAdmin(); }
+  if (a === 'mapsave') return run({op: 'map_save', id: IX.edit && IX.edit.id, supergroup_id: $('#ix_sg').value.trim(), topic_id: $('#ix_tp').value.trim(), supergroup_name: $('#ix_sgn').value, topic_name: $('#ix_tpn').value, story_id: $('#ix_story').value, story_topic_id: $('#ix_stopic').value}, () => { IX.edit = null; IX.step = 'list'; return 'Mapping saved'; });
+  if (a === 'mapcancel'){ IX.edit = null; IX.step = 'list'; return loadAdmin(); }
+  if (a === 'mapedit'){ IX.edit = IX.maps.mappings.find(m => m.id === id); IX.step = 'details'; return loadAdmin(); }
+  if (a === 'mapnew'){ IX.edit = null; IX.step = 'story'; return loadAdmin(); }
+  if (a === 'mapstory'){ IX.edit = {story_id: sid}; IX.step = 'topic'; return loadAdmin(); }
+  if (a === 'mapcard'){ IX.edit = IX.maps.mappings.find(m => m.id === id); IX.step = 'topic'; return loadAdmin(); }
+  if (a === 'maptopic'){ IX.edit = Object.assign({}, IX.edit, {story_topic_id: b.dataset.tid || ''}); IX.step = 'details'; return loadAdmin(); }
+  if (a === 'mapback'){ IX.step = b.dataset.to || 'list'; if (IX.step === 'list') IX.edit = null; return loadAdmin(); }
   if (a === 'mapon') return run({op: 'map_enable', id}); if (a === 'mapoff') return run({op: 'map_disable', id});
   if (a === 'mapdel') return askConfirm('Delete this mapping? Files waiting for it are put on hold.', () => run({op: 'map_delete', id}));
   if (a === 'authorize') return run({op: 'authorize', story_id: sid}, () => 'Story authorized');
@@ -3674,6 +3700,7 @@ async function ixClick(ev){
   if (a === 'export') return once('ixexp', async () => { try{ const r = await ixPost({op: 'export', period_start: +b.dataset.ps}); const u = URL.createObjectURL(new Blob([r.csv], {type: 'text/csv'})); const l = document.createElement('a'); l.href = u; l.download = 'index-report-' + b.dataset.ps + '.csv'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 3000); }catch(e){ toast(adminErr(e)); } });
   if (a === 'savesettings') return run({op: 'settings', settings: {order_by: $('#ix_order').value, live_reports: $('#ix_live').checked, auto_index_2am: $('#ix_auto').checked, report_chat: $('#ix_rc').value.trim()}}, () => 'Settings saved');
 }
+document.addEventListener('input', e => { if (e.target && e.target.id === 'ix_sq'){ const q = e.target.value.trim().toLowerCase(); $$('#ix_stories [data-ixtitle]').forEach(c => { c.hidden = !!q && !c.dataset.ixtitle.includes(q); }); } });
 document.addEventListener('change', e => { if (e.target && e.target.id === 'ix_story' && IX.maps){ const s = $('#ix_stopic'); if (s) s.innerHTML = ixTopicOpts(IX.maps.stories, e.target.value, ''); } });
 
 const SORTS = {az: (x, y) => x.title.localeCompare(y.title, undefined, {numeric: true, sensitivity: 'base'}), za: (x, y) => y.title.localeCompare(x.title, undefined, {numeric: true, sensitivity: 'base'}),
@@ -3683,7 +3710,8 @@ const gapLine = s => ((s.adm || {}).topics || []).filter(t => t.gaps).map(t => (
 const storyBtns = s => `<button class="btn ghost small" data-aedit="${esc(s.id)}">Edit</button><button class="btn ghost small" data-atop="${esc(s.id)}" data-title="${esc(s.title)}">Topics</button><button class="btn ghost small" data-aeps="${esc(s.id)}" data-title="${esc(s.title)}">Episodes</button>
   <button class="btn ghost small" data-apub="${esc(s.id)}" data-to="${s.published ? 0 : 1}">${s.published ? 'Unpublish' : 'Publish'}</button>${String(s.status || '').toLowerCase() === 'ongoing' ? `<button class="btn ok small" data-acomplete="${esc(s.id)}" data-title="${esc(s.title)}">&#10003; Mark as complete</button>` : ''}<button class="btn danger small" data-adel="${esc(s.id)}" data-title="${esc(s.title)}">Delete</button>`;
 const stNorm = s => String(s.status || 'Ongoing').trim().toLowerCase();
-const inSub = (s, k) => k === 'all' ? true : k === 'ongoing' ? stNorm(s) === 'ongoing' : k === 'completed' ? stNorm(s) === 'completed' : k === 'other' ? !['ongoing', 'completed'].includes(stNorm(s)) : ((A.cols.find(c => 'c:' + c.id === k) || {story_ids: []}).story_ids.map(String).includes(String(s.id)));
+const inCollection = s => (A.cols || []).some(c => (c.story_ids || []).map(String).includes(String(s.id)));
+const inSub = (s, k) => k === 'all' ? true : k === 'ongoing' ? !inCollection(s) && stNorm(s) === 'ongoing' : k === 'completed' ? !inCollection(s) && stNorm(s) === 'completed' : k === 'other' ? !inCollection(s) && !['ongoing', 'completed'].includes(stNorm(s)) : ((A.cols.find(c => 'c:' + c.id === k) || {story_ids: []}).story_ids.map(String).includes(String(s.id)));      // a story inside a collection is not shown in the status tabs
 function paintAdminStories(){
   const box = $('#astories'); if (!box) return;
   if (!adminSubs('stories').some(x => x[0] === A.sub)) A.sub = 'all';
@@ -3866,40 +3894,56 @@ async function resetFlow(scope){
 
 /* ---- story editor (metadata only) ---- */
 const KINDS = {full: ['&#128081;', 'Full Story plans', 'Members see one plan card at a time and slide for the next.'], pack: ['&#128230;', 'Episode packs', 'Small cards named only "Episode _ to _". Tapping one shows the full details.'], rental: ['&#9203;', 'Rental plans', 'Access ends after the days you set. Rentals get no upgrade credit.']};
-/* ---- two-topic plans (story editor): sold together, shown with the other plans on the story page ---- */
-const PAIRT = [];
+/* ---- bundle plans (story editor): several topics sold together. For every topic the admin picks which plan of that topic is included ---- */
+const BT = {topics: [], plans: []};
+function bundlePlanOpts(tid, cur){
+  const list = BT.plans.filter(p => p.topic === tid && !isBundle(p) && p.id && p.from);
+  if (!tid) return '<option value="">Choose a topic first</option>';
+  if (!list.length) return '<option value="">No saved plan in this topic</option>';
+  return '<option value="">Choose a plan</option>' + list.map(p => `<option value="${esc(p.id)}"${p.id === cur ? ' selected' : ''}>${esc(p.label)} (ep ${p.from}${p.to ? ' to ' + p.to : ' onwards'}${p.scope === 'snapshot' ? ', till date' : ''}) \u20b9${p.price}</option>`).join('');
+}
+function bundleComp(c = {}){
+  return `<div class="bcomp" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) auto;gap:8px;margin:6px 0;align-items:center"><select class="pc-t" aria-label="Topic"><option value="">Topic</option>${BT.topics.map(t => `<option value="${esc(t.id)}"${t.id === c.topic ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select><select class="pc-p" aria-label="Plan of this topic that is included">${bundlePlanOpts(c.topic, c.plan)}</select><button class="btn ghost small pc-del" type="button" aria-label="Remove this topic">&#10005;</button></div>`;
+}
 function pairRow(o = {}){
-  const opt = sel => PAIRT.map(t => `<option value="${esc(t.id)}"${sel === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('');
-  const num = (c, p, v) => `<input class="${c}" type="number" min="1" inputmode="numeric" placeholder="${p}" value="${v ?? ''}">`;
-  return `<div class="optrow pairrow${o.hidden ? ' hid' : ''}" data-id="${esc(o.id || '')}"><input class="p-label" placeholder="Plan name, e.g. Season 1 + Season 2" value="${esc(o.label || '')}" aria-label="Plan name">
+  const comps = (o.bundle && o.bundle.length) ? o.bundle : (isBundle(o) ? [{topic: o.topic, plan: ''}, ...o.more.map(m => ({topic: m.topic, plan: ''}))] : [{}, {}]);
+  return `<div class="optrow pairrow${o.hidden ? ' hid' : ''}" data-id="${esc(o.id || '')}"><input class="p-label" placeholder="Plan name, e.g. Season 1 + 2 + 3" value="${esc(o.label || '')}" aria-label="Plan name">
     <div class="o2 omp"><input class="p-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="p-mrp" type="number" min="0" inputmode="decimal" placeholder="MRP (original price)" value="${o.mrp ?? ''}" aria-label="MRP"></div>
-    <label class="field"><span>First topic</span><select class="p-t1"><option value="">Choose a topic</option>${opt(o.topic)}</select></label><div class="o2">${num('p-f1', 'From ep', o.from)}${num('p-e1', 'To ep (blank = ongoing)', o.to)}</div>
-    <label class="field"><span>Second topic</span><select class="p-t2"><option value="">Choose a topic</option>${opt(o.topic2)}</select></label><div class="o2">${num('p-f2', 'From ep', o.from2)}${num('p-e2', 'To ep (blank = ongoing)', o.to2)}</div>
+    <small class="note" style="display:block;margin:6px 0 2px">Admin only: for every topic, choose which plan of that topic is included. Members just see this bundle as one plan.${isBundle(o) && !(o.bundle && o.bundle.length) ? ' <b>Choose the plan of every topic again to save changes.</b>' : ''}</small>
+    <div class="bcomps">${comps.map(bundleComp).join('')}</div>
+    <div class="actions" style="padding:0 0 6px"><button class="btn ghost small pc-add" type="button">＋ Add another topic</button></div>
+    <label class="field check"><input type="checkbox" class="p-till"${o.scope === 'snapshot' ? ' checked' : ''}><span style="margin:0">Till date: only the episodes available when access starts (every topic of the bundle is fixed at that moment)</span></label>
     <label class="field check"><input type="checkbox" class="p-fwd"${o.fwd ? ' checked' : ''}><span style="margin:0">Forwarding allowed: episodes sent to chat can be forwarded and saved</span></label>
     <label class="field check"><input type="checkbox" class="p-hide"${o.hidden ? ' checked' : ''}><span style="margin:0">Hide from members (stops new sales, existing buyers keep access)</span></label>
     <button type="button" class="btn danger small p-del">Remove plan</button></div>`;
 }
 function pairsHtml(s){
-  PAIRT.splice(0, PAIRT.length, ...(s.topics || [])); const list = (s.options || []).filter(o => o.topic2);
-  return `<h3 class="h3" style="font-size:20px">Two-topic plans</h3><p class="note">Sell two topics together as one plan. It appears on the story page with the other plans. Choose the two topics and the episodes of each one. Existing purchases are never changed.</p>
-    <div id="e_pairs">${list.map(pairRow).join('')}</div>${PAIRT.length >= 2 ? '<div class="actions" style="padding:0"><button class="btn ghost small" type="button" id="pairAdd">＋ Add a two-topic plan</button></div>' : '<p class="note">Add at least two topics first (save the story, then tap Topics).</p>'}`;
+  BT.topics = s.topics || []; BT.plans = (s.options || []).filter(o => o.id);
+  const list = (s.options || []).filter(isBundle);
+  return `<h3 class="h3" style="font-size:20px">Bundle plans (2 or more topics)</h3><p class="note">Sell several topics together as one plan. It appears on the story page with the other plans. Pick the topics and, for each one, which of its saved plans is included. Existing purchases are never changed.</p>
+    <div id="e_pairs">${list.map(pairRow).join('')}</div>${BT.topics.length >= 2 ? '<div class="actions" style="padding:0"><button class="btn ghost small" type="button" id="pairAdd">＋ Add a bundle plan</button></div>' : '<p class="note">Add at least two topics first (save the story, then tap Topics).</p>'}`;
 }
 function readPairs(){
-  return $$('#e_pairs .pairrow').map(r => { const q = k => r.querySelector(k), n = k => parseInt(q(k).value) || null;
+  return $$('#e_pairs .pairrow').map(r => { const q = k => r.querySelector(k);
     return {id: r.dataset.id || '', label: q('.p-label').value.trim(), price: q('.p-price').value === '' ? 0 : Number(q('.p-price').value), mrp: q('.p-mrp').value !== '' ? Number(q('.p-mrp').value) : 0, days: 0, kind: 'full',
-      topic: q('.p-t1').value, from: n('.p-f1'), to: n('.p-e1'), topic2: q('.p-t2').value, from2: n('.p-f2'), to2: n('.p-e2'), fwd: q('.p-fwd').checked, hidden: q('.p-hide').checked}; });
+      bundle: [...r.querySelectorAll('.bcomp')].map(c => ({topic: c.querySelector('.pc-t').value, plan: c.querySelector('.pc-p').value})), scope: q('.p-till').checked ? 'snapshot' : '', fwd: q('.p-fwd').checked, hidden: q('.p-hide').checked}; });
 }
+document.addEventListener('change', e => { if (e.target && e.target.classList && e.target.classList.contains('pc-t')){ const p = e.target.closest('.bcomp').querySelector('.pc-p'); p.innerHTML = bundlePlanOpts(e.target.value, ''); } });
 function pairProblem(list){
   for (const o of list){
-    if (!o.label) return 'Give every two-topic plan a name';
-    if (!o.topic || !o.topic2) return `"${o.label}": choose both topics`;
-    if (o.topic === o.topic2) return `"${o.label}": choose two different topics`;
-    if (!o.from || !o.from2) return `"${o.label}": fill the From episode of both topics`;
-    if ((o.to && o.to < o.from) || (o.to2 && o.to2 < o.from2)) return `"${o.label}": From must not be greater than To`;
+    if (!o.label) return 'Give every bundle plan a name';
+    if (o.bundle.length < 2) return `"${o.label}": add at least two topics`;
+    const seen = new Set();
+    for (const c of o.bundle){
+      if (!c.topic) return `"${o.label}": choose a topic in every row`;
+      if (!c.plan) return `"${o.label}": choose which plan of every topic is included`;
+      if (seen.has(c.topic)) return `"${o.label}": every topic can be used only once`;
+      seen.add(c.topic);
+    }
   }
   return '';
 }
-let PT = [];                                              // the other topics of the story being edited: a plan row may add one as its second topic
+let PT = [];
 function optRow(o = {}, removable = true, kind){
   kind = kind || planKind(o);
   const rent = kind === 'rental', full = kind === 'full', auto = !!o.auto, ro = auto ? ' readonly' : '';
@@ -3911,8 +3955,6 @@ function optRow(o = {}, removable = true, kind){
     <div class="o2 omp"><input class="o-price" type="number" min="0" inputmode="decimal" placeholder="Price" value="${o.price ?? ''}" aria-label="Price"><input class="o-mrp" type="number" min="0" inputmode="decimal" placeholder="MRP (original price)" value="${o.mrp ?? ''}" aria-label="MRP, the original price. Other plans of this story or topic get the same % off"></div>
     <div class="${full ? 'o2' : 'o3'}">${full ? '<input class="o-days" type="hidden" value="0">' : `<input class="o-days" type="number" min="${rent ? 1 : 0}" inputmode="numeric" placeholder="${rent ? 'Days *' : 'Days (0 = keep)'}" value="${o.days ?? ''}" aria-label="Days of access">`}<input class="o-from" type="number" min="1" inputmode="numeric" placeholder="${rent ? 'From ep (blank = all)' : 'From ep'}" value="${o.from ?? ''}" aria-label="From episode"${ro}><input class="o-to" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to ?? ''}" aria-label="To episode, leave blank for ongoing"${ro}></div>
     ${full ? `<label class="field check"><input type="checkbox" class="o-notetick"${o.nonote ? '' : ' checked'}><span style="margin:0">Show the "we don't guarantee upcoming episodes" note on this plan</span></label>` : ''}
-    ${PT.length && !auto ? `<div class="box" style="margin:8px 0;grid-column:1/-1"><label class="field" style="margin:0"><span>Also include a 2nd topic in this plan (optional). Its episodes are filled here, the first topic uses From / To above</span><select class="o-t2"><option value="">None, this topic only</option>${PT.map(t => `<option value="${esc(t.id)}"${o.topic2 === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
-      <div class="o2"><input class="o-from2" type="number" min="1" inputmode="numeric" placeholder="2nd topic: From ep" value="${o.from2 ?? ''}" aria-label="From episode of the second topic"><input class="o-to2" type="number" min="1" inputmode="numeric" placeholder="To ep (blank = ongoing)" value="${o.to2 ?? ''}" aria-label="To episode of the second topic"></div></div>` : ''}
     <details class="oextra"${custom ? ' open' : ''}><summary>Customise${custom ? ' &#10003;' : ''}</summary>
       <div class="o2"><label class="field"><span>Badge (e.g. Best value)</span><input class="o-badge" maxlength="24" value="${esc(o.badge || '')}"></label><label class="field"><span>Position (1 = first)</span><input class="o-order" type="number" min="1" max="9999" inputmode="numeric" value="${o.order || ''}"></label></div>
       <label class="field"><span>Short note shown on the plan</span><input class="o-note" maxlength="140" value="${esc(o.note || '')}"></label>
@@ -3949,7 +3991,7 @@ function planSummary(opts){
     <div>&#128230; <b>Episode packs:</b> ${pack.length ? `${pack.length} pack${pack.length > 1 ? 's' : ''}, ${money(Math.min(...pp))}${Math.max(...pp) > Math.min(...pp) ? ' - ' + money(Math.max(...pp)) : ''}${pack.filter(o => o.hidden).length ? ' (' + pack.filter(o => o.hidden).length + ' hidden)' : ''}` : none}</div>
     <div>&#9203; <b>Rentals:</b> ${rent.length ? rent.map(o => o.days + ' days ' + money(o.price) + tag(o)).join(' | ') : none}</div>`;
 }
-const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order, scope: o.scope, fwd: o.fwd, nonote: o.nonote, mrp: o.mrp, topic2: o.topic2, from2: o.from2, to2: o.to2});
+const planPayload = o => ({id: o.id, label: o.label, price: o.price, days: o.days, from: o.from, to: o.to, kind: o.kind, badge: o.badge, note: o.note, hidden: o.hidden, order: o.order, scope: o.scope, fwd: o.fwd, nonote: o.nonote, mrp: o.mrp});
 function planProblem(list, needFrom){
   for (const p of list){
     if (p.kind === 'rental' && !(p.days >= 1)) return `Rental "${p.label}": enter the days (1 or more)`;
@@ -4022,7 +4064,7 @@ function paintPhoto(){
 function readPlans(sel = '#e_opts', auto = false){          // auto = true reads the hand edits of rule-made packs instead
   return $$(sel + ' .optrow').filter(r => !!r.dataset.auto === auto).map(r => { const q = k => r.querySelector(k);
     return {id: r.dataset.id || '', label: q('.o-label').value.trim(), price: q('.o-price').value === '' ? 0 : Number(q('.o-price').value), days: parseInt(q('.o-days').value) || 0,
-      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: !!(q('.o-fwd') && q('.o-fwd').checked), nonote: !!(q('.o-notetick') && !q('.o-notetick').checked), mrp: q('.o-mrp') && q('.o-mrp').value !== '' ? Number(q('.o-mrp').value) : 0, topic2: q('.o-t2') ? q('.o-t2').value : '', from2: q('.o-from2') ? (parseInt(q('.o-from2').value) || null) : null, to2: q('.o-to2') ? (parseInt(q('.o-to2').value) || null) : null}; }).filter(o => o.label);
+      from: parseInt(q('.o-from').value) || null, to: parseInt(q('.o-to').value) || null, kind: q('.o-kind').value, badge: q('.o-badge').value.trim(), note: q('.o-note').value.trim(), hidden: q('.o-hide').checked, order: parseInt(q('.o-order').value) || 0, scope: q('.o-snap') && q('.o-snap').checked ? 'snapshot' : '', fwd: !!(q('.o-fwd') && q('.o-fwd').checked), nonote: !!(q('.o-notetick') && !q('.o-notetick').checked), mrp: q('.o-mrp') && q('.o-mrp').value !== '' ? Number(q('.o-mrp').value) : 0}; }).filter(o => o.label);
 }
 function addPacks(sel, pre){                      // pre = prefix of the four generator inputs
   const g = k => $('#' + pre + k), size = parseInt(g('size').value), price = Number(g('price').value) || 0, total = parseInt(g('total').value);
@@ -4120,7 +4162,7 @@ function openTopicEditor(tid){
     <label class="field"><span>Topic name *</span><input id="te_name" value="${esc(t.name)}" maxlength="60"></label>
     <label class="field"><span>Note shown on the topic card (optional)</span><textarea id="te_note" maxlength="300" style="min-height:70px">${esc(t.note || '')}</textarea></label>
     <h3 class="h3" style="font-size:20px">Plans and prices for this topic</h3><p class="note">Full story plans and packs need a From episode (leave To blank for ongoing). A rental can leave From blank to rent the whole topic. Price 0 means free for everyone. Existing purchases are never changed.</p>
-    ${planEditorHtml('te_opts', (s.options || []).filter(o => o.topic === tid && !o.topic2), 'tg_', {auto: true})}
+    ${planEditorHtml('te_opts', (s.options || []).filter(o => o.topic === tid && !isBundle(o)), 'tg_', {auto: true})}
     <div class="actions"><button class="btn" id="teSave">Save topic</button><button class="btn ghost" id="teClose2">Cancel</button></div>`;
   openSheet('topiced');
   if (t.pack){ $('#tg_start').value = t.pack.start; $('#tg_size').value = t.pack.size; $('#tg_price').value = t.pack.price; $('#tg_auto').checked = true; }
@@ -4128,7 +4170,7 @@ function openTopicEditor(tid){
 function openPlanAdd(tid){
   const s = T.story, t = (s.topics || []).find(x => x.id === tid); if (!t) return;
   TE.id = tid; PT = [];
-  const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid && !o.auto && !o.topic2).map(o => +o.to || 0));      // the new plan carries on after the last one
+  const last = Math.max(0, ...(s.options || []).filter(o => o.topic === tid && !o.auto && !isBundle(o)).map(o => +o.to || 0));      // the new plan carries on after the last one
   $('#topiced').innerHTML = `<div class="top"><button class="btn ghost small" id="teClose">Back</button><strong>Add plan</strong></div>
     <h3 class="h3" style="margin-top:0">${esc(t.name)}</h3>
     <p class="note">Plans added here go to this topic only. Pick a section: full story plan, episode packs or rental. Everything is saved together when you tap Save plan. Existing purchases are never changed.</p>
@@ -4147,7 +4189,7 @@ async function savePlanAdd(){
     const bad = planProblem(nps, true); if (bad) return toast(bad, 5000);
     try{
       const d = await api(`/api/story/${encodeURIComponent(T.sid)}?limit=1`);                              // newest plans, so nothing saved elsewhere is overwritten
-      const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto && !o.topic2).map(planPayload);
+      const mine = (d.story.options || []).filter(o => o.topic === tid && !o.auto && !isBundle(o)).map(planPayload);
       const r = await topicCall({action: 'edit', id: tid, options: [...mine, ...nps.map(p => ({...planPayload(p), id: ''}))], ...(pack ? {pack} : {})}); if (!r) return;
       if (r.warnings && r.warnings.length) alert('Saved, but please check:\n\n' + r.warnings.join('\n'));
       toast(pack ? 'Automatic packs saved' : nps.length > 1 ? `${nps.length} plans added` : 'Plan added'); closeSheet('topiced'); loadTopics(); loadAdmin(); loadHome();
@@ -4657,6 +4699,8 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-eedit]'))){ M.edit = +m.dataset.eedit; return renderManageList(); }
   if (c('#x_cancel')){ M.edit = null; return renderManageList(); }
   if ((m = c('[data-esave]'))) return saveEpisodeEdit(m.dataset.esave);
+  if ((m = c('.pc-add'))){ m.closest('.pairrow').querySelector('.bcomps').insertAdjacentHTML('beforeend', bundleComp({})); return; }
+  if ((m = c('.pc-del'))) return m.closest('.bcomp').remove();
   if (c('#pairAdd')){ $('#e_pairs').insertAdjacentHTML('beforeend', pairRow({})); const rs = $$('#e_pairs .pairrow'); rs[rs.length - 1].scrollIntoView({block: 'center'}); return; }
   if ((m = c('.p-del'))) return m.closest('.pairrow').remove();
   if (c('#fdSave')) return once('fdsave', async () => { const n = Math.max(0, Math.min(365, parseInt($('#fd_days').value) || 0)); try{ await api('/api/admin/free-days', {method: 'POST', retry: false, body: JSON.stringify({days: n})}); toast(n ? `New episodes are free for ${n} days` : 'New episodes are no longer free'); }catch(e){ toast(adminErr(e), 5000); } });
