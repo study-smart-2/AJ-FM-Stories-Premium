@@ -11,7 +11,7 @@
 <style>
 :root{
   --ink:#0b101c; --panel:#141b2b; --panel2:#1a2338; --line:#27324d; --gold:#d6ab4f; --gold-2:#f1d48a;
-  --text:#f3ecda; --muted:#a3adc2; --gold-rgb:214,171,79; --ok-rgb:108,197,154; --cv-a:#243052; --cv-b:#0f1526; --surf:#10172a; --nav-bg:#0e1424; --sk-a:#141b2b; --sk-b:#1e2842; --feat-a:#1d2646; --soft:#d4cdb9; --wish-bg:rgba(8,12,22,.7); color-scheme:dark; --ok:#6cc59a; --bad:#e27b7b; --warn:#e8b64c; --nav:60px; --mini:68px;
+  --text:#f3ecda; --muted:#a3adc2; --gold-rgb:214,171,79; --ok-rgb:108,197,154; --cv-a:#243052; --cv-b:#0f1526; --surf:#10172a; --nav-bg:#0e1424; --sk-a:#141b2b; --sk-b:#1e2842; --feat-a:#1d2646; --soft:#d4cdb9; --wish-bg:rgba(8,12,22,.7); color-scheme:dark; --ok:#6cc59a; --bad:#e27b7b; --warn:#e8b64c; --nav:60px;
   --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
   --sans:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
 }
@@ -21,7 +21,6 @@ button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer;min-height:40px}
 :focus-visible{outline:2px solid var(--gold-2);outline-offset:2px}
 body{padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 16px)}
-body.hasplayer{padding-bottom:calc(var(--nav) + var(--mini) + env(safe-area-inset-bottom,0px) + 16px)}
 h1,h2,h3,h4{margin:0}
 .appbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
 .brand{font-family:var(--serif);font-size:27px;font-weight:700;color:var(--gold-2);line-height:1}
@@ -87,8 +86,7 @@ h1,h2,h3,h4{margin:0}
 /* sheets */
 .sheet{position:fixed;inset:0;background:var(--ink);overflow:auto;overflow-x:hidden;z-index:6;display:none;padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px)}
 .sheet.open{display:block}
-body.hasplayer .sheet{padding-bottom:calc(var(--mini) + env(safe-area-inset-bottom,0px) + 40px)}
-#fullplayer{z-index:10}#editor,#epman,#topics{z-index:8}#topiced,#cpedit{z-index:9}#admin{z-index:7}
+#editor,#epman,#topics{z-index:8}#topiced,#cpedit{z-index:9}#admin{z-index:7}
 .top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;gap:10px}
 .btn{border:1px solid var(--gold);background:var(--gold);color:#1a1405;font-weight:700;padding:11px 16px;border-radius:10px;min-height:44px}
 .btn.ghost{background:transparent;color:var(--gold-2)}
@@ -137,44 +135,8 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .ep small{color:var(--muted);white-space:nowrap}
 .eprow{display:flex;align-items:center;gap:6px;margin:0 16px 8px}
 .eprow .ep{flex:1;min-width:0;width:auto;margin:0}
-.dl{flex:none;min-width:50px;min-height:52px;padding:0 8px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--gold-2);font-weight:700;font-size:15px}
-.dl.done{border-color:var(--ok);color:var(--ok)}.dl.run,.dl.queued{border-color:var(--gold)}.dl.pause{border-color:var(--bad);color:var(--bad)}
-.dlx{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--gold-2);font-size:13px;min-height:40px;margin:6px 6px 0 0}
-.dlx.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.15)}
-#dlsheet{z-index:8}
 .pill{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
 .pill.free{border-color:var(--ok);color:var(--ok)}.pill.owned{border-color:var(--gold);color:var(--gold-2)}.pill.lock{border-color:var(--bad);color:var(--bad)}
-/* mini player */
-.mini{position:fixed;left:8px;right:8px;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 26px);z-index:9;background:var(--surf);border:1px solid var(--gold);border-radius:14px;padding:8px 10px;display:none;align-items:center;gap:10px;height:var(--mini)}
-.mini.show{display:flex}
-.mini .mcv{width:44px;height:44px;border-radius:8px;overflow:hidden;flex:none;background:var(--cv-a);display:flex;align-items:center;justify-content:center}
-.mini .mcv img{width:100%;height:100%;object-fit:cover}
-.mini .mt{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0}
-.mini .mt b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mini .mt small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mini button.mb{background:none;border:0;color:var(--gold-2);font-size:20px;min-width:44px;height:44px;border-radius:50%}
-.mini button#mPlay{background:var(--gold);color:#1a1405}
-.mini .mbar{position:absolute;left:12px;right:12px;bottom:3px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
-.mini .mbar i{display:block;height:100%;width:0;background:var(--gold)}
-/* full player */
-.fp{padding:0 20px 30px;text-align:center}
-.fp .cv{width:min(62vw,260px);margin:8px auto 16px}
-.fp .cv.has-img{width:auto;max-width:78%;display:inline-block}.fp .cv.has-img img{width:auto;max-width:100%;max-height:38vh}
-.fp h2{font-family:var(--serif);font-size:26px;line-height:1.1;color:var(--gold-2);overflow-wrap:anywhere}
-.fp .state{min-height:22px;color:var(--muted);font-size:13.5px;margin:6px 0}
-.fp .state.bad{color:var(--bad)}
-.fp input[type=range]{width:100%;accent-color:var(--gold)}
-.fp .times{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px}
-.fp .row{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
-.fp .row button{background:none;border:0;color:var(--gold-2);font-size:20px;min-width:52px;height:52px}
-.fp #fPlay{background:var(--gold);color:#1a1405;border-radius:50%;width:64px;height:64px;font-size:26px}
-.fp .opt{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;text-align:left}
-.fp .opt b{display:block;margin-bottom:6px}
-.fp .rr{display:flex;align-items:center;gap:8px}.fp .rr input{flex:1}
-.fp .rr button,.fp .chiprow button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--gold-2);font-size:13px;min-height:40px}
-.fp .bufbar{height:4px;border-radius:2px;background:var(--line);margin:-2px 0 4px;overflow:hidden}.fp .bufbar i{display:block;height:100%;width:0;background:rgba(var(--gold-rgb),.45)}
-.fp .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.fp .chiprow button.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.15)}
 /* forms and admin */
 .field{display:block;margin:0 16px 12px}
 .field>span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
@@ -193,7 +155,7 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .seg{display:flex;gap:6px;padding:4px 16px 12px;overflow-x:auto;scrollbar-width:none}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 12px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}.kpi small{display:block;color:var(--muted);font-size:12px}.kpi b{font-size:20px}
-.toast{position:fixed;left:50%;bottom:calc(var(--nav) + var(--mini) + env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:var(--gold);color:#1a1405;padding:10px 16px;border-radius:999px;font-weight:700;z-index:30;display:none;max-width:92%;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:var(--gold);color:#1a1405;padding:10px 16px;border-radius:999px;font-weight:700;z-index:30;display:none;max-width:92%;text-align:center}
 @media (prefers-reduced-motion:no-preference){.toast.show{animation:pop .2s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}}
 
 /* home v2: header, carousel, deals, themes */
@@ -225,10 +187,10 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 @media (prefers-reduced-motion:no-preference){.rail .slide{transition:transform .15s}.rail .slide:active{transform:scale(.98)}}
 /* themes: dark (default, in :root) | light | warm */
 html[data-theme=light]{--ink:#F7F8FC;--panel:#FFFFFF;--panel2:#EEF1F6;--line:#E5E7EB;--gold:#C99A2E;--gold-2:#8F6A0E;--text:#171923;--muted:#667085;--ok:#1f8f5f;--bad:#c24545;--warn:#a86b00;--gold-rgb:201,154,46;--ok-rgb:31,143,95;--cv-a:#EEF1F6;--cv-b:#E2E6EE;--surf:#FFFFFF;--nav-bg:#FFFFFF;--sk-a:#EEF1F6;--sk-b:#F7F8FC;--feat-a:#FFF8E6;--soft:#3d4352;--wish-bg:rgba(255,255,255,.88);color-scheme:light}
-html[data-theme=light] .card,html[data-theme=light] .ep,html[data-theme=light] .plan,html[data-theme=light] .feat,html[data-theme=light] .mini{box-shadow:0 1px 3px rgba(23,25,35,.08),0 4px 14px rgba(23,25,35,.05)}
+html[data-theme=light] .card,html[data-theme=light] .ep,html[data-theme=light] .plan,html[data-theme=light] .feat{box-shadow:0 1px 3px rgba(23,25,35,.08),0 4px 14px rgba(23,25,35,.05)}
 html[data-theme=light] .bnav{box-shadow:0 -2px 12px rgba(23,25,35,.06)}
 html[data-theme=warm]{--ink:#fbf5e9;--panel:#fffaf0;--panel2:#f3e8d0;--line:#e2d3b1;--gold:#b9821f;--gold-2:#8a5a0a;--text:#2b2113;--muted:#74664d;--ok:#1f8f5f;--bad:#c24545;--warn:#a86b00;--gold-rgb:185,130,31;--ok-rgb:31,143,95;--cv-a:#f3e8d0;--cv-b:#e8d9b6;--surf:#fffaf0;--nav-bg:#fffaf0;--sk-a:#f3e8d0;--sk-b:#fbf5e9;--feat-a:#f3e8d0;--soft:#4a3d28;--wish-bg:rgba(255,250,240,.88);color-scheme:light}
-html[data-theme=warm] .card,html[data-theme=warm] .ep,html[data-theme=warm] .plan,html[data-theme=warm] .feat,html[data-theme=warm] .mini{box-shadow:0 1px 3px rgba(74,52,20,.10),0 4px 14px rgba(74,52,20,.06)}
+html[data-theme=warm] .card,html[data-theme=warm] .ep,html[data-theme=warm] .plan,html[data-theme=warm] .feat{box-shadow:0 1px 3px rgba(74,52,20,.10),0 4px 14px rgba(74,52,20,.06)}
 html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-color .25s ease,box-shadow .25s ease!important}
 .thsel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .thopt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-size:13px;font-weight:700;min-height:64px}
@@ -433,7 +395,6 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .rq-note{margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);font-size:12.5px;color:var(--soft)}
 .rq-prev{display:flex;gap:10px;align-items:center;margin-top:8px}
 .rq-prev .cv{width:72px;flex:none}
-.mini .mbar{top:0;bottom:auto;left:14px;right:14px}
 
 /* story overview: one topic card per row */
 .tcard{display:flex;gap:12px;align-items:center;width:calc(100% - 32px);margin:0 16px 10px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--panel);text-align:left;min-height:72px}
@@ -510,8 +471,6 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .sbar{position:fixed;left:0;right:0;bottom:0;z-index:5;box-sizing:border-box;width:100%;max-width:100vw;overflow:hidden;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--nav-bg);border-top:1px solid var(--gold);box-shadow:0 -8px 24px rgba(0,0,0,.25);display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
 #story:has(.sbar:not(:empty)){padding-bottom:calc(230px + env(safe-area-inset-bottom,0px))}
 .sbar:empty{display:none}
-body.hasplayer .sbar{bottom:calc(var(--mini) + 12px)}
-body.hasplayer #story:has(.sbar:not(:empty)){padding-bottom:calc(230px + var(--mini) + env(safe-area-inset-bottom,0px))}
 .sb-row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;min-width:0}.sb-row .link{flex:none;white-space:nowrap}
 #sbBuy{white-space:nowrap;flex:none}
 .sb-plan{min-width:0}.sb-plan small{display:block;color:var(--muted);font-size:12px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}.sb-plan b{font-size:20px;color:var(--gold-2)}
@@ -573,7 +532,7 @@ html[data-theme=warm] .feat{border-color:#D9B48D}
 html[data-theme=warm] .cv{border-color:#D5A77B}
 html[data-theme=warm] .btn{box-shadow:0 3px 10px rgba(123,61,32,.12)}
 /* Distinct, clear theme-specific interaction states. */
-.chip.on,.ep.on,.dlx.on{box-shadow:inset 0 0 0 1px var(--gold)}
+.chip.on,.ep.on{box-shadow:inset 0 0 0 1px var(--gold)}
 input,textarea,select{border-color:var(--line)}
 ::placeholder{color:var(--muted);opacity:1}
 
@@ -642,7 +601,7 @@ html[data-theme=light] .obn,html[data-theme=warm] .obn{box-shadow:0 8px 24px rgb
 :root{--r-ctl:12px;--r-card:18px;--ring:0 0 0 3px rgba(var(--gold-rgb),.28)}
 html{color-scheme:dark light;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-h2.title,.sec,.h3,.feat h3,.fp h2{text-wrap:balance;letter-spacing:-.012em}
+h2.title,.sec,.h3,.feat h3{text-wrap:balance;letter-spacing:-.012em}
 .sec{font-size:26px}
 .plc .pp,.pkd .pdp,.sb-plan b,.card .pr,.cr{font-variant-numeric:tabular-nums lining-nums}
 /* plans are what members pay for: selection must be obvious and must not shift the layout */
@@ -709,7 +668,7 @@ html[data-theme=warm]{
   --ok:#1b8a5a; --bad:#b83c3c; --warn:#9a5b00; color-scheme:light;
 }
 /* text that sits on the accent colour, and surfaces that had fixed blue or brown colours */
-.badge,.btn,.mini button#mPlay,.fp #fPlay,.wish.on,.bnav button.on svg,.plc .bdg{color:var(--on-gold)}
+.badge,.btn,.wish.on,.bnav button.on svg,.plc .bdg{color:var(--on-gold)}
 .btn.ghost{color:var(--gold-2)}.btn.danger{color:var(--bad)}
 .hero{background:linear-gradient(var(--feat-a),var(--ink))}
 html[data-theme] .promo{background:linear-gradient(120deg,var(--feat-a),var(--surf));color:var(--gold-2);border-color:var(--gold)}
@@ -908,7 +867,6 @@ html:not([data-theme=light]):not([data-theme=warm]) .card,
 html:not([data-theme=light]):not([data-theme=warm]) .ep,
 html:not([data-theme=light]):not([data-theme=warm]) .plan,
 html:not([data-theme=light]):not([data-theme=warm]) .feat,
-html:not([data-theme=light]):not([data-theme=warm]) .mini{box-shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.28);border-color:var(--line)}
 html:not([data-theme=light]):not([data-theme=warm]) .bnav{box-shadow:0 -4px 18px rgba(0,0,0,.38);border-top:1px solid var(--line)}
 html:not([data-theme=light]):not([data-theme=warm]) .obn{box-shadow:0 10px 28px rgba(0,0,0,.4)}
 html:not([data-theme=light]):not([data-theme=warm]) .btn{box-shadow:0 4px 14px rgba(var(--gold-rgb),.25)}
@@ -925,7 +883,7 @@ html:not([data-theme=light]):not([data-theme=warm]) .plc.on::after{background-im
 /* Violet accent (from the Light theme) in the Warm theme too; its sand/cream surfaces stay */
 html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; --on-gold:#ffffff; --feat-a:#efe6f6; --cv-a:#ebe0f3; --cv-b:#dccdea}
 /* text that sits on the accent colour must follow it in every theme */
-.toast,#admin .admin-mark,.cmb-best,.cmb-tick,.badge,.btn,.mini button#mPlay,.fp #fPlay,.wish.on,.plc .bdg,.bnav button.on svg{color:var(--on-gold)}
+.toast,#admin .admin-mark,.cmb-best,.cmb-tick,.badge,.btn,.wish.on,.plc .bdg,.bnav button.on svg{color:var(--on-gold)}
 .btn.ghost{color:var(--gold-2)}.btn.danger{color:var(--bad)}
 
 /* plan cards: every plan its own card; plans the cart rules do not allow right now */
@@ -981,8 +939,9 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
 .cmb-daily-sec .pl-dots{padding-bottom:10px}
 /* collection banner: first tile of the row, same size as a story card, slides along with the stories */
 .rail.hasart{--aw:clamp(124px,30.5vw,176px);scroll-padding-left:calc(16px + var(--aw) + 14px)}
-.rail .colart{position:sticky;left:0;z-index:3;flex:none;width:var(--aw,clamp(124px,30.5vw,176px));padding:0;border:0;background:none;display:block;text-align:left;scroll-snap-align:none;cursor:pointer}
+.rail .colart{position:sticky;left:16px;z-index:3;flex:none;width:var(--aw,clamp(124px,30.5vw,176px));padding:0;border:0;background:none;display:block;text-align:left;scroll-snap-align:none;cursor:pointer}
 .rail .colart .cv{box-shadow:8px 0 16px rgba(0,0,0,.38)}
+.rail.hasart{clip-path:inset(0 0 0 16px)}      /* the stories slide behind the pinned banner and are cut off at its left edge: nothing shows outside the banner */
 .cvhero{display:flex;justify-content:center;padding:14px 16px 4px}
 .cvhero img{width:min(62%,260px);aspect-ratio:3/4;object-fit:cover;border-radius:16px;border:1px solid var(--gold);box-shadow:0 10px 26px rgba(0,0,0,.3)}
 .cvname{padding:10px 16px 0;margin:0}.cvmeta{padding:2px 16px 14px}
@@ -1177,15 +1136,6 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="combopage" aria-label="Story combinations"></section>
 <section class="sheet" id="couponed" aria-label="Coupon editor"></section>
-<section class="sheet" id="fullplayer" aria-label="Player"></section>
-
-<div class="mini" id="mini" role="region" aria-label="Now playing">
-  <div class="mcv" id="mCover"></div>
-  <button class="mt" id="mOpen" aria-label="Open the full player"><b id="mTitle"></b><small id="mSub"></small></button>
-  <button class="mb" id="mPlay" aria-label="Play or pause">&#9654;</button>
-  <button class="mb" id="mNext" aria-label="Next episode">&#9197;</button>
-  <div class="mbar"><i id="mProg"></i></div>
-</div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -1292,7 +1242,7 @@ function goBack(){ const id = stack[stack.length - 1]; if (id === 'admin' && typ
 function goBot(payload){
   const contact = payload === 'help' && S.home && S.home.contact;                 // Help & support opens the Contact Bot; if none is added, the store bot's help like before
   const url = contact ? `https://t.me/${contact}` : `https://t.me/${BOT_USERNAME}?start=${payload}`;
-  if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); if (audio.paused) setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); }   // stay open if audio is playing
+  if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); }
   else window.open(url, '_blank');
 }
 
@@ -2549,9 +2499,9 @@ async function loadLibrary(){
       const [c, hd] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []}))]); if (L.seg !== seg) return;
       body.innerHTML = (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
           lines: [`Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}`], bar: i.episode.duration ? Math.min(100, Math.round(i.pos / i.episode.duration * 100)) : 0,
-          actions: `<button class="lbtn" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}">${tr('lres')}</button>${dlBtnHtml(i.episode.id)}<button class="lbtn rm" data-lcx="${esc(i.story.id)}">${tr('lrem')}</button>`}))).join('') : libEmpty('lel')) +
+          actions: `<button class="lbtn" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}">${tr('lres')}</button><button class="lbtn rm" data-lcx="${esc(i.story.id)}">${tr('lrem')}</button>`}))).join('') : libEmpty('lel')) +
         (hd.items.length ? `<h3 class="lsub">${tr('lhead')}</h3>` + hd.items.map(h => (HIST[h.episode_id] = h, `<div class="eprow"><button class="ep" data-hist="${h.episode_id}" data-story="${esc(h.story_id)}" data-pos="${h.pos}" ${h.available ? '' : 'disabled'}>
-          <span class="n">${epn(h)}</span><span class="t"><b>${esc(h.story_title)}</b><br><small>${esc(h.title)}</small></span><small>${h.completed ? 'Done' : clock(h.pos)}</small></button>${h.available ? dlBtnHtml(h.episode_id) : ''}</div>`)).join('') : '');
+          <span class="n">${epn(h)}</span><span class="t"><b>${esc(h.story_title)}</b><br><small>${esc(h.title)}</small></span><small>${h.completed ? 'Done' : clock(h.pos)}</small></button></div>`)).join('') : '');
     } else if (seg === 'owned' || seg === 'rentals'){
       const d = await api('/api/library', {signal: sig}); if (L.seg !== seg) return;
       let list = d.stories.filter(s => seg === 'owned' ? !s.expires : !!s.expires);
@@ -2583,82 +2533,6 @@ async function libRemove(btn, url, payload, after){
   catch(e){ btn.disabled = false; toast(errText(e)); }
 }
 
-/* ---------- player (one audio element, one authoritative state) ---------- */
-let audio = makeAudio();                     // the element that is playing now; the next episode is buffered in a second one and swapped in
-const P = {next:null, preloading:false, sid:null, story:null, ep:null, state:'idle', err:'', userPaused:false, repeat:false, rate:1, sleepAt:0, sleepEnd:false, seq:0, retries:0, lastSave:0, dragging:false};
-try{ const r = parseFloat(localStorage.getItem('ajfm_rate')); if (r >= 0.5 && r <= 5) P.rate = r; }catch(e){}
-let rateWarned = false;
-const rateLabel = r => r.toFixed(2).replace(/\.?0+$/, '') + 'x';
-function setRate(v){
-  P.rate = Math.min(5, Math.max(0.5, Math.round(v * 100) / 100));
-  audio.playbackRate = P.rate; audio.defaultPlaybackRate = P.rate;
-  try{ localStorage.setItem('ajfm_rate', String(P.rate)); }catch(e){}
-  if (P.rate > 4 && !rateWarned){ rateWarned = true; toast('Above 4x some phones play no sound. If it goes silent, lower the speed.', 4500); }
-  paintFull();
-}
-const playing = () => !audio.paused && !audio.ended;
-
-function showMini(){ $('#mini').classList.add('show'); document.body.classList.add('hasplayer'); paintMini(); }
-function paintMini(){
-  if (!P.ep) return;
-  const c = P.story && P.story.cover;
-  $('#mCover').innerHTML = isImg(c) ? `<img src="${esc(c)}" alt="" data-fb="📖">` : esc(c || '📖');
-  $('#mTitle').textContent = `${P.story ? P.story.title : ''}`;
-  $('#mSub').textContent = P.state === 'loading' ? 'Loading...' : P.state === 'buffering' ? 'Buffering...' : P.state === 'error' ? 'Problem. Tap to retry' : `Episode ${epn(P.ep)}: ${P.ep.title || ''}`;
-  $('#mPlay').innerHTML = playing() || P.state === 'loading' ? '&#10074;&#10074;' : '&#9654;';
-  const d = isFinite(audio.duration) && audio.duration ? audio.duration : (P.ep.duration || 0);
-  $('#mProg').style.width = d ? Math.min(100, audio.currentTime / d * 100) + '%' : '0';
-}
-function renderFull(){
-  const c = P.story && P.story.cover;
-  $('#fullplayer').innerHTML = `<div class="top"><button class="btn ghost small" id="fClose" aria-label="Close player">Close</button><button class="btn ghost small" id="fStory">Open story</button></div>
-    <div class="fp">${cover(c)}<h2 id="fTitle"></h2><div class="by" id="fStoryTitle"></div><div class="state" id="fState" aria-live="polite"></div>
-    <div id="fRetry"></div>
-    <input type="range" id="fSeek" min="0" max="1" step="1" value="0" aria-label="Seek"><div class="bufbar" aria-hidden="true"><i id="fBuf"></i></div><div class="times"><span id="fCur">0:00</span><span id="fDur">0:00</span></div>
-    <div class="row"><button id="fPrev" aria-label="Previous episode">&#9198;</button><button id="fBack" aria-label="Back 15 seconds">-15</button><button id="fPlay" aria-label="Play or pause">&#9654;</button>
-      <button id="fFwd" aria-label="Forward 15 seconds">+15</button><button id="fNext" aria-label="Next episode">&#9197;</button></div>
-    <div class="opt"><b>Speed <span id="fRate"></span></b><div class="rr"><button id="rMinus" aria-label="Slower by 0.05">-0.05</button><input type="range" id="rSlide" min="0.5" max="5" step="0.05" aria-label="Playback speed"><button id="rPlus" aria-label="Faster by 0.05">+0.05</button></div>
-      <div class="chiprow">${[1, 1.25, 1.5, 2, 3, 4, 5].map(r => `<button data-rate="${r}">${r}x</button>`).join('')}</div></div>
-    <div class="opt"><b>Sleep timer <span id="fSleep"></span></b><div class="chiprow">${[['Off', 0], ['15 min', 15], ['30 min', 30], ['45 min', 45], ['60 min', 60]].map(([t, m]) => `<button data-sleep="${m}">${t}</button>`).join('')}<button data-sleep="end">End of episode</button></div></div>
-    <div class="opt"><b>Repeat</b><div class="chiprow"><button id="fRepeat" aria-pressed="false">Repeat this episode: off</button></div></div>
-    <div class="opt"><b>Listen with the screen off</b><div class="by" style="margin-bottom:8px">Send episodes into your bot chat and play them with Telegram's own player. It keeps playing in the background and moves on to the next episode by itself. Saving and forwarding are switched off. The episodes remove themselves from the chat when their audio time plus a little extra is over. Each episode can be sent <span id="dMax">5</span> times.</div>
-      <div id="dStatus" aria-live="polite"></div><div class="ctl" style="padding:0"><select id="dCount" aria-label="How many episodes"><option value="1">1 episode</option><option value="3">3 episodes</option><option value="5" selected>5 episodes</option><option value="10">10 episodes</option></select><button class="btn" id="dGo">Send to my chat</button></div><div class="by" id="dLeft" style="margin-top:6px"></div></div></div>`;
-  paintFull(); loadDelivery();
-}
-function paintFull(){
-  if (!$('#fTitle')) return;
-  if (P.ep){ $('#fTitle').textContent = `Episode ${epn(P.ep)}: ${P.ep.title || ''}`; $('#fStoryTitle').textContent = P.story ? P.story.title : ''; }
-  const st = {loading:'Loading episode...', buffering:'Buffering...', playing:'Playing', paused:'Paused', error:P.err, idle:''}[P.state] || '';
-  const s = $('#fState'); s.textContent = st; s.className = 'state' + (P.state === 'error' ? ' bad' : '');
-  $('#fRetry').innerHTML = P.state === 'error' ? '<button class="btn small" id="fRetryBtn">Try again</button>' : '';
-  $('#fPlay').innerHTML = playing() || P.state === 'loading' ? '&#10074;&#10074;' : '&#9654;';
-  const d = isFinite(audio.duration) ? audio.duration : (P.ep ? P.ep.duration : 0) || 0;
-  $('#fSeek').max = Math.max(1, Math.floor(d)); if (!P.dragging) $('#fSeek').value = Math.floor(audio.currentTime || 0);
-  $('#fCur').textContent = clock(audio.currentTime); $('#fDur').textContent = clock(d);
-  const buf = audio.buffered && audio.buffered.length ? audio.buffered.end(audio.buffered.length - 1) : 0; $('#fBuf').style.width = d ? Math.min(100, buf / d * 100) + '%' : '0';
-  $('#fRate').textContent = rateLabel(P.rate); $('#rSlide').value = P.rate;
-  $$('#fullplayer [data-rate]').forEach(b => b.classList.toggle('on', Math.abs(parseFloat(b.dataset.rate) - P.rate) < 0.001));
-  const left = P.sleepAt ? Math.max(0, Math.ceil((P.sleepAt - Date.now()) / 60000)) : 0;
-  $('#fSleep').textContent = P.sleepEnd ? '(after this episode)' : P.sleepAt ? `(${left} min left)` : '';
-  $$('#fullplayer [data-sleep]').forEach(b => b.classList.toggle('on', P.sleepEnd ? b.dataset.sleep === 'end' : (!P.sleepAt && b.dataset.sleep === '0')));
-  if (P.ep && $('#fDl')){ $('#fDl').dataset.dl = P.ep.id; paintDl(P.ep.id); }
-  $('#fRepeat').textContent = `Repeat this episode: ${P.repeat ? 'on' : 'off'}`; $('#fRepeat').classList.toggle('on', P.repeat); $('#fRepeat').setAttribute('aria-pressed', P.repeat);
-}
-const D = {info: null, fetched: 0};
-async function loadDelivery(){ try{ D.info = await api('/api/delivery' + (P.ep ? '?episode_id=' + P.ep.id : '')); D.fetched = Date.now(); paintDelivery(); }catch(e){} }
-function paintDelivery(){
-  const box = $('#dStatus'), go = $('#dGo'); if (!box) return;
-  const info = D.info || {}, list = (info.deliveries || []).filter(d => d.expires > Date.now() / 1000), now = Date.now() / 1000;
-  const mx = $('#dMax'); if (mx && info.max_per_episode) mx.textContent = info.max_per_episode;
-  const lf = $('#dLeft'); if (lf) lf.textContent = info.left != null ? `Sends left for this episode: ${info.left} of ${info.max_per_episode}` : '';
-  box.innerHTML = list.map(d => `<div class="access"><b>${esc(d.title || 'Your story')}: ${d.first === d.last ? 'episode ' + d.first : 'episodes ' + d.first + ' to ' + d.last} ${d.first === d.last ? 'is' : 'are'} in your chat</b><br>Removed in ${clock(Math.max(0, d.expires - now))} (${esc(d.total_text)} of audio + ${esc(d.extra_text)} extra)</div>`).join('') +
-    (list.length ? '<button class="btn block" data-pbot="1" style="margin-bottom:8px">Open the bot chat</button>' : '');
-}
-setInterval(() => { if ($('#fullplayer').classList.contains('open') && D.info && (D.info.deliveries || []).length){ paintDelivery(); if (Date.now() - D.fetched > 20000 || D.info.deliveries.some(d => d.expires <= Date.now() / 1000)) loadDelivery(); } }, 1000);
-function paintAll(){ paintMini(); paintFull(); }
-function markPlaying(){ $$('#story .ep').forEach(b => b.classList.toggle('on', !!P.ep && b.dataset.ep === String(P.ep.id) && V.id === P.sid)); }
-
-
 /* ---------- episodes are not played in the app: tapping one sends it straight to the member's bot chat ---------- */
 const SENDN = () => 1;   // tapping an episode in the list sends only that episode
 function openChat(){
@@ -2679,328 +2553,8 @@ async function sendEpisode(ep, demo){
     }catch(e){ toast(errText(e), 5000); }
   });
 }
-async function playEpisodeInApp(ep, story, pos = 0, retries = 0){
-  const seq = ++P.seq; discardNext();                // a newer request always replaces an older one
-  P.sid = story.id; P.story = {id: story.id, title: story.title, cover: story.cover};
-  P.ep = {id: ep.id, no: ep.no, to: ep.to, title: ep.title, duration: ep.duration}; P.state = 'loading'; P.err = ''; P.userPaused = false; P.retries = retries;
-  showMini(); if ($('#fullplayer').classList.contains('open')) renderFull(); else paintAll(); markPlaying();
-  try{
-    let src = await offUrl(ep.id);                                         // a saved copy plays without any network
-    if (!src){ const d = await api(`/api/play/${ep.id}`, {method: 'POST', retry: false}); src = d.url; }
-    if (seq !== P.seq) return;
-    audio.src = src; audio.defaultPlaybackRate = P.rate; audio.playbackRate = P.rate;
-    audio.addEventListener('loadedmetadata', () => { if (seq === P.seq && pos > 1) audio.currentTime = pos; }, {once: true});
-    await audio.play();
-    if (seq !== P.seq) return;
-    P.state = 'playing'; setSession(); prefetchNext();
-  }catch(e){
-    if (seq !== P.seq) return;
-    if (e.name === 'NotAllowedError'){ P.state = 'paused'; }
-    else { P.state = 'error'; P.err = e.status === 403 ? 'This episode is locked. Choose a plan to unlock it.' : e.status === 404 ? 'This episode is not available.' : errText(e); }
-  }
-  paintAll();
-}
-async function recover(){
-  if (!P.ep || P.state === 'loading') return;
-  if (P.retries >= 2){ P.state = 'error'; P.err = 'Playback stopped. Check your connection and try again.'; paintAll(); return; }
-  await playEpisode(P.ep, P.story, audio.currentTime || 0, P.retries + 1);       // fetches a fresh link, in case the old one expired
-}
-async function goNeighbor(dir, auto){
-  if (!P.ep) return; const seq = P.seq; let d = null;
-  try{ d = await api(`/api/story/${encodeURIComponent(P.sid)}?${dir}=${P.ep.no}&limit=1`); }
-  catch(e){ if (e.aborted) return; if (!e.network){ toast(errText(e)); return; } }                  // no connection: fall back to the saved episodes
-  if (seq !== P.seq) return;
-  const n = d ? d.eps[0] : offNeighbor(dir);
-  if (!n){ if (auto){ P.state = 'paused'; paintAll(); } toast(d ? (dir === 'after' ? (auto ? 'That was the last episode' : 'No next episode') : 'No previous episode') : (dir === 'after' ? 'No next downloaded episode' : 'No previous downloaded episode')); return; }
-  if (n.locked){ P.state = 'paused'; paintAll(); toast('The next episode is locked. Choose a plan to continue.', 4000); return; }
-  await playEpisode(n, P.story, 0);
-}
-function saveProgress(force, completed = false, keepalive = false){
-  if (!P.ep || !P.sid) return;
-  const now = Date.now(); if (!force && now - P.lastSave < 15000) return; P.lastSave = now;
-  const d = isFinite(audio.duration) ? Math.floor(audio.duration) : 0;
-  store.set('ajpos' + P.ep.id, completed ? 0 : Math.floor(audio.currentTime || 0));        // remembered on the phone too, for listening offline
-  api('/api/progress', {method: 'POST', retry: false, keepalive, body: JSON.stringify({episode_id: P.ep.id, pos: Math.floor(audio.currentTime || 0), duration: d, completed})}).catch(() => {});
-}
-function clearSleep(){ P.sleepAt = 0; P.sleepEnd = false; }
-function setSleep(v){
-  if (v === 'end'){ P.sleepEnd = true; P.sleepAt = 0; toast('Playback will stop after this episode'); }
-  else { const m = parseInt(v); P.sleepEnd = false; P.sleepAt = m ? Date.now() + m * 60000 : 0; if (m) toast(`Sleep timer set for ${m} minutes`); }
-  paintFull();
-}
-function setSession(){
-  if (!('mediaSession' in navigator) || !P.ep) return;
-  try{
-    const cv = P.story && P.story.cover, art = typeof cv === 'string' && /^https?:/.test(cv) ? [{src: cv, sizes: '512x512'}] : [];
-    navigator.mediaSession.metadata = new MediaMetadata({title: P.ep.title || ('Episode ' + epn(P.ep)), artist: P.story ? P.story.title : "AJ's FM Stories", album: "AJ's FM Stories", artwork: art});
-    const set = (a, f) => navigator.mediaSession.setActionHandler(a, f);
-    set('play', () => { P.userPaused = false; audio.play(); }); set('pause', () => { P.userPaused = true; audio.pause(); });
-    set('previoustrack', () => goNeighbor('before')); set('nexttrack', () => goNeighbor('after'));
-    set('seekbackward', () => { audio.currentTime = Math.max(0, audio.currentTime - 15); }); set('seekforward', () => { audio.currentTime += 15; });
-  }catch(e){}
-}
-function keepAlive(){ setTimeout(() => { if (P.ep && audio.paused && !P.userPaused && !audio.ended && P.state !== 'error') audio.play().catch(() => {}); }, 500); }
-function toggle(){ if (!P.ep) return; if (audio.paused){ P.userPaused = false; if (P.state === 'error') return recover(); audio.play().catch(() => {}); } else { P.userPaused = true; audio.pause(); } }
-
-function makeAudio(){ const a = new Audio(); a.preload = 'auto'; wireAudio(a); return a; }
-function wireAudio(a){
-  const on = (ev, fn) => a.addEventListener(ev, (...x) => { if (a === audio) fn(...x); });         // a buffering spare element never changes the player state
-  on('playing', () => { P.state = 'playing'; paintAll(); setSession(); try{ navigator.mediaSession.playbackState = 'playing'; if (isFinite(audio.duration) && audio.duration > 0) navigator.mediaSession.setPositionState({duration: audio.duration, playbackRate: audio.playbackRate || 1, position: Math.min(audio.currentTime, audio.duration)}); }catch(e){} });
-  on('waiting', () => { if (P.state === 'playing'){ P.state = 'buffering'; paintAll(); } });
-  on('canplay', () => { if (P.state === 'buffering'){ P.state = audio.paused ? 'paused' : 'playing'; paintAll(); } });
-  on('progress', paintFull);
-  on('pause', () => {
-    if (P.state === 'playing' || P.state === 'buffering') P.state = 'paused';
-    try{ navigator.mediaSession.playbackState = 'paused'; }catch(e){}
-    paintAll(); saveProgress(true);
-    if (!P.userPaused && !audio.ended && document.hidden) keepAlive();         // the phone paused it while the app was minimised
-  });
-  on('ended', async () => {
-    saveProgress(true, true);
-    if (P.sleepEnd){ clearSleep(); P.state = 'paused'; paintAll(); toast('Sleep timer: stopped after this episode'); return; }
-    if (P.repeat){ audio.currentTime = 0; audio.play().catch(() => {}); return; }
-    if (await playLocalNext()) return;                                        // saved on the phone: starts at once, no network needed
-    if (P.next && P.next.forNo === P.ep.no) return swapToNext();                // already buffered: starts at once, even in the background
-    await goNeighbor('after', true);                                          // otherwise the server decides whether the next episode may play
-  });
-  on('error', () => { if (P.ep && P.state !== 'loading') recover(); });
-  on('timeupdate', () => {
-    if (P.sleepAt && Date.now() >= P.sleepAt){ clearSleep(); P.userPaused = true; audio.pause(); toast('Sleep timer: playback stopped'); }
-    paintAll(); saveProgress(false); maybePreload();
-  });
-  on('loadedmetadata', paintAll);
-}
-function discardNext(){ if (P.next){ try{ P.next.audio.removeAttribute('src'); P.next.audio.load(); }catch(e){} P.next = null; } }
-function maybePreload(){
-  if (!P.ep || P.next || P.preloading) return;
-  if (OFF.auto && OFF.ok && P.nextEp && P.nextFor === P.ep.id && OFF.meta.has(P.nextEp.id)) return;      // the next episode is already being saved on the phone
-  const d = isFinite(audio.duration) ? audio.duration : 0;
-  if (!d || audio.currentTime < d * 0.5) return;                                // starts buffering the next episode from the half-way point
-  P.preloading = true; const seq = P.seq, sid = P.sid, no = P.ep.no;
-  (async () => {
-    try{
-      const r = await api(`/api/story/${encodeURIComponent(sid)}?after=${no}&limit=1`), n = r.eps[0];
-      if (seq !== P.seq || !n || n.locked) return;                              // never buffer or play what the member may not hear
-      const u = await api(`/api/play/${n.id}`, {method: 'POST', retry: false});
-      if (seq !== P.seq) return;
-      const na = makeAudio(); na.defaultPlaybackRate = P.rate; na.playbackRate = P.rate; na.src = u.url; na.load();
-      P.next = {ep: n, audio: na, forNo: no};
-    }catch(e){} finally { P.preloading = false; }
-  })();
-}
-async function swapToNext(){
-  const n = P.next; P.next = null; const old = audio, seq = ++P.seq;
-  P.ep = {id: n.ep.id, no: n.ep.no, to: n.ep.to, title: n.ep.title, duration: n.ep.duration}; P.state = 'buffering'; P.userPaused = false; P.retries = 0;
-  audio = n.audio; try{ old.removeAttribute('src'); old.load(); }catch(e){}
-  paintAll(); markPlaying(); setSession();
-  try{ await audio.play(); if (seq !== P.seq) return; P.state = 'playing'; prefetchNext(); }
-  catch(e){ if (seq !== P.seq) return; if (e.name === 'NotAllowedError') P.state = 'paused'; else { P.state = 'error'; P.err = 'Could not start the next episode.'; } }
-  paintAll();
-}
-document.addEventListener('visibilitychange', () => { if (document.hidden){ saveProgress(true, false, true); keepAlive(); } else { offResumeAll(); if (CART.length && Date.now() - _rcAt > 8000) refreshCart(); } });      // back from the bot after paying: bought plans leave the cart
+document.addEventListener('visibilitychange', () => { if (!document.hidden && CART.length && Date.now() - _rcAt > 8000) refreshCart(); });      // back from the bot after paying: bought plans leave the cart
 setTimeout(() => { if (CART.length) refreshCart(); }, 2500);
-window.addEventListener('pagehide', () => saveProgress(true, false, true));
-if (tg && tg.onEvent){ try{ tg.onEvent('deactivated', () => { saveProgress(true, false, true); keepAlive(); }); }catch(e){} }
-
-/* ---------- offline downloads: episodes are saved on the phone in 4 MB parts, so a stopped download carries on where it left off ---------- */
-const OFF = {ok: false, ready: null, meta: new Map(), jobs: new Map(), queue: [], active: 0, urls: new Map(), max: 2, auto: store.get('ajauto', '1') !== '0'};
-const CHUNK = 4 * 1024 * 1024;
-const fmtSize = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : Math.max(1, Math.round(b / 1048576)) + ' MB';
-function offOpen(){
-  return Promise.reject(new Error('Downloads are removed'));      // the offline download feature is switched off
-  if (OFF.ready) return OFF.ready;
-  OFF.ready = new Promise((res, rej) => {
-    if (!window.indexedDB) return rej(new Error('no storage'));
-    const rq = indexedDB.open('ajfm-offline', 1);
-    rq.onupgradeneeded = () => { const d = rq.result; d.createObjectStore('meta', {keyPath: 'id'}); d.createObjectStore('parts'); };
-    rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); rq.onblocked = () => rej(new Error('blocked'));
-  });
-  OFF.ready.catch(() => { OFF.ok = false; });
-  return OFF.ready;
-}
-const idb = (name, mode, fn) => offOpen().then(db => new Promise((res, rej) => {
-  const tx = db.transaction(name, mode); let out;
-  try{ out = fn(tx.objectStore(name)); }catch(e){ rej(e); return; }
-  tx.oncomplete = () => res(out && 'result' in out ? out.result : undefined); tx.onerror = tx.onabort = () => rej(tx.error || new Error('storage error'));
-}));
-const partRange = id => IDBKeyRange.bound([id, 0], [id, Infinity]);
-const offSave = m => idb('meta', 'readwrite', os => os.put(m));
-const offPut = (id, i, blob) => idb('parts', 'readwrite', os => os.put(blob, [id, i]));
-const offPlayable = m => !!m && m.complete && (!m.until || m.until * 1000 > Date.now());
-function offState(id){
-  const m = OFF.meta.get(id), j = OFF.jobs.get(id);
-  if (m && m.complete) return offPlayable(m) ? 'done' : 'expired';
-  if (j) return j.state;
-  return m ? 'pause' : 'none';
-}
-function dlLabel(id, long){
-  const s = offState(id), m = OFF.meta.get(id), pct = m && m.parts ? Math.floor((m.next || 0) / m.parts * 100) : 0;
-  if (s === 'done') return long ? ['\u2713 Saved offline (tap to remove)', 'Saved on this phone. Tap to remove', 'done'] : ['\u2713', 'Saved on this phone. Tap to remove', 'done'];
-  if (s === 'run') return long ? [`Downloading ${pct}% (tap to stop)`, 'Downloading. Tap to stop', 'run'] : [pct + '%', 'Downloading. Tap to stop', 'run'];
-  if (s === 'queued') return long ? ['Waiting to download (tap to stop)', 'Waiting. Tap to stop', 'queued'] : ['...', 'Waiting. Tap to stop', 'queued'];
-  if (s === 'pause') return long ? [`Paused at ${pct}% (tap to continue)`, 'Paused. Tap to continue', 'pause'] : ['\u27F3', 'Paused. Tap to continue', 'pause'];
-  return long ? ['\u2B07 Download for offline', 'Download for offline listening', ''] : ['\u2B07', 'Download for offline listening', ''];
-}
-const dlBtnHtml = () => '';
-function paintDl(id){
-  $$(`[data-dl="${id}"]`).forEach(b => { const long = b.dataset.long === '1', [t, l, c] = dlLabel(id, long); b.textContent = t; b.setAttribute('aria-label', l); b.className = (long ? 'dlx ' : 'dl ') + c + (long && c ? ' on' : ''); });
-  const m = OFF.meta.get(id), el = $(`[data-dlp="${id}"]`);
-  if (el && m) el.textContent = m.complete ? fmtSize(m.size) + (offPlayable(m) ? '' : ' - expired') : Math.floor((m.next || 0) / m.parts * 100) + '%';
-}
-async function offLoad(){
-  try{
-    const all = await idb('meta', 'readonly', os => os.getAll());
-    for (const m of all || []) OFF.meta.set(m.id, m);
-    for (const m of [...OFF.meta.values()]){
-      if (!m.complete && m.auto) await offWipe(m.id);                                     // a half-finished automatic download is not worth keeping
-      else if (m.until && m.until * 1000 + 86400000 < Date.now()) await offWipe(m.id);    // the plan ended more than a day ago
-    }
-  }catch(e){ OFF.ok = false; }
-  offResumeAll();
-}
-function offResumeAll(){
-  if (!OFF.ok || !navigator.onLine) return;
-  for (const m of OFF.meta.values()){
-    if (m.complete) continue;
-    const j = OFF.jobs.get(m.id);
-    if (j && j.state !== 'pause') continue;
-    if (j){ j.state = 'queued'; if (!OFF.queue.includes(m.id)) OFF.queue.push(m.id); }
-    else if (!m.auto){ OFF.jobs.set(m.id, {state: 'queued', auto: false, ep: {id: m.id, no: m.no, to: m.to, title: m.title, duration: m.duration}, story: m.story}); OFF.queue.push(m.id); }
-    paintDl(m.id);
-  }
-  offPump();
-}
-async function offQueue(ep, story, auto){
-  if (!OFF.ok) return toast('Downloads are not available on this phone');
-  try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-  const m = OFF.meta.get(ep.id), j = OFF.jobs.get(ep.id);
-  if (!auto && m && m.auto){ m.auto = false; offSave(m).catch(() => {}); if (j) j.auto = false; }      // the member asked for it: it is no longer cleaned up automatically
-  if (m && m.complete){ paintDl(ep.id); return; }
-  if (j){ if (j.state === 'pause'){ j.state = 'queued'; OFF.queue.unshift(ep.id); paintDl(ep.id); offPump(); } return; }
-  OFF.jobs.set(ep.id, {state: 'queued', auto, ep, story});
-  auto ? OFF.queue.push(ep.id) : OFF.queue.unshift(ep.id);
-  paintDl(ep.id); offPump();
-}
-function offPump(){
-  while (OFF.active < OFF.max && OFF.queue.length){
-    const id = OFF.queue.shift(), j = OFF.jobs.get(id); if (!j || j.state !== 'queued') continue;
-    OFF.active++; offRun(id, j).finally(() => { OFF.active--; offPump(); });
-  }
-}
-async function offRun(id, j){
-  j.state = 'run'; j.ctl = new AbortController(); paintDl(id);
-  let info = null, url = '', fails = 0, m = OFF.meta.get(id);
-  try{
-    for (;;){
-      if (!info){
-        info = await api(`/api/download/${id}`, {method: 'POST', retry: false, signal: j.ctl.signal}); url = info.url;
-        if (!m || m.size !== info.size){
-          if (m) await offWipe(id, true);                                                   // the file on the server changed: start again
-          m = {id, sid: j.story.id, story: {id: j.story.id, title: j.story.title, cover: j.story.cover || ''}, no: j.ep.no, to: j.ep.to || null, title: j.ep.title || '', duration: j.ep.duration || 0,
-               size: info.size, mime: info.mime || 'audio/mpeg', parts: Math.max(1, Math.ceil(info.size / CHUNK)), next: 0, complete: false, auto: !!j.auto, until: info.until || null, saved: Date.now()};
-          OFF.meta.set(id, m);
-        }
-        m.until = info.until || null; await offSave(m);
-      }
-      if (m.next >= m.parts) break;
-      const i = m.next, a = i * CHUNK, b = Math.min(m.size, a + CHUNK) - 1; let blob;
-      try{
-        const r = await fetch(url, {headers: {Range: `bytes=${a}-${b}`}, signal: j.ctl.signal});
-        if (r.status === 403){ info = null; if (++fails > 3) throw Object.assign(new Error('Access to this episode has ended.'), {status: 403}); continue; }
-        if (r.status !== 206 && !(r.status === 200 && m.parts === 1)) throw new Error('The server could not send the file (' + r.status + ')');
-        blob = await r.blob();
-        if (blob.size !== b - a + 1) throw new Error('The download was cut short');
-      }catch(e){
-        if (j.ctl.signal.aborted || e.status) throw e;
-        if (++fails > 5 || !navigator.onLine) throw e;
-        await sleep(Math.min(15000, 1500 * fails)); continue;
-      }
-      fails = 0; await offPut(id, i, blob); m.next = i + 1; await offSave(m); paintDl(id);
-    }
-    m.complete = true; await offSave(m); OFF.jobs.delete(id); paintDl(id);
-    if (!j.auto) toast(`Saved offline: episode ${epn(m)}`);
-  }catch(e){
-    if (j.removed) return;
-    if (e.status === 403 || e.status === 404){ toast(e.status === 403 ? 'This episode is locked. Choose a plan to download it.' : 'This episode is not available.', 4000); await offWipe(id); return; }
-    j.state = 'pause'; paintDl(id);
-    if (!j.auto && navigator.onLine && !(j.ctl && j.ctl.signal.aborted)) toast('Download paused (' + ((e && e.message) || 'error').slice(0, 80) + '). It will continue when the connection is back.', 5000);
-  }
-}
-async function offWipe(id, keepJob){
-  const j = OFF.jobs.get(id);
-  if (j && !keepJob){ j.removed = true; try{ j.ctl && j.ctl.abort(); }catch(e){} OFF.jobs.delete(id); }
-  OFF.queue = OFF.queue.filter(x => x !== id);
-  const u = OFF.urls.get(id); if (u){ try{ URL.revokeObjectURL(u); }catch(e){} OFF.urls.delete(id); }
-  OFF.meta.delete(id);
-  try{ await idb('parts', 'readwrite', os => os.delete(partRange(id))); await idb('meta', 'readwrite', os => os.delete(id)); }catch(e){}
-  paintDl(id);
-}
-async function offEvictAuto(keep){ for (const m of [...OFF.meta.values()]) if (m.auto && !keep.includes(m.id)) await offWipe(m.id); }
-async function offUrl(id){
-  const m = OFF.meta.get(id); if (!offPlayable(m)) return '';
-  if (OFF.urls.has(id)) return OFF.urls.get(id);
-  try{
-    const parts = await idb('parts', 'readonly', os => os.getAll(partRange(id)));
-    if (!parts || parts.length !== m.parts) return '';
-    const u = URL.createObjectURL(new Blob(parts, {type: m.mime || 'audio/mpeg'}));
-    OFF.urls.set(id, u);
-    const live = new Set([id, P.ep && P.ep.id, P.nextEp && P.nextEp.id]);
-    for (const [k, v] of [...OFF.urls]) if (!live.has(k)){ try{ URL.revokeObjectURL(v); }catch(e){} OFF.urls.delete(k); }
-    return u;
-  }catch(e){ return ''; }
-}
-function offNeighbor(dir){
-  if (!P.ep) return null; const cur = P.ep.no;
-  const l = [...OFF.meta.values()].filter(m => m.sid === P.sid && offPlayable(m) && (dir === 'after' ? m.no > cur : m.no < cur)).sort((a, b) => dir === 'after' ? a.no - b.no : b.no - a.no);
-  const m = l[0]; return m ? {id: m.id, no: m.no, to: m.to, title: m.title, duration: m.duration, locked: false} : null;
-}
-async function prefetchNext(){                       // keeps the next episode saved on the phone while this one plays, so it starts even when the app is minimised
-  if (!OFF.ok || !OFF.auto || !P.ep || !P.sid || !navigator.onLine) return;
-  if (navigator.connection && navigator.connection.saveData) return;
-  const ep = P.ep, story = P.story; let n = null;
-  try{ const r = await api(`/api/story/${encodeURIComponent(P.sid)}?after=${ep.no}&limit=1`); n = r.eps[0]; }catch(e){ n = offNeighbor('after'); }
-  if (!P.ep || P.ep.id !== ep.id || !n || n.locked) return;
-  P.nextEp = {id: n.id, no: n.no, to: n.to, title: n.title, duration: n.duration}; P.nextFor = ep.id;
-  await offEvictAuto([ep.id, n.id]);
-  const m = OFF.meta.get(n.id); if (!m || !m.complete) offQueue(n, story, true);
-}
-async function playLocalNext(){                       // next episode from the phone's own copy: same audio element, no network needed
-  if (!P.ep || !P.nextEp || P.nextFor !== P.ep.id) return false;
-  const n = P.nextEp; if (!offPlayable(OFF.meta.get(n.id))) return false;
-  const u = await offUrl(n.id); if (!u) return false;
-  const seq = ++P.seq; discardNext();
-  P.ep = {id: n.id, no: n.no, to: n.to, title: n.title, duration: n.duration}; P.state = 'buffering'; P.userPaused = false; P.retries = 0; P.lastSave = 0;
-  audio.src = u; audio.defaultPlaybackRate = P.rate; audio.playbackRate = P.rate;
-  paintAll(); markPlaying(); setSession();
-  try{ await audio.play(); if (seq !== P.seq) return true; P.state = 'playing'; }
-  catch(e){ if (seq !== P.seq) return true; if (e.name === 'NotAllowedError') P.state = 'paused'; else { P.state = 'error'; P.err = 'Could not start the next episode.'; } }
-  paintAll(); prefetchNext(); return true;
-}
-function dlTap(id, ep, story){
-  const s = offState(id);
-  if (s === 'done'){ if (confirm('Remove this download from your phone?')) offWipe(id).then(() => { renderDownloads(); }); return; }
-  if (s === 'run' || s === 'queued'){ if (confirm('Stop this download?')) offWipe(id).then(() => { renderDownloads(); }); return; }
-  if (!ep) return; if (!navigator.onLine) return toast('Connect to the internet to download');
-  offQueue(ep, story, false);
-}
-function openDownloads(){ openSheet('dlsheet'); renderDownloads(); if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(e => { const x = $('#dlQuota'); if (x && e.quota) x.textContent = `Phone storage for the app: ${fmtSize(e.usage || 0)} used of ${fmtSize(e.quota)} allowed.`; }).catch(() => {}); }
-function renderDownloads(){
-  const el = $('#dlsheet'); if (!el || !el.classList.contains('open') && !renderDownloads.force) return;
-  const all = [...OFF.meta.values()].sort((a, b) => String(a.sid).localeCompare(String(b.sid)) || a.no - b.no), by = new Map();
-  all.forEach(m => { if (!by.has(m.sid)) by.set(m.sid, []); by.get(m.sid).push(m); });
-  const saved = all.filter(m => m.complete), used = saved.reduce((t, m) => t + m.size, 0);
-  const row = m => `<div class="eprow"><button class="ep" data-dlplay="${m.id}" ${offPlayable(m) ? '' : 'disabled'}><span class="n">${epn(m)}</span><span class="t">${esc(m.title)}</span><small data-dlp="${m.id}">${m.complete ? fmtSize(m.size) + (offPlayable(m) ? '' : ' - expired') : Math.floor((m.next || 0) / m.parts * 100) + '%'}</small></button><button class="dl" data-dlrm="${m.id}" aria-label="Remove">\u2715</button></div>`;
-  el.innerHTML = `<div class="top"><button class="btn ghost small" id="dlClose">Back</button><strong>Downloads</strong></div>
-    ${navigator.onLine ? '' : '<div class="box" style="border-color:var(--gold)"><b>You are offline</b><div class="by">Your downloaded episodes still play.</div></div>'}
-    <div class="box"><b>Saved on this phone</b><div class="by">${saved.length} episodes, ${fmtSize(used)}</div><div class="by" id="dlQuota"></div>
-      <button class="dlx ${OFF.auto ? 'on' : ''}" id="dlAuto" aria-pressed="${OFF.auto}">Auto-download next episode: ${OFF.auto ? 'on' : 'off'}</button>
-      <div class="by" style="margin-top:6px">While an episode plays, the next one is saved on the phone, so it can start even when Telegram is in the background. It is removed after you move on. Episodes you download yourself stay until you remove them. Files can be large (a long episode can be hundreds of MB).</div>
-      ${all.length ? '<button class="dlx" id="dlClear">Remove all downloads</button>' : ''}</div>
-    ${all.length ? [...by].map(([sid, ms]) => `<h3 class="h3">${esc(ms[0].story.title)}</h3>` + ms.map(row).join('')).join('') : '<div class="empty">Nothing downloaded yet. Tap the \u2B07 button next to an episode to save it for offline listening.</div>'}`;
-}
-function offlineBoot(){ offOpen().then(offLoad).then(() => { if ([...OFF.meta.values()].some(offPlayable)) openDownloads(); }).catch(() => {}); }
-window.addEventListener('online', () => { offResumeAll(); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
-window.addEventListener('offline', () => { toast('You are offline.', 3000); const x = $('#dlsheet'); if (x && x.classList.contains('open')) renderDownloads(); });
 
 /* ---------- story page ---------- */
 const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null, mode:'overview', pack:null, sel:null};
@@ -3251,7 +2805,7 @@ function freeLeft(ts){                                    // time left of a free
 function epRow(e){
   const adm = V.access && V.access.admin;
   const tagHtml = e.locked ? '<span class="pill lock">Locked</span>' : adm ? '' : (e.kind === 'free' ? `<span class="pill free">${e.free_until && !e.free ? 'Free \u00b7 ' + freeLeft(e.free_until) : 'Free'}</span>` : '<span class="pill owned">Owned</span>');
-  const btn = `<button class="ep${e.locked ? ' lock' : ''}${P.ep && P.ep.id === e.id && P.sid === V.id ? ' on' : ''}" data-ep="${e.id}" aria-label="Episode ${epn(e)}, ${esc(e.title)}${e.locked ? ', locked' : ''}">
+  const btn = `<button class="ep${e.locked ? ' lock' : ''}" data-ep="${e.id}" aria-label="Episode ${epn(e)}, ${esc(e.title)}${e.locked ? ', locked' : ''}">
     <span class="n">${epn(e)}</span><span class="t">${esc(e.title)}</span>${e.published === false ? '<span class="pill lock">Hidden</span>' : ''}${tagHtml}<small>${clock(e.duration)}</small></button>`;
   if (e.locked) return btn;
   return btn;
@@ -3950,8 +3504,6 @@ async function resetFlow(scope){
       toast('Erasing...', 60000);
       const r = await step(5, {text: word});
       const total = Object.values(r.deleted || {}).reduce((a, b) => a + b, 0);
-      try{ audio.pause(); }catch(e){}
-      P.ep = null; P.sid = null; P.state = 'idle'; $('#mini').classList.remove('show'); document.body.classList.remove('hasplayer');
       S.home = null; S.homeState = 'idle'; S.wish = new Set(); Object.assign(S.feed, {items: [], offset: 0, state: 'idle', done: false, seeded: false, err: ''});
       Object.assign(B, {all: null, allState: 'idle', items: [], state: 'idle'});
       toast(`Done. ${total} records erased.`, 6000);
@@ -4564,51 +4116,6 @@ document.addEventListener('click', async e => {
   }
   if (c('#rqPhotoRm')){ R.photo = ''; const f = $('#rq_photo'); if (f) f.value = ''; return paintRqPhoto(); }
   if (c('#rqSubmit')) return submitRequest();
-  /* player */
-  if (c('#mPlay')) return toggle();
-  if (c('#mOpen')){ if (P.state === 'error') return recover(); renderFull(); return openSheet('fullplayer'); }
-  if (c('#fClose')) return closeSheet('fullplayer');
-  if (c('#openDl') || c('#fDlList')) return openDownloads();
-  if (c('#dlClose')) return closeSheet('dlsheet');
-  if (c('#fDl')){ if (P.ep) dlTap(P.ep.id, P.ep, P.story); return; }
-  if (c('#fAuto') || c('#dlAuto')){ OFF.auto = !OFF.auto; store.set('ajauto', OFF.auto ? '1' : '0'); const f = $('#fAuto'); if (f){ f.textContent = `Auto-download next: ${OFF.auto ? 'on' : 'off'}`; f.classList.toggle('on', OFF.auto); f.setAttribute('aria-pressed', OFF.auto); } renderDownloads(); if (OFF.auto) prefetchNext(); return; }
-  if (c('#dlClear')){ if (confirm('Remove every downloaded episode from this phone?')) (async () => { for (const id of [...OFF.meta.keys()]) await offWipe(id); renderDownloads(); })(); return; }
-  if ((m = c('[data-dlrm]'))){ const id = +m.dataset.dlrm; if (confirm('Remove this download from your phone?')) offWipe(id).then(renderDownloads); return; }
-  if ((m = c('[data-dlplay]'))){ const x = OFF.meta.get(+m.dataset.dlplay); if (!x) return; if (!offPlayable(x)) return toast('This download has expired. Connect to the internet to renew.'); closeSheet('dlsheet'); return playEpisode({id: x.id, no: x.no, to: x.to, title: x.title, duration: x.duration}, x.story, parseInt(store.get('ajpos' + x.id, '0')) || 0); }
-  if ((m = c('[data-dl]')) && m.dataset.dl !== '0'){
-    const id = +m.dataset.dl; let ep = V.eps && V.eps.find(v => v.id === id), st = ep && V.story ? storyTag(V.story) : null;
-    if (!ep && CONT[id]){ const i = CONT[id]; ep = {id, no: i.episode.no, to: i.episode.to, title: i.episode.title, duration: i.episode.duration}; st = i.story; }
-    else if (!ep && HIST[id]){ const h = HIST[id]; ep = {id, no: h.no, to: h.to, title: h.title, duration: h.duration}; st = {id: h.story_id, title: h.story_title, cover: h.cover}; }
-    return dlTap(id, ep, st);
-  }
-  if (c('#fStory')){ closeSheet('fullplayer'); return openStory(P.sid); }
-  if (c('#fPlay')) return toggle();
-  if (c('#fRetryBtn')) return recover();
-  if (c('#fBack') && P.ep){ audio.currentTime = Math.max(0, audio.currentTime - 15); return; }
-  if (c('#fFwd') && P.ep){ audio.currentTime += 15; return; }
-  if (c('#fPrev')) return goNeighbor('before');
-  if (c('#fNext')) return goNeighbor('after');
-  if ((m = c('#fullplayer [data-rate]'))) return setRate(parseFloat(m.dataset.rate));
-  if ((m = c('[data-sleep]'))) return setSleep(m.dataset.sleep);
-  if ((m = c('#rMinus, #rPlus')) && e.detail === 0) return setRate(P.rate + (m.id === 'rPlus' ? 0.05 : -0.05));   // keyboard use
-  if (c('#fRepeat')){ P.repeat = !P.repeat; return paintFull(); }
-  if (c('#dGo')){
-    if (!P.ep) return toast('Play an episode first');
-    return once('room', async () => {
-      const btn = $('#dGo'); if (btn) btn.disabled = true;
-      try{
-        const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: P.ep.id, count: +$('#dCount').value})});
-        P.userPaused = true; audio.pause(); await loadDelivery();
-        toast(r.delivery && r.delivery.trimmed ? `Sent, but fewer episodes: one reached its ${D.info.max_per_episode}-send limit.` : r.already ? 'These episodes are already in your chat.' : `Sent to your bot chat. They are removed in ${r.delivery.window_text}.`, 5500);
-        goBot('');
-      }catch(err){
-        toast(errText(err), 6000);
-        if (err.data && err.data.error === 'no_chat') goBot('');            // the member has to press Start in the bot first
-        else if (err.data && err.data.delivery) loadDelivery();
-      }finally{ const b2 = $('#dGo'); if (b2) b2.disabled = false; }
-    });
-  }
-  if (c('#mNext')) return goNeighbor('after');
   /* admin */
   if (c('#adminBtn')){ A.view = 'home'; renderAdmin(); return openSheet('admin'); }
   if (c('#uTimeSave')) return once('upd', async () => { try{ await cpPost('/api/admin/updates', {default_time: $('#u_time').value}); toast('Report time saved'); loadAdmin(); }catch(e){ toast(adminErr(e), 5000); } });
@@ -4790,8 +4297,6 @@ document.addEventListener('input', e => {
   if (id === 'fbaq'){ FBA.q = e.target.value.trim(); FBA.limit = 30; return adminSearch(); }
   if (id === 'aoq'){ A.oq = e.target.value.trim(); return adminSearch(); }
   if (id === 'm_q'){ M.q = e.target.value.trim(); M.page = 1; return manageSearch(); }
-  if (id === 'fSeek'){ P.dragging = true; $('#fCur').textContent = clock(e.target.value); }
-  if (id === 'rSlide') setRate(parseFloat(e.target.value));
 });
 const epSearch = deb(() => loadStoryPage(1), 350), adminSearch = deb(() => loadAdmin(), 350), manageSearch = deb(() => loadManage(), 350);
 /* MRP on one plan -> every other paid plan of the same story / topic editor gets an MRP with the SAME % off */
@@ -4815,7 +4320,6 @@ document.addEventListener('change', async e => {
   if (id === 'apub'){ A.pub = e.target.value; return loadAdmin(); }
   if (id === 'asort'){ A.sort = e.target.value; return paintAdminStories(); }
   if (id === 'aost'){ A.ostatus = e.target.value; return loadAdmin(); }
-  if (id === 'fSeek'){ P.dragging = false; audio.currentTime = Number(e.target.value); }
   if (id === 'rq_photo' && e.target.files[0]){ try{ R.photo = await downscale(e.target.files[0], 1200); paintRqPhoto(); }catch(err){ toast(err.message); } }
   if (id === 'cp_ordmode'){ const n = $('#cp_ordno'); if (n){ n.disabled = !e.target.value; if (e.target.value && !n.value) n.value = 1; } return; }
   if (id === 'col_art' && e.target.files[0]){ try{ COL.art = await downscale(e.target.files[0], 1200); COL.artClear = false; colArtPaint(); }catch(err){ toast(err.message); } return; }
@@ -4826,12 +4330,6 @@ document.addEventListener('change', async e => {
   if (id === 'm_file' && e.target.files[0]){ M.fileName = e.target.files[0].name; $('#m_data').value = await e.target.files[0].text(); toast('File loaded. Tap Check only first.'); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'epJump') $('#epGo').click(); if (e.key === 'Enter' && e.target.id === 'mJump') $('#mGo').click(); });
-document.addEventListener('pointerdown', e => {                   // hold the speed buttons to keep stepping by 0.05x
-  const b = e.target.closest('#rMinus, #rPlus'); if (!b) return;
-  const d = b.id === 'rPlus' ? 0.05 : -0.05; setRate(P.rate + d);
-  clearInterval(window._rt); window._rt = setInterval(() => setRate(P.rate + d), 150);
-});
-['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, () => clearInterval(window._rt), true));
 if (tg) tg.BackButton.onClick(goBack);
 
 /* ---------- start ---------- */
@@ -4870,7 +4368,7 @@ function splashInit(){
   try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
   api('/api/away').then(a => { S.away = a; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/terms').then(t => { if (t.user && !t.accepted) showTerms(); }).catch(() => {});
-  api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(e => { if (e.network || !navigator.onLine) offlineBoot(); });
+  api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; }).catch(() => {});
   applyTheme(); applyLang(); renderHeader();
   api('/api/reviews?limit=12').then(d => { S.reviews = d; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
