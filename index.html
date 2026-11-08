@@ -3600,12 +3600,13 @@ const bnPrompt = c => `Create an image of a coupon with the text: "Use code - ${
 const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JSON.stringify(body)});
 /* ---------------- Admin → Index Bot (added section; talks only to /api/admin/index/*) ---------------- */
 const IX = {view: 'overview', edit: null, maps: null, step: 'list'};
-const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
+const DY = {step: 'list', edit: null, src: null, status: 'review', stories: [], sources: []};   // Do it yourself tab
+const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['diy', '🛠 Do it yourself'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
 const ixPost = body => api('/api/admin/index/action', {method: 'POST', retry: false, body: JSON.stringify(body)});
 const ixWhen = t => t ? new Date(t * 1000).toLocaleString() : '-';
 const ixSize = n => { n = +n || 0; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; };
 async function indexAdmin(body, sig, tab){
-  if (!body.dataset.ixbound){ body.dataset.ixbound = '1'; body.addEventListener('click', ixClick); }
+  if (!body.dataset.ixbound){ body.dataset.ixbound = '1'; body.addEventListener('click', ixClick); body.addEventListener('change', ixChange); body.addEventListener('input', ixInput); }
   const d = await api('/api/admin/index/state?view=' + IX.view, {signal: sig}); if (A.tab !== tab) return;
   let h = '';
   if (IX.view === 'overview'){
@@ -3658,6 +3659,40 @@ async function indexAdmin(body, sig, tab){
       <div class="by">${Object.entries(x.by_story).map(([k, v]) => esc(k) + ': ' + v).join(' · ') || 'No files'}</div>
       <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-ixa="export" data-ps="${r.period_start}" type="button">Export CSV</button></div></div>`; }).join('') || '<div class="empty">The first summary is made at 02:00.</div>';
     h += '<h4 style="margin:12px 16px 6px">Recent index jobs</h4>' + d.jobs.map(j => `<div class="mrow"><b>#${j.id} ${esc(j.story_id)}</b> <span class="by">${esc(j.status)} · ${esc(j.trigger)}</span><div class="by">${j.indexed} indexed · ${j.skipped} skipped · ${j.failed} failed of ${j.total} · ${ixWhen(j.started)} ${esc(j.note || '')}</div></div>`).join('');
+  } else if (IX.view === 'diy'){
+    DY.stories = d.stories; DY.sources = d.sources;
+    const dback = t => `<div class="actions" style="padding:0 0 10px;margin:0 16px;align-items:center"><button class="btn ghost small" data-ixa="dyback" type="button">&larr; Back</button><b style="align-self:center">${t}</b></div>`;
+    if (DY.step === 'form'){
+      const e = DY.edit || {kind: 'channel', stories: [], match: 'artwork'}, chosen = {}; (e.stories || []).forEach(x => chosen[x.story_id] = x.story_topic_id);
+      h = dback(e.id ? 'Edit source #' + e.id : 'New source') + `<div class="box"><b>Details</b>
+        <label class="field"><span>Name (only for you)</span><input id="dy_name" maxlength="80" value="${esc(e.name || '')}"></label>
+        <label class="field"><span>Type</span><select id="dy_kind">${[['topic', 'Supergroup topic'], ['group', 'Group (all its posts)'], ['channel', 'Channel']].map(k => `<option value="${k[0]}"${k[0] === e.kind ? ' selected' : ''}>${k[1]}</option>`).join('')}</select></label>
+        <label class="field"><span>Post link or chat id ${e.id ? '(empty = keep ' + esc(e.chat_name || e.chat_id) + ')' : '*'}</span><input id="dy_link" placeholder="https://t.me/c/1234567890/12  or  -1001234567890" autocomplete="off"></label>
+        <label class="field"><span>Topic id (Supergroup topic only; empty = taken from the link)</span><input id="dy_topic" inputmode="numeric" value="${e.kind === 'topic' && e.topic_id ? e.topic_id : ''}"></label>
+        <label class="field"><span>Pick the story by</span><select id="dy_match"><option value="artwork"${e.match !== 'fixed' ? ' selected' : ''}>Artwork (matches the story's banners)</option><option value="fixed"${e.match === 'fixed' ? ' selected' : ''}>Fixed (one story only)</option></select></label></div>
+        <div class="box"><b>Stories covered in this place + their topic</b>
+        <label class="field"><span>Search</span><input id="dy_sq" type="search" placeholder="Story name" autocomplete="off"></label>
+        <div id="dy_list">${d.stories.map(s => `<div class="mrow" data-dyt="${esc((s.title || '').toLowerCase())}" style="margin:6px 0"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" class="dy_chk" data-sid="${esc(s.id)}"${s.id in chosen ? ' checked' : ''}> <b>${esc(s.title)}</b></label>${s.topics.length ? `<select class="dy_top" data-sid="${esc(s.id)}" style="margin-top:6px">${ixTopicOpts(d.stories, s.id, chosen[s.id])}</select>` : '<div class="by">no topics</div>'}</div>`).join('')}</div>
+        <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="dysave" type="button">Save source</button><button class="btn ghost small" data-ixa="dyback" type="button">Cancel</button></div>
+        <small class="note">Every audio post from this place goes to the story whose banner its artwork matches, and to the topic chosen above. Unclear posts wait in Review. The Index Bot must be a member (admin for a channel). Stories must also be authorized.</small></div>`;
+    } else if (DY.step === 'posts'){
+      const s = d.sources.find(x => x.id === DY.src); if (!s){ DY.step = 'list'; return loadAdmin(); }
+      const pd = await api('/api/admin/index/state?view=diy_posts&source=' + s.id + '&status=' + DY.status, {signal: sig}); if (A.tab !== tab) return;
+      const opts = sid => s.stories.map(x => `<option value="${esc(x.story_id)}"${x.story_id === sid ? ' selected' : ''}>${esc(x.title)}</option>`).join('');
+      h = dback(esc(s.name)) + `<div class="actions" style="padding:0 16px 10px;flex-wrap:wrap;gap:6px">${['review', 'unmatched', 'assigned', 'ignored'].map(k => `<button class="btn ${k === DY.status ? '' : 'ghost'} small" data-ixa="dystatus" data-st="${k}" type="button">${k} (${pd.counts[k]})</button>`).join('')}</div>
+        <div class="actions" style="padding:0 16px 10px;gap:6px"><button class="btn small" data-ixa="dycsv" data-id="${s.id}" type="button">Download sheet</button><label class="btn ghost small" style="cursor:pointer">Upload sheet<input id="dy_file" type="file" accept=".csv,.txt,.json" hidden></label></div>
+        <p class="note" style="margin:0 16px 10px">Review rows: choose the story and topic, fix the ep no or title if needed, then Save. A saved post joins the Index Bot queue. Posts already indexed are locked.</p>` +
+        (pd.posts.map(p => `<div class="mrow"><b>#${p.id}</b> <span class="by">${esc(p.name || p.title || '')}</span><div class="by">${esc(p.note || '')}</div>
+          <div class="two"><label class="field"><span>Story</span><select class="dy_ps" data-pid="${p.id}"><option value="">Choose</option>${opts(p.story_id)}</select></label><label class="field"><span>Topic</span><select class="dy_pt" data-pid="${p.id}">${ixTopicOpts(d.stories, p.story_id, p.story_topic_id)}</select></label></div>
+          <div class="two"><label class="field"><span>Ep no</span><input class="dy_pe" data-pid="${p.id}" value="${esc(p.ep_text || '')}" placeholder="auto"></label><label class="field"><span>Title</span><input class="dy_ptitle" data-pid="${p.id}" value="${esc(p.title_edit || '')}" placeholder="auto"></label></div>
+          <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="dyfix" data-pid="${p.id}" type="button">Save</button></div></div>`).join('') || '<div class="empty">Nothing here.</div>');
+    } else {
+      h = `<p class="note" style="margin:0 16px 10px">One group, supergroup topic or channel that holds posts of SEVERAL stories. The story is found from the post's artwork, the topic comes from the source.</p><div class="actions" style="padding:0 0 10px;margin:0 16px"><button class="btn small" data-ixa="dynew" type="button">＋ New source</button></div>` +
+        (d.sources.map(s => `<div class="mrow scard"><h4 style="margin:0 0 4px">${esc(s.name)}</h4><div><span class="tag">${esc(s.kind)}</span> <span class="tag ${s.status === 'active' ? 'live' : 'warn'}">${s.status === 'active' ? 'Active' : 'Paused'}</span></div>
+          <div class="by" style="margin-top:6px">${esc(s.chat_name || s.chat_id)}${s.topic_id ? ' · topic #' + s.topic_id : ''}</div><div class="by">${s.stories.map(x => esc(x.title) + (x.topic_name ? ' / ' + esc(x.topic_name) : '') + (x.authorized ? '' : ' ⚠ not authorized')).join(' · ')}</div>
+          <div class="by">✅ ${s.counts.assigned} assigned · 👀 ${s.counts.review} review · ❓ ${s.counts.unmatched} unmatched</div>
+          <div class="actions" style="padding:8px 0 0;flex-wrap:wrap;gap:6px"><button class="btn small" data-ixa="dyopen" data-id="${s.id}" type="button">Review</button><button class="btn ghost small" data-ixa="dyedit" data-id="${s.id}" type="button">Edit</button><button class="btn ghost small" data-ixa="${s.status === 'active' ? 'dypause' : 'dyresume'}" data-id="${s.id}" type="button">${s.status === 'active' ? 'Pause' : 'Resume'}</button><button class="btn ghost small" data-ixa="dydel" data-id="${s.id}" type="button">Delete</button></div></div>`).join('') || '<div class="empty">No source yet. Tap New source.</div>');
+    }
   } else if (IX.view === 'settings'){
     const s = d.settings;
     h = `<div class="box"><b>Bot settings</b>
@@ -3674,12 +3709,45 @@ function ixTopicOpts(stories, sid, cur){
   if (!s) return '<option value="">Choose a story first</option>';
   return s.topics.length ? s.topics.map(t => `<option value="${esc(t.id)}"${t.id === cur ? ' selected' : ''}>${esc(t.name)}</option>`).join('') : '<option value="">This story has no topics</option>';
 }
+async function ixChange(ev){
+  const t = ev.target;
+  if (t.classList && t.classList.contains('dy_ps')){ const tp = document.querySelector('.dy_pt[data-pid="' + t.dataset.pid + '"]'); if (tp) tp.innerHTML = ixTopicOpts(DY.stories, t.value, ''); return; }
+  if (t.id === 'dy_file' && t.files && t.files[0]){
+    const txt = await t.files[0].text();
+    try{ const r = await ixPost({op: 'diy_sheet', text: txt}); toast(r.changed + ' row(s) applied' + (r.errors.length ? ', ' + r.errors.length + ' problem(s): ' + r.errors[0] : '')); }catch(e){ toast(adminErr(e)); }
+    t.value = ''; loadAdmin();
+  }
+}
+function ixInput(ev){
+  if (ev.target.id !== 'dy_sq') return;
+  const q = ev.target.value.trim().toLowerCase();
+  document.querySelectorAll('#dy_list [data-dyt]').forEach(r => { r.style.display = !q || r.dataset.dyt.includes(q) ? '' : 'none'; });
+}
 async function ixClick(ev){
   const v = ev.target.closest('[data-ixv]');
   if (v){ IX.view = v.dataset.ixv; IX.edit = null; IX.step = 'list'; return loadAdmin(); }
   const b = ev.target.closest('[data-ixa]'); if (!b) return;
   const a = b.dataset.ixa, id = +b.dataset.id || null, sid = b.dataset.sid;
   const run = async (body, ok) => once('ix' + a + (id || sid || ''), async () => { try{ const r = await ixPost(body); toast(ok ? ok(r) : 'Done'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+  if (a.startsWith('dy')){
+    if (a === 'dynew'){ DY.edit = null; DY.step = 'form'; return loadAdmin(); }
+    if (a === 'dyedit'){ DY.edit = DY.sources.find(s => s.id === id); DY.step = 'form'; return loadAdmin(); }
+    if (a === 'dyback'){ DY.step = 'list'; DY.edit = null; return loadAdmin(); }
+    if (a === 'dyopen'){ DY.src = id; DY.status = 'review'; DY.step = 'posts'; return loadAdmin(); }
+    if (a === 'dystatus'){ DY.status = b.dataset.st; return loadAdmin(); }
+    if (a === 'dypause' || a === 'dyresume') return run({op: a === 'dypause' ? 'diy_pause' : 'diy_resume', id});
+    if (a === 'dydel') return askConfirm('Delete this source? Posts waiting in Review are removed; posts already in the Index Bot queue stay.', () => run({op: 'diy_delete', id}));
+    if (a === 'dysave'){
+      const stories = [...document.querySelectorAll('.dy_chk:checked')].map(c => { const t = document.querySelector('.dy_top[data-sid="' + c.dataset.sid + '"]'); return {story_id: c.dataset.sid, story_topic_id: t ? t.value : ''}; });
+      return once('dysave', async () => { try{ await ixPost({op: 'diy_save', id: DY.edit && DY.edit.id, name: $('#dy_name').value, kind: $('#dy_kind').value, link: $('#dy_link').value, topic_id: $('#dy_topic').value, match: $('#dy_match').value, stories}); toast('Saved'); DY.step = 'list'; DY.edit = null; }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+    }
+    if (a === 'dyfix'){
+      const pid = b.dataset.pid, q = c => document.querySelector(c + '[data-pid="' + pid + '"]');
+      return once('dyfix' + pid, async () => { try{ const r = await ixPost({op: 'diy_fix', ids: [+pid], story: q('.dy_ps').value, topic: q('.dy_pt').value, ep: q('.dy_pe').value, title: q('.dy_ptitle').value}); toast(r.errors && r.errors.length ? r.errors[0] : 'Saved'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+    }
+    if (a === 'dycsv') return once('dycsv', async () => { try{ const r = await ixPost({op: 'diy_csv', id}); const u = URL.createObjectURL(new Blob(['\ufeff' + r.csv], {type: 'text/csv'})); const l = document.createElement('a'); l.href = u; l.download = 'diy_' + id + '.csv'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }catch(e){ toast(adminErr(e)); } });
+    return;
+  }
   if (a === 'mapsave') return run({op: 'map_save', id: IX.edit && IX.edit.id, supergroup_id: $('#ix_sg').value.trim(), topic_id: $('#ix_tp').value.trim(), supergroup_name: $('#ix_sgn').value, topic_name: $('#ix_tpn').value, story_id: $('#ix_story').value, story_topic_id: $('#ix_stopic').value}, () => { IX.edit = null; IX.step = 'list'; return 'Mapping saved'; });
   if (a === 'mapcancel'){ IX.edit = null; IX.step = 'list'; return loadAdmin(); }
   if (a === 'mapedit'){ IX.edit = IX.maps.mappings.find(m => m.id === id); IX.step = 'details'; return loadAdmin(); }
