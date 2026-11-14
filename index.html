@@ -4409,14 +4409,14 @@ const BKCAP = {
   feedback:    {label: 'Feedback', exp: 'feedback'},
   stats:       {label: 'Analytics', exp: 'analytics'},
   audit:       {label: 'Audit log', exp: 'audit'},
-  index:       {label: 'Index Bot', note: 'Index Bot already has its own export on its screen.'},
+  index:       {label: 'Index mappings', exp: 'index', imp: 'index', del: true, note: 'An index mapping connects one topic of a Telegram supergroup to a story.'},
   reset:       {label: 'Reset data', note: 'Export everything first (Admin home, the Data card), then reset.'},
   home:        {label: 'Everything', exp: 'all', all: true}
 };
-const BK = {tab: 'home', mode: 'export', fmt: 'xlsx', files: [], covers: [], imode: 'both', pv: null, run: 0, delTok: null, lastJob: null};
+const BK = {tab: 'home', mode: 'export', fmt: 'xlsx', style: 'simple', files: [], covers: [], pv: null, run: 0, delTok: null, lastJob: null};
 const bkPost = (p, body) => api(p, {method: 'POST', retry: false, timeout: 90000, body: JSON.stringify(body || {})});
 const bkCap = () => BKCAP[BK.tab] || BKCAP.home;
-const bkModes = cap => [cap.exp && ['export', '⬇ Export'], cap.imp && ['import', '⬆ Import / edit'], cap.restore && ['restore', '♻️ Restore']].filter(Boolean);
+const bkModes = cap => [cap.imp && ['add', '➕ Add new'], cap.imp && ['edit', '✏️ Edit'], cap.del && ['delete', '🗑 Delete'], cap.exp && ['export', '⬇ Export'], cap.restore && ['restore', '♻️ Restore']].filter(Boolean);
 
 function bkDecorate(){
   const menu = $('#aMenu');
@@ -4445,29 +4445,49 @@ function bkFmtChips(){
   return `<div class="field" style="margin:10px 0"><span>File type</span><div class="chips" style="padding:0;flex-wrap:wrap;overflow:visible">${[['xlsx', 'Excel (.xlsx)'], ['csv', 'CSV'], ['txt', 'Text (.txt)'], ['json', 'JSON']].map(([k, t]) => `<button class="chip${BK.fmt === k ? ' on' : ''}" data-bk="fmt:${k}" type="button">${t}</button>`).join('')}</div>
     <small class="hint">Excel is easiest on a computer. CSV and Text with several sheets download as one ZIP.</small></div>`;
 }
+function bkStyleChips(cap){
+  if (!cap.imp) return '';
+  return `<div class="field" style="margin:10px 0"><span>Which file?</span><div class="chips" style="padding:0;flex-wrap:wrap;overflow:visible">
+    <button class="chip${BK.style === 'simple' ? ' on' : ''}" data-bk="style:simple" type="button">Simple, to edit</button><button class="chip${BK.style === 'complete' ? ' on' : ''}" data-bk="style:complete" type="button">Complete, for backup</button></div>
+    <small class="hint">${BK.style === 'simple' ? 'Easy columns. Change what you want and upload it in Edit.' : 'Every column, also the technical ones and the delete column. Use it as a backup or to restore after a data loss.'}</small></div>`;
+}
+function bkPicker(cap){
+  const names = a => a.length ? a.map(f => esc(f.name)).join(', ') : '';
+  return `<label class="field" style="margin:10px 0 0"><span>Your file (.xlsx, .csv, .txt or .json)</span><input type="file" id="bkFile" multiple accept=".xlsx,.xlsm,.csv,.txt,.json,.zip"></label><div class="by" id="bkFileNames" style="margin:4px 0 8px">${names(BK.files)}</div>
+    ${cap.covers ? `<label class="field" style="margin:0"><span>Cover pictures (optional): a ZIP or images</span><input type="file" id="bkCov" multiple accept=".zip,image/*"></label><div class="by" id="bkCovNames" style="margin:4px 0 8px">${names(BK.covers)}</div>` : ''}`;
+}
 function bkPane(){
   const cap = bkCap(), el = $('#bkPane'); if (!el) return;
-  if (BK.mode === 'export' && cap.exp){
-    el.innerHTML = `${bkFmtChips()}
+  const what = esc(cap.label.toLowerCase());
+  if (BK.mode === 'add' && cap.imp){
+    el.innerHTML = `<div class="dcard"><b>1. Download the blank file</b><div class="by">Fill one row for each new item. Gold headings are required, the rest is optional. A grey example row shows how.</div>${bkFmtChips()}
+        <div class="actions" style="padding:0"><button class="btn small" data-bk="sample" type="button">Download blank file</button><button class="btn ghost small" data-bk="sendsample" type="button">Send to my Telegram</button></div></div>
+      <div class="dcard"><b>2. Choose the filled file</b>${bkPicker(cap)}${cap.covers ? '<div class="by">In <b>Cover</b> write a Telegram post link, a picture file name from the ZIP, an image link or one emoji.</div>' : ''}</div>
+      <div class="dcard"><b>3. Check, then confirm</b><div class="by">Only new items are added. Anything that already exists is left as it is. You see a preview first and nothing is saved until you confirm.</div>
+        <div class="actions" style="padding:10px 0 0"><button class="btn" data-bk="check" type="button">Check file</button></div></div>`;
+  } else if (BK.mode === 'edit' && cap.imp){
+    el.innerHTML = `<div class="dcard"><b>1. Download your ${what} to edit</b><div class="by">You get your current data in easy columns. Change what you want.</div>${bkFmtChips()}
+        ${cap.covers ? '<label class="field check" style="margin:0 0 8px"><input type="checkbox" id="bkCovers"> <span>Also give me the cover pictures (a ZIP)</span></label>' : ''}
+        <div class="actions" style="padding:0"><button class="btn small" data-bk="editfile" type="button">Download my ${what}</button></div></div>
+      <div class="dcard"><b>2. Choose the edited file</b>${bkPicker(cap)}<div class="by">You can delete the rows you did not change. They stay as they are.</div></div>
+      <div class="dcard"><b>3. Check, then confirm</b><div class="by">Only existing items are changed. <b>An empty cell keeps the current value.</b> To clear a value type <b>-</b>. Nothing is ever deleted by an upload. You see a preview first.</div>
+        <div class="actions" style="padding:10px 0 0"><button class="btn" data-bk="check" type="button">Check file</button></div></div>`;
+  } else if (BK.mode === 'delete' && cap.del){
+    el.innerHTML = `<div class="dcard"><b>1. Download the list</b><div class="by">You get every ${what} in a file with an empty <b>Delete</b> column.</div>${bkFmtChips()}
+        <div class="actions" style="padding:0"><button class="btn small" data-bk="delfile" type="button">Download the list</button></div></div>
+      <div class="dcard"><b>2. Mark what to delete</b><div class="by">Type <b>yes</b> in the Delete column of the rows you want to remove. Leave all other rows empty. Then choose the file.</div>${bkPicker(cap)}</div>
+      <div class="dcard"><b>3. Check, then confirm twice</b><div class="by">Nothing is deleted by the upload. You get a report here and in Telegram and must confirm two times. A safety copy is made first. Files waiting in the queue are put on hold. Episodes that are already indexed stay.</div>
+        <div class="actions" style="padding:10px 0 0"><button class="btn" data-bk="check" type="button">Check file</button></div></div>`;
+  } else if (BK.mode === 'export' && cap.exp){
+    el.innerHTML = `${bkStyleChips(cap)}${bkFmtChips()}
       ${cap.filters ? `<div class="two"><label class="field"><span>Status</span><select id="bkStatus"><option value="">All</option>${['pending', 'approved', 'rejected', 'revoked', 'refunded', 'cancelled'].map(s => `<option>${s}</option>`).join('')}</select></label><label class="field"><span>Story ID (optional)</span><input id="bkStory" maxlength="40" autocapitalize="off"></label></div>
       <div class="two"><label class="field"><span>From date</span><input id="bkFrom" type="date"></label><label class="field"><span>To date</span><input id="bkTo" type="date"></label></div>` : ''}
-      ${cap.covers || cap.all ? `<label class="field check"><input type="checkbox" id="bkCovers"> <span>Include the cover images (makes a ZIP, restores covers on import)</span></label>` : ''}
-      <div class="by" style="padding:0 16px 10px">${cap.all ? 'One file with every tab: stories, orders, coupons, collections, combinations, banners, updates, deliveries, feedback, analytics and the audit log.' : cap.imp ? 'The exported file is also the import file: edit it and upload it back.' : cap.restore ? 'Exports every order that matches the filters, with all columns needed for a restore.' : 'Exports all rows, not only the ones visible on screen.'}</div>
-      <div class="actions"><button class="btn" data-bk="export" type="button">Export ${esc(cap.label.toLowerCase())}</button></div>`;
-  } else if (BK.mode === 'import' && cap.imp){
-    const names = a => a.length ? a.map(f => esc(f.name)).join(', ') : 'No file chosen';
-    el.innerHTML = `<div class="dcard"><b>1. Get the sample file</b><div class="by">It has every column. Gold headings are required, grey headings are optional, and one example row shows how to fill it. Or export your current data (Export tab) and edit that.</div>${bkFmtChips()}
-        <div class="actions" style="padding:0"><button class="btn small" data-bk="sample" type="button">Download sample</button><button class="btn ghost small" data-bk="sendsample" type="button">Send to my Telegram</button></div></div>
-      <div class="dcard"><b>2. Choose your filled file</b>
-        <label class="field" style="margin:10px 0 0"><span>Data file (.xlsx, .csv, .txt, .json, or a ZIP of them)</span><input type="file" id="bkFile" multiple accept=".xlsx,.xlsm,.csv,.txt,.json,.zip"></label><div class="by" id="bkFileNames" style="margin:4px 0 8px">${names(BK.files)}</div>
-        ${cap.covers ? `<label class="field" style="margin:0"><span>Covers ZIP or images from your computer (optional)</span><input type="file" id="bkCov" multiple accept=".zip,image/*"></label><div class="by" id="bkCovNames" style="margin:4px 0 8px">${names(BK.covers)}</div>
-        <div class="by">In the <b>cover</b> column write a Telegram post link (t.me/…), a file name from the ZIP (story1.jpg), an image link, or one emoji. Blank keeps the current cover.</div>` : ''}
-        <label class="field" style="margin:10px 0 0"><span>What may the file do?</span><select id="bkMode"><option value="both"${BK.imode === 'both' ? ' selected' : ''}>Add new and update existing</option><option value="create"${BK.imode === 'create' ? ' selected' : ''}>Only add new</option><option value="update"${BK.imode === 'update' ? ' selected' : ''}>Only update existing</option></select></label></div>
-      <div class="dcard"><b>3. Check, then confirm</b><div class="by">Nothing is saved while checking. A blank cell keeps the current value; type <b>-</b> to empty a field. Rows are never deleted by an upload; a <b>delete = yes</b> row only starts a delete request that you confirm twice.</div>
-        <div class="actions" style="padding:10px 0 0"><button class="btn" data-bk="check" type="button">Check file</button></div></div>`;
+      ${cap.covers || cap.all ? `<label class="field check"><input type="checkbox" id="bkCovers"> <span>Include the cover pictures (makes a ZIP)</span></label>` : ''}
+      <div class="by" style="padding:0 16px 10px">${cap.all ? 'One file with every tab: stories, orders, coupons, collections, combinations, banners, updates, deliveries, feedback, analytics and the audit log. It is the complete file for backup and restore.' : cap.restore ? 'Exports every order that matches the filters, with all columns needed for a restore.' : 'Exports all rows, not only the ones visible on screen.'}</div>
+      <div class="actions"><button class="btn" data-bk="export" type="button">Export ${what}</button></div>`;
   } else if (BK.mode === 'restore' && cap.restore){
-    el.innerHTML = `<div class="dcard"><b>Restore orders from an export file</b><div class="by">Use this only after the backup is lost. Put the stories back first (Stories › Import), then restore orders. Each order returns exactly as exported with its original number and access dates. Nothing is approved and nobody is notified. Orders that already exist are skipped. Payment proof screenshots are not in the file.</div>
-        <label class="field" style="margin:10px 0 0"><span>Orders export file (.csv, .xlsx, .json, or the everything ZIP)</span><input type="file" id="bkFile" accept=".xlsx,.csv,.txt,.json,.zip"></label><div class="by" id="bkFileNames" style="margin:4px 0 8px">${BK.files.length ? esc(BK.files[0].name) : 'No file chosen'}</div>
+    el.innerHTML = `<div class="dcard"><b>Restore orders from an export file</b><div class="by">Use this only after the backup is lost. Put the stories back first (Stories › Add new or Edit, with the complete file), then restore orders. Each order returns exactly as exported with its original number and access dates. Nothing is approved and nobody is notified. Orders that already exist are skipped. Payment proof screenshots are not in the file.</div>
+        <label class="field" style="margin:10px 0 0"><span>Orders export file (.csv, .xlsx, .json, or the everything ZIP)</span><input type="file" id="bkFile" accept=".xlsx,.csv,.txt,.json,.zip"></label><div class="by" id="bkFileNames" style="margin:4px 0 8px">${BK.files.length ? esc(BK.files[0].name) : ''}</div>
         <div class="actions" style="padding:0"><button class="btn" data-bk="restorecheck" type="button">Check file</button></div></div>`;
   } else el.innerHTML = '';
 }
@@ -4589,14 +4609,16 @@ async function bkCheck(restore){
     }
     BK.uploads = ids;
     if (restore) await bkStart('/api/admin/bulk/restore', {uploads: ids, dry_run: true});
-    else await bkStart('/api/admin/bulk/import', {section: bkCap().imp, uploads: ids, dry_run: true, mode: BK.imode});
+    else await bkStart('/api/admin/bulk/import', {section: bkCap().imp, uploads: ids, dry_run: true, mode: BK.mode === 'add' ? 'create' : (BK.mode === 'delete' ? 'delete' : 'update')});
   }catch(e){ bkCard(`<div class="dcard"><b>❌ ${esc(adminErr(e))}</b></div>`); }
 }
 function bkExportGo(){
   const cap = bkCap(), f = {};
   if (cap.filters){ const v = id => ($('#' + id) || {}).value || ''; f.status = v('bkStatus'); f.story_id = v('bkStory').trim(); f.from = v('bkFrom'); f.to = v('bkTo'); Object.keys(f).forEach(k => f[k] || delete f[k]); }
-  return bkStart('/api/admin/bulk/export', {section: cap.exp, format: BK.fmt, filters: f, include_covers: !!($('#bkCovers') || {}).checked});
+  return bkStart('/api/admin/bulk/export', {section: cap.exp, format: BK.fmt, filters: f, include_covers: !!($('#bkCovers') || {}).checked, style: cap.imp && BK.style === 'simple' ? 'simple' : 'complete'});
 }
+function bkDelFile(){ const cap = bkCap(); return bkStart('/api/admin/bulk/export', {section: cap.exp, format: BK.fmt, style: 'delete'}); }
+function bkEditFile(){ const cap = bkCap(); return bkStart('/api/admin/bulk/export', {section: cap.exp, format: BK.fmt, include_covers: !!($('#bkCovers') || {}).checked, style: 'simple'}); }
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-bk], #aData, #bkHomeCard'); if (!t) return;
   if (t.id === 'aData'){ return bkOpen(A.view === 'tab' ? A.tab : 'home'); }
@@ -4605,8 +4627,11 @@ document.addEventListener('click', e => {
   if (a === 'mode'){ BK.mode = v; BK.files = []; BK.covers = []; bkPaint(); return bkResume(); }
   if (a === 'fmt'){ BK.fmt = v; return bkPane(); }
   if (a === 'export') return once('bk', bkExportGo);
-  if (a === 'sample') return bkDownload(`/api/admin/bulk/template?section=${bkCap().imp}&format=${BK.fmt}`);
-  if (a === 'sendsample') return bkSend({template: {section: bkCap().imp, format: BK.fmt}});
+  if (a === 'sample') return bkDownload(`/api/admin/bulk/template?section=${bkCap().imp}&format=${BK.fmt}&kind=new`);
+  if (a === 'sendsample') return bkSend({template: {section: bkCap().imp, format: BK.fmt, kind: 'new'}});
+  if (a === 'editfile') return once('bk', bkEditFile);
+  if (a === 'delfile') return once('bk', bkDelFile);
+  if (a === 'style'){ BK.style = v; return bkPane(); }
   if (a === 'check') return once('bk', () => bkCheck(false));
   if (a === 'restorecheck') return once('bk', () => bkCheck(true));
   if (a === 'apply') return once('bk', () => bkStart('/api/admin/bulk/import', {section: bkCap().imp, dry_run: false, preview_id: BK.pv.id, confirm_affects: !!($('#bkAff') || {}).checked, allow_free: !!($('#bkFree') || {}).checked}));
@@ -4624,9 +4649,8 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
-  if (t.id === 'bkFile'){ BK.files = Array.from(t.files || []); const n = $('#bkFileNames'); if (n) n.textContent = BK.files.length ? BK.files.map(f => f.name).join(', ') : 'No file chosen'; }
-  if (t.id === 'bkCov'){ BK.covers = Array.from(t.files || []); const n = $('#bkCovNames'); if (n) n.textContent = BK.covers.length ? BK.covers.map(f => f.name).join(', ') : 'No file chosen'; }
-  if (t.id === 'bkMode') BK.imode = t.value;
+  if (t.id === 'bkFile'){ BK.files = Array.from(t.files || []); const n = $('#bkFileNames'); if (n) n.textContent = BK.files.length ? BK.files.map(f => f.name).join(', ') : ''; }
+  if (t.id === 'bkCov'){ BK.covers = Array.from(t.files || []); const n = $('#bkCovNames'); if (n) n.textContent = BK.covers.length ? BK.covers.map(f => f.name).join(', ') : ''; }
 });
 </script>
 </body>
