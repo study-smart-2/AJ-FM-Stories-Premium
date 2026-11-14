@@ -1090,6 +1090,17 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
   .appbar,.sdtop,.sheet .top{transition:box-shadow .25s}
 }
 .bcomp select{min-width:0;width:100%;text-overflow:ellipsis}
+/* Data screen: import, export, restore */
+.dcard{margin:0 16px 12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.dcard>b{display:block;font-size:15px;margin-bottom:2px}
+.dbar{height:12px;border-radius:7px;background:var(--line);margin:10px 0 6px;overflow:hidden}
+.dbar i{display:block;height:100%;min-width:2px;border-radius:7px;background:var(--gold);transition:width .35s ease}
+.dstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin:10px 0}
+.dstats span{display:flex;flex-direction:column;align-items:center;padding:8px 4px;border:1px solid var(--line);border-radius:10px;font-size:12px;color:var(--muted)}
+.dstats span b{font-size:20px;color:var(--text);line-height:1.2}
+.dstats span.bad{border-color:var(--bad);color:var(--bad)}.dstats span.bad b{color:var(--bad)}
+#datasheet input[type=file]{padding:9px 10px;font-size:13.5px}
+@media (prefers-reduced-motion:reduce){.dbar i{transition:none}}
 </style>
 <script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
@@ -1136,6 +1147,7 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <section class="sheet" id="topiced" aria-label="Topic editor"></section>
 <section class="sheet" id="cpedit" aria-label="Coupon editor"></section>
 <section class="sheet" id="coledit" aria-label="Collection editor"></section>
+<section class="sheet" id="datasheet" aria-label="Import, export and restore data"></section>
 <section class="sheet" id="colview" aria-label="Collection"></section>
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="combopage" aria-label="Story combinations"></section>
@@ -4384,6 +4396,238 @@ function splashInit(){
   else if (_sid) setTimeout(() => openStory(_sid), 300);      // deep link from the bot: ?story=<story id>
 })();
 
+
+/* ===================== Data: import, edit, export, restore and delete from files ===================== */
+const BKCAP = {
+  stories:     {label: 'Stories', exp: 'stories', imp: 'stories', covers: true},
+  orders:      {label: 'Orders', exp: 'orders', restore: true, filters: true},
+  coupons:     {label: 'Coupons', exp: 'coupons', imp: 'coupons'},
+  collections: {label: 'Collections', exp: 'collections', imp: 'collections'},
+  combos:      {label: 'Combinations', exp: 'combos', imp: 'combos'},
+  rooms:       {label: 'Deliveries', exp: 'deliveries'},
+  updates:     {label: 'Updates', exp: 'updates', note: 'The update days and report time of every story are also columns of the Stories file, so you can change them in bulk there.'},
+  feedback:    {label: 'Feedback', exp: 'feedback'},
+  stats:       {label: 'Analytics', exp: 'analytics'},
+  audit:       {label: 'Audit log', exp: 'audit'},
+  index:       {label: 'Index Bot', note: 'Index Bot already has its own export on its screen.'},
+  reset:       {label: 'Reset data', note: 'Export everything first (Admin home, the Data card), then reset.'},
+  home:        {label: 'Everything', exp: 'all', all: true}
+};
+const BK = {tab: 'home', mode: 'export', fmt: 'xlsx', files: [], covers: [], imode: 'both', pv: null, run: 0, delTok: null, lastJob: null};
+const bkPost = (p, body) => api(p, {method: 'POST', retry: false, timeout: 90000, body: JSON.stringify(body || {})});
+const bkCap = () => BKCAP[BK.tab] || BKCAP.home;
+const bkModes = cap => [cap.exp && ['export', '⬇ Export'], cap.imp && ['import', '⬆ Import / edit'], cap.restore && ['restore', '♻️ Restore']].filter(Boolean);
+
+function bkDecorate(){
+  const menu = $('#aMenu');
+  if (menu && !$('#aData')){ const b = document.createElement('button'); b.className = 'ax-circle'; b.id = 'aData'; b.type = 'button'; b.setAttribute('aria-label', 'Import and export data'); b.textContent = '⇅'; menu.parentNode.insertBefore(b, menu); }
+  const grid = $('#admin .ax-grid');
+  if (grid && !$('#bkHomeCard')){ const b = document.createElement('button'); b.className = 'ax-card'; b.id = 'bkHomeCard'; b.type = 'button'; b.dataset.bk = 'open-home'; b.style.setProperty('--i', 13);
+    b.innerHTML = '<span class="ax-cic" aria-hidden="true">⇅</span><b>Data</b><small>Import, edit, export and restore</small>'; grid.appendChild(b); }
+}
+const _bkRenderAdmin = renderAdmin;
+renderAdmin = function(){ const r = _bkRenderAdmin.apply(this, arguments); bkDecorate(); return r; };
+
+function bkOpen(tab){
+  BK.tab = BKCAP[tab] ? tab : 'home'; const cap = bkCap(), m = bkModes(cap);
+  BK.mode = m.length ? m[0][0] : 'export'; BK.files = []; BK.covers = []; BK.pv = null; BK.delTok = null; BK.run++;
+  bkPaint(); openSheet('datasheet'); bkResume();
+}
+function bkPaint(){
+  const cap = bkCap(), m = bkModes(cap);
+  $('#datasheet').innerHTML = `<div class="top"><button class="btn ghost small" data-bk="close" type="button">Back</button><strong>Data · ${esc(cap.label)}</strong></div>
+    ${m.length > 1 ? `<div class="chips" role="tablist" aria-label="What to do">${m.map(([k, t]) => `<button class="chip${BK.mode === k ? ' on' : ''}" role="tab" aria-selected="${BK.mode === k}" data-bk="mode:${k}" type="button">${t}</button>`).join('')}</div>` : ''}
+    ${cap.note ? `<div class="by" style="padding:0 16px 10px">${esc(cap.note)}</div>` : ''}
+    <div id="bkPane"></div><div id="bkJob" aria-live="polite"></div>`;
+  bkPane();
+}
+function bkFmtChips(){
+  return `<div class="field" style="margin:10px 0"><span>File type</span><div class="chips" style="padding:0;flex-wrap:wrap;overflow:visible">${[['xlsx', 'Excel (.xlsx)'], ['csv', 'CSV'], ['txt', 'Text (.txt)'], ['json', 'JSON']].map(([k, t]) => `<button class="chip${BK.fmt === k ? ' on' : ''}" data-bk="fmt:${k}" type="button">${t}</button>`).join('')}</div>
+    <small class="hint">Excel is easiest on a computer. CSV and Text with several sheets download as one ZIP.</small></div>`;
+}
+function bkPane(){
+  const cap = bkCap(), el = $('#bkPane'); if (!el) return;
+  if (BK.mode === 'export' && cap.exp){
+    el.innerHTML = `${bkFmtChips()}
+      ${cap.filters ? `<div class="two"><label class="field"><span>Status</span><select id="bkStatus"><option value="">All</option>${['pending', 'approved', 'rejected', 'revoked', 'refunded', 'cancelled'].map(s => `<option>${s}</option>`).join('')}</select></label><label class="field"><span>Story ID (optional)</span><input id="bkStory" maxlength="40" autocapitalize="off"></label></div>
+      <div class="two"><label class="field"><span>From date</span><input id="bkFrom" type="date"></label><label class="field"><span>To date</span><input id="bkTo" type="date"></label></div>` : ''}
+      ${cap.covers || cap.all ? `<label class="field check"><input type="checkbox" id="bkCovers"> <span>Include the cover images (makes a ZIP, restores covers on import)</span></label>` : ''}
+      <div class="by" style="padding:0 16px 10px">${cap.all ? 'One file with every tab: stories, orders, coupons, collections, combinations, banners, updates, deliveries, feedback, analytics and the audit log.' : cap.imp ? 'The exported file is also the import file: edit it and upload it back.' : cap.restore ? 'Exports every order that matches the filters, with all columns needed for a restore.' : 'Exports all rows, not only the ones visible on screen.'}</div>
+      <div class="actions"><button class="btn" data-bk="export" type="button">Export ${esc(cap.label.toLowerCase())}</button></div>`;
+  } else if (BK.mode === 'import' && cap.imp){
+    const names = a => a.length ? a.map(f => esc(f.name)).join(', ') : 'No file chosen';
+    el.innerHTML = `<div class="dcard"><b>1. Get the sample file</b><div class="by">It has every column. Gold headings are required, grey headings are optional, and one example row shows how to fill it. Or export your current data (Export tab) and edit that.</div>${bkFmtChips()}
+        <div class="actions" style="padding:0"><button class="btn small" data-bk="sample" type="button">Download sample</button><button class="btn ghost small" data-bk="sendsample" type="button">Send to my Telegram</button></div></div>
+      <div class="dcard"><b>2. Choose your filled file</b>
+        <label class="field" style="margin:10px 0 0"><span>Data file (.xlsx, .csv, .txt, .json, or a ZIP of them)</span><input type="file" id="bkFile" multiple accept=".xlsx,.xlsm,.csv,.txt,.json,.zip"></label><div class="by" id="bkFileNames" style="margin:4px 0 8px">${names(BK.files)}</div>
+        ${cap.covers ? `<label class="field" style="margin:0"><span>Covers ZIP or images from your computer (optional)</span><input type="file" id="bkCov" multiple accept=".zip,image/*"></label><div class="by" id="bkCovNames" style="margin:4px 0 8px">${names(BK.covers)}</div>
+        <div class="by">In the <b>cover</b> column write a Telegram post link (t.me/…), a file name from the ZIP (story1.jpg), an image link, or one emoji. Blank keeps the current cover.</div>` : ''}
+        <label class="field" style="margin:10px 0 0"><span>What may the file do?</span><select id="bkMode"><option value="both"${BK.imode === 'both' ? ' selected' : ''}>Add new and update existing</option><option value="create"${BK.imode === 'create' ? ' selected' : ''}>Only add new</option><option value="update"${BK.imode === 'update' ? ' selected' : ''}>Only update existing</option></select></label></div>
+      <div class="dcard"><b>3. Check, then confirm</b><div class="by">Nothing is saved while checking. A blank cell keeps the current value; type <b>-</b> to empty a field. Rows are never deleted by an upload; a <b>delete = yes</b> row only starts a delete request that you confirm twice.</div>
+        <div class="actions" style="padding:10px 0 0"><button class="btn" data-bk="check" type="button">Check file</button></div></div>`;
+  } else if (BK.mode === 'restore' && cap.restore){
+    el.innerHTML = `<div class="dcard"><b>Restore orders from an export file</b><div class="by">Use this only after the backup is lost. Put the stories back first (Stories › Import), then restore orders. Each order returns exactly as exported with its original number and access dates. Nothing is approved and nobody is notified. Orders that already exist are skipped. Payment proof screenshots are not in the file.</div>
+        <label class="field" style="margin:10px 0 0"><span>Orders export file (.csv, .xlsx, .json, or the everything ZIP)</span><input type="file" id="bkFile" accept=".xlsx,.csv,.txt,.json,.zip"></label><div class="by" id="bkFileNames" style="margin:4px 0 8px">${BK.files.length ? esc(BK.files[0].name) : 'No file chosen'}</div>
+        <div class="actions" style="padding:0"><button class="btn" data-bk="restorecheck" type="button">Check file</button></div></div>`;
+  } else el.innerHTML = '';
+}
+
+/* ---- upload in 4 MB pieces with a real progress bar ---- */
+function bkUpload(file, onp){
+  const CH = 4 * 1024 * 1024, parts = Math.max(1, Math.ceil(file.size / CH));
+  const id = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+  const send = i => new Promise((res, rej) => {
+    const x = new XMLHttpRequest(); x.open('POST', `${API_URL.replace(/\/$/, '')}/api/admin/bulk/upload?id=${id}&part=${i}&parts=${parts}&name=${encodeURIComponent(file.name)}`);
+    x.setRequestHeader('X-Init-Data', tg ? tg.initData : ''); x.setRequestHeader('Content-Type', 'application/octet-stream'); x.timeout = 120000;
+    x.upload.onprogress = e => onp && onp(Math.min(file.size, i * CH + e.loaded));
+    x.onload = () => { let d = {}; try{ d = JSON.parse(x.responseText); }catch(e){} x.status === 200 ? res(d) : rej(new Error(d.message || `Upload failed (${x.status})`)); };
+    x.onerror = () => rej(new Error('The upload stopped. Check your internet and try again.')); x.ontimeout = () => rej(new Error('The upload took too long. Try a smaller file.'));
+    x.send(file.slice(i * CH, (i + 1) * CH));
+  });
+  return (async () => { for (let i = 0; i < parts; i++){ let tries = 0; for (;;){ try{ await send(i); break; }catch(e){ if (++tries >= 3) throw e; await sleep(800); } } } return id; })();
+}
+async function bkBlob(path){
+  const r = await fetch(API_URL.replace(/\/$/, '') + path, {headers: {'X-Init-Data': tg ? tg.initData : ''}});
+  if (!r.ok){ let m = `Download failed (${r.status})`; try{ m = (await r.json()).message || m; }catch(e){} throw new Error(m); }
+  const cd = r.headers.get('Content-Disposition') || '', mt = /filename="?([^";]+)"?/.exec(cd);
+  return {blob: await r.blob(), name: mt ? mt[1] : 'file'};
+}
+async function bkDownload(path){
+  try{ const {blob, name} = await bkBlob(path); const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000);
+    toast('Downloading ' + name + '. If nothing happens, use “Send to my Telegram”.', 5000);
+  }catch(e){ toast(adminErr(e), 5000); }
+}
+async function bkSend(body){ try{ await bkPost('/api/admin/bulk/send', body); toast('Sent. Open your chat with the bot to save the file.', 5000); }catch(e){ toast(adminErr(e), 5000); } }
+
+/* ---- progress card and results ---- */
+function bkCard(html){ const el = $('#bkJob'); if (!el) return; const had = !!el.firstElementChild; el.innerHTML = html; if (html && (!had || el.getBoundingClientRect().bottom > innerHeight)) el.scrollIntoView({block: 'center', behavior: 'smooth'}); }
+function bkBar(j){
+  const p = Math.max(0, Math.min(100, j.percent || 0)), running = j.state === 'running';
+  return `<div class="dcard"><b>${esc(j.label || 'Working')}</b>
+    <div class="dbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}" aria-label="${esc(j.label || 'Progress')}"><i style="width:${p}%"></i></div>
+    <div class="by">${p}%${j.total ? ` · ${j.done} of ${j.total}` : ''}${j.current ? ' · ' + esc(j.current) : ''}${j.errors ? ` · <span style="color:var(--bad)">${j.errors} problems</span>` : ''}</div>
+    ${running && j.id ? `<div class="actions" style="padding:10px 0 0"><button class="btn ghost small" data-bk="cancel" data-id="${esc(j.id)}" type="button">Cancel</button></div>` : ''}</div>`;
+}
+async function bkAttach(job){
+  const run = ++BK.run; bkCard(bkBar(job));
+  try{
+    let j = job;
+    while (j.state === 'running'){ await sleep(700); if (run !== BK.run) return; j = (await api('/api/admin/bulk/job?id=' + encodeURIComponent(job.id))).job; if (!j) throw new Error('The job was lost. Open Data again to see its result.'); if (j.state === 'running') bkCard(bkBar(j)); }
+    BK.lastJob = j; bkFinished(j);
+  }catch(e){ if (run === BK.run) bkCard(`<div class="dcard"><b>Could not read the progress</b><div class="by">${esc(adminErr(e))}</div></div>`); }
+}
+async function bkResume(){
+  try{ const r = await api('/api/admin/bulk/job'); if (r.job && r.job.state === 'running') bkAttach(r.job); else if (r.job && !r.job.applied && r.job.stage === 'preview' && r.job.state === 'done' && Date.now() / 1000 - r.job.finished < 1700 && (r.job.kind === 'import' || r.job.kind === 'restore')){ /* keep a fresh preview visible */ BK.pv = r.job; bkFinished(r.job); } }catch(e){}
+}
+function bkProblems(j, max = 8){
+  const items = ((j.result || {}).items || []).filter(i => i.action === 'error' || (i.msgs || []).length);
+  return items.length ? `<div style="margin:8px 0">${items.slice(0, max).map(i => `<div class="by" style="margin:4px 0"><b>${i.action === 'error' ? '❌' : 'ℹ️'} ${esc(i.sheet)} row ${i.row}${i.key ? ' · ' + esc(i.key) : ''}</b>: ${esc((i.msgs || []).join('; '))}</div>`).join('')}${items.length > max ? `<div class="by">… and ${items.length - max} more rows</div>` : ''}</div>` : '';
+}
+function bkErrBtns(j){ return j.has_errors ? `<button class="btn ghost small" data-bk="errors" data-id="${esc(j.id)}" type="button">Download problem list</button><button class="btn ghost small" data-bk="senderrors" data-id="${esc(j.id)}" type="button">Send it to Telegram</button>` : ''; }
+function bkFinished(j){
+  const r = j.result || {};
+  if (j.state === 'error') return bkCard(`<div class="dcard"><b>❌ It did not work</b><div class="by">${esc(r.error || r.summary || 'Something went wrong.')}</div></div>`);
+  if (j.state === 'cancelled') return bkCard(`<div class="dcard"><b>Stopped</b><div class="by">${esc(r.summary || '')}</div><div class="actions" style="padding:10px 0 0">${bkErrBtns(j)}</div></div>`);
+  if (j.kind === 'export') return bkCard(`<div class="dcard"><b>✅ File ready</b><div class="by">${esc(r.summary || '')} (${Math.max(1, Math.round((r.size || 0) / 1024))} KB)</div>
+      <div class="actions" style="padding:10px 0 0"><button class="btn small" data-bk="download" data-id="${esc(j.id)}" type="button">Download</button><button class="btn ghost small" data-bk="send" data-id="${esc(j.id)}" type="button">Send to my Telegram</button></div></div>`);
+  if (j.kind === 'delete') return bkCard(`<div class="dcard"><b>🗑 ${esc(r.summary || 'Done')}</b><div class="by">A safety copy was made first${r.snapshot ? ' (' + esc(r.snapshot) + ')' : ''}.</div><div class="actions" style="padding:10px 0 0">${bkErrBtns(j)}</div></div>`);
+  if ((j.kind === 'import' || j.kind === 'restore') && j.stage !== 'preview')
+    return bkCard(`<div class="dcard"><b>✅ ${esc(r.summary || 'Done')}</b><div class="by">${r.snapshot ? 'A safety copy of the database was made first (' + esc(r.snapshot) + '). ' : ''}${j.kind === 'import' ? 'Open the tab to see the result.' : ''}</div>${j.errors ? `<div class="by" style="color:var(--bad)">${j.errors} problems</div>` : ''}<div class="actions" style="padding:10px 0 0">${bkErrBtns(j)}</div></div>`);
+  if (j.kind === 'import') return bkPreview(j);
+  if (j.kind === 'restore') return bkRestorePreview(j);
+}
+function bkPreview(j){
+  const r = j.result, c = r.counts, fl = r.flags || {}, can = c.create + c.update > 0;
+  BK.pv = j;
+  bkCard(`<div class="dcard"><b>Preview: nothing is saved yet</b><div class="by">${esc(r.summary)}${r.total ? ` · ${r.total} rows read` : ''}</div>
+    <div class="dstats"><span><b>${c.create}</b>new</span><span><b>${c.update}</b>changed</span><span><b>${c.unchanged}</b>same</span><span class="${c.error ? 'bad' : ''}"><b>${c.error}</b>problems</span></div>
+    ${r.covers ? `<div class="by">🖼 ${r.covers} covers will be saved after the stories.</div>` : ''}${c.skip ? `<div class="by">${c.skip} rows skipped because of the chosen mode.</div>` : ''}
+    ${(r.notes || []).map(n => `<div class="by">ℹ️ ${esc(n)}</div>`).join('')}${bkProblems(j)}
+    ${fl.affects ? `<label class="field check" style="margin:8px 0"><input type="checkbox" id="bkAff"> <span>⚠️ ${fl.affects_stories} stories change plans that ${fl.affects} buyers have access to now. I understand.</span></label>` : ''}
+    ${fl.free ? `<label class="field check" style="margin:8px 0"><input type="checkbox" id="bkFree"> <span>⚠️ ${fl.free} stories have a plan with price 0 (free for everyone). I meant it.</span></label>` : ''}
+    ${r.deletes ? `<div class="by" style="margin:8px 0"><b>🗑 ${r.deletes} rows say delete = yes.</b> Nothing is deleted by this upload.</div><button class="btn ghost small" data-bk="delreview" type="button">Review delete request</button>` : ''}
+    <div class="actions" style="padding:10px 0 0">${can ? `<button class="btn" data-bk="apply" type="button">Confirm and save ${c.create + c.update} rows</button>` : ''}<button class="btn ghost" data-bk="discard" type="button">${can ? 'Cancel' : 'Close'}</button>${bkErrBtns(j)}</div></div>`);
+}
+function bkRestorePreview(j){
+  const r = j.result, c = r.counts; BK.pv = j;
+  bkCard(`<div class="dcard"><b>Preview: nothing is restored yet</b><div class="by">${esc(r.summary)}</div>
+    <div class="dstats"><span><b>${c.create}</b>to add</span><span><b>${c.unchanged}</b>exist</span><span class="${c.error ? 'bad' : ''}"><b>${c.error}</b>problems</span></div>${bkProblems(j)}
+    ${c.create ? `<label class="field" style="margin:8px 0"><span>Type RESTORE to confirm</span><input id="bkTyped" autocomplete="off" autocapitalize="characters" placeholder="RESTORE"></label>` : ''}
+    <div class="actions" style="padding:10px 0 0">${c.create ? `<button class="btn" data-bk="restoreapply" type="button">Restore ${c.create} orders</button>` : ''}<button class="btn ghost" data-bk="discard" type="button">${c.create ? 'Cancel' : 'Close'}</button>${bkErrBtns(j)}</div></div>`);
+}
+
+/* ---- the two-step delete ---- */
+function bkDelReport(rep){ return rep.map(d => `<div class="by" style="margin:6px 0"><b>${esc(d.section)}: ${esc(d.label)}</b><br>${(d.lines || []).map(esc).join('<br>')}</div>`).join(''); }
+async function bkDelStart(){
+  try{ const r = await bkPost('/api/admin/bulk/delete', {action: 'start', preview_id: BK.pv.id}); BK.delTok = r.token; BK.delRep = r.report;
+    bkCard(`<div class="dcard"><b>🗑 Delete request: confirmation 1 of 2</b><div class="by">${r.count} items would be deleted. ${r.sent ? 'This report was also sent to your Telegram.' : 'The report could not be sent to Telegram, read it here.'} Orders are never deleted.</div>${bkDelReport(r.report)}
+      <div class="actions" style="padding:10px 0 0"><button class="btn danger" data-bk="del1" type="button">Confirm 1 of 2</button><button class="btn ghost" data-bk="delcancel" type="button">Cancel, delete nothing</button></div></div>`);
+  }catch(e){ toast(adminErr(e), 5000); }
+}
+async function bkDel1(){
+  try{ const r = await bkPost('/api/admin/bulk/delete', {action: 'confirm', token: BK.delTok, step: 1});
+    bkCard(`<div class="dcard"><b>🛑 Final warning: confirmation 2 of 2</b><div class="by">${r.sent ? 'The report was sent to your Telegram again. ' : ''}A safety copy of the database is made, then this is deleted for good:</div>${bkDelReport(BK.delRep || [])}
+      <div class="actions" style="padding:10px 0 0"><button class="btn danger" data-bk="del2" type="button">Delete now (2 of 2)</button><button class="btn ghost" data-bk="delcancel" type="button">Cancel, delete nothing</button></div></div>`);
+  }catch(e){ toast(adminErr(e), 5000); }
+}
+async function bkDel2(){
+  try{ const r = await bkPost('/api/admin/bulk/delete', {action: 'confirm', token: BK.delTok, step: 2}); BK.delTok = null; bkAttach(r.job); }catch(e){ toast(adminErr(e), 5000); }
+}
+
+/* ---- actions ---- */
+async function bkStart(path, body){
+  try{ const r = await bkPost(path, body); bkAttach(r.job); }
+  catch(e){ if (e.data && e.data.error === 'busy' && e.data.job){ toast('Another job is running. Showing it.', 4000); bkAttach(e.data.job); } else { bkCard(`<div class="dcard"><b>❌ ${esc(adminErr(e))}</b></div>`); } }
+}
+async function bkCheck(restore){
+  if (!BK.files.length) return toast('Choose the file first');
+  try{
+    const all = [...BK.files, ...BK.covers], total = all.reduce((a, f) => a + f.size, 0) || 1; let sent = 0, ids = [];
+    for (const f of all){
+      const ref = sent; bkCard(bkBar({state: 'running', label: 'Uploading ' + f.name, percent: Math.round(100 * ref / total), done: 0, total: 0}));
+      ids.push(await bkUpload(f, loaded => bkCard(bkBar({state: 'running', label: 'Uploading ' + f.name, percent: Math.round(100 * (ref + loaded) / total)})))); sent += f.size;
+    }
+    BK.uploads = ids;
+    if (restore) await bkStart('/api/admin/bulk/restore', {uploads: ids, dry_run: true});
+    else await bkStart('/api/admin/bulk/import', {section: bkCap().imp, uploads: ids, dry_run: true, mode: BK.imode});
+  }catch(e){ bkCard(`<div class="dcard"><b>❌ ${esc(adminErr(e))}</b></div>`); }
+}
+function bkExportGo(){
+  const cap = bkCap(), f = {};
+  if (cap.filters){ const v = id => ($('#' + id) || {}).value || ''; f.status = v('bkStatus'); f.story_id = v('bkStory').trim(); f.from = v('bkFrom'); f.to = v('bkTo'); Object.keys(f).forEach(k => f[k] || delete f[k]); }
+  return bkStart('/api/admin/bulk/export', {section: cap.exp, format: BK.fmt, filters: f, include_covers: !!($('#bkCovers') || {}).checked});
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-bk], #aData, #bkHomeCard'); if (!t) return;
+  if (t.id === 'aData'){ return bkOpen(A.view === 'tab' ? A.tab : 'home'); }
+  const [a, v] = (t.dataset.bk || 'open-home').split(':'); const id = t.dataset.id;
+  if (a === 'open') return bkOpen('home'); if (a === 'close'){ BK.run++; return closeSheet('datasheet'); }
+  if (a === 'mode'){ BK.mode = v; BK.files = []; BK.covers = []; bkPaint(); return bkResume(); }
+  if (a === 'fmt'){ BK.fmt = v; return bkPane(); }
+  if (a === 'export') return once('bk', bkExportGo);
+  if (a === 'sample') return bkDownload(`/api/admin/bulk/template?section=${bkCap().imp}&format=${BK.fmt}`);
+  if (a === 'sendsample') return bkSend({template: {section: bkCap().imp, format: BK.fmt}});
+  if (a === 'check') return once('bk', () => bkCheck(false));
+  if (a === 'restorecheck') return once('bk', () => bkCheck(true));
+  if (a === 'apply') return once('bk', () => bkStart('/api/admin/bulk/import', {section: bkCap().imp, dry_run: false, preview_id: BK.pv.id, confirm_affects: !!($('#bkAff') || {}).checked, allow_free: !!($('#bkFree') || {}).checked}));
+  if (a === 'restoreapply') return once('bk', () => { const typed = (($('#bkTyped') || {}).value || '').trim(); if (typed !== 'RESTORE') return toast('Type RESTORE in capital letters'); return bkStart('/api/admin/bulk/restore', {dry_run: false, preview_id: BK.pv.id, confirm: typed}); });
+  if (a === 'discard'){ BK.pv = null; BK.run++; return bkCard(''); }
+  if (a === 'cancel') return once('bk', async () => { try{ await bkPost('/api/admin/bulk/cancel', {id}); toast('Stopping after the current row…'); }catch(er){ toast(adminErr(er)); } });
+  if (a === 'download') return bkDownload('/api/admin/bulk/file?id=' + encodeURIComponent(id));
+  if (a === 'send') return bkSend({job: id});
+  if (a === 'errors') return bkDownload('/api/admin/bulk/errors?id=' + encodeURIComponent(id));
+  if (a === 'senderrors') return bkSend({errors: id});
+  if (a === 'delreview') return once('bk', bkDelStart);
+  if (a === 'del1') return once('bk', bkDel1);
+  if (a === 'del2') return once('bk', bkDel2);
+  if (a === 'delcancel') return once('bk', async () => { try{ if (BK.delTok) await bkPost('/api/admin/bulk/delete', {action: 'cancel', token: BK.delTok}); }catch(er){} BK.delTok = null; toast('Nothing was deleted'); if (BK.pv) bkFinished(BK.pv); else bkCard(''); });
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'bkFile'){ BK.files = Array.from(t.files || []); const n = $('#bkFileNames'); if (n) n.textContent = BK.files.length ? BK.files.map(f => f.name).join(', ') : 'No file chosen'; }
+  if (t.id === 'bkCov'){ BK.covers = Array.from(t.files || []); const n = $('#bkCovNames'); if (n) n.textContent = BK.covers.length ? BK.covers.map(f => f.name).join(', ') : 'No file chosen'; }
+  if (t.id === 'bkMode') BK.imode = t.value;
+});
 </script>
 </body>
 </html>
