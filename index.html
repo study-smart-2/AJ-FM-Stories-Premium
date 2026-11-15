@@ -2982,25 +2982,40 @@ function openCouponEditor(id){
     <div class="two"><label class="field"><span>Discount type</span><select id="cp_type"><option value="percentage"${c.discount_type === 'percentage' ? ' selected' : ''}>Percentage (%)</option><option value="fixed"${c.discount_type === 'fixed' ? ' selected' : ''}>Fixed amount</option></select></label><label class="field"><span>Discount value *</span><input id="cp_value" type="number" min="0" step="any" inputmode="decimal" value="${c.discount_value ?? ''}"></label></div>
     <div class="two"><label class="field"><span>Minimum order total (0 = none)</span><input id="cp_min" type="number" min="0" inputmode="decimal" value="${c.min_order_value || ''}"></label><label class="field"><span>Total uses (0 = unlimited)</span><input id="cp_use" type="number" min="0" inputmode="numeric" value="${c.usage_limit || ''}"></label></div>
     <div class="two"><label class="field"><span>Uses per member (0 = unlimited)</span><input id="cp_per" type="number" min="0" inputmode="numeric" value="${c.id ? (c.per_user_limit || '') : 1}"></label><label class="field"><span>Minimum stories in the cart (0 = none)</span><input id="cp_mins" type="number" min="0" max="30" inputmode="numeric" value="${c.min_stories || ''}"></label></div>
-    <label class="field"><span>Only for this story (empty = every story)</span><input id="cp_story" list="cp_stories" value="${esc(c.story_title || '')}" placeholder="All stories" autocomplete="off"><datalist id="cp_stories">${CPA.stories.map(x => `<option value="${esc(x.title)}"></option>`).join('')}</datalist></label>
+    <div class="field"><span>Only for this story (empty = every story; add 2 or more stories one by one)</span><div class="tickrow" id="cp_chips"></div><input id="cp_story" list="cp_stories" value="" placeholder="Type a story name and pick it from the list" autocomplete="off"><datalist id="cp_stories">${CPA.stories.map(x => `<option value="${esc(x.title)}"></option>`).join('')}</datalist></div>
     <div class="field"><span>Only for stories with this status (none ticked = every status)</span><div class="tickrow">${stOpts.map(o => `<label class="tick"><input type="checkbox" class="cp_st" value="${esc(o.value)}"${(c.statuses || []).includes(o.value) ? ' checked' : ''}> ${esc(o.value[0].toUpperCase() + o.value.slice(1))} <small>${o.count ? o.count : 'none'}</small></label>`).join('') || '<span class="hint">No story has a status yet.</span>'}</div><span class="hint">Only the statuses your stories really have are listed.</span></div>
     <div class="field"><span>Works on these plan sections (none ticked = every section)</span><div class="tickrow">${[[1, 'Section 1: full story / topic plans'], [2, 'Section 2: episode packs'], [3, 'Section 3: rentals']].map(([n, t]) => `<label class="tick"><input type="checkbox" class="cp_sec" value="${n}"${(c.sections || []).includes(n) ? ' checked' : ''}> ${t}</label>`).join('')}</div></div>
     <div class="two"><label class="field"><span>Works on which order</span><select id="cp_ordmode"><option value=""${!c.order_mode ? ' selected' : ''}>Every order</option><option value="exact"${c.order_mode === 'exact' ? ' selected' : ''}>Only order no.</option><option value="from"${c.order_mode === 'from' ? ' selected' : ''}>Order no. and later</option></select></label><label class="field"><span>Order number</span><input id="cp_ordno" type="number" min="1" max="99" inputmode="numeric" value="${c.order_no || ''}" placeholder="1"${c.order_mode ? '' : ' disabled'}></label></div>
     <div class="by" style="padding:0 16px 8px">Order number counts the member's earlier orders: 1 = first purchase, 2 = second purchase, and so on. &ldquo;Only order no.&rdquo; with 1 makes a first-purchase code that stops showing after the first order.</div>
-    <div class="by" style="padding:0 16px 8px">&ldquo;Minimum order&rdquo; looks at the whole cart total. &ldquo;Only for this story&rdquo; gives the discount on that story's plans only. &ldquo;Minimum stories&rdquo; counts the different stories in the cart; with a status ticked it counts only stories of that status (e.g. 3 Completed or Stopped stories).</div>
+    <div class="by" style="padding:0 16px 8px">&ldquo;Minimum order&rdquo; looks at the whole cart total. &ldquo;Only for this story&rdquo; gives the discount on the plans of the stories you add only (add 2 or more if you like). &ldquo;Minimum stories&rdquo; counts the different stories in the cart; with a status ticked it counts only stories of that status (e.g. 3 Completed or Stopped stories).</div>
     <div class="two"><label class="field"><span>Valid from</span><input id="cp_start" type="datetime-local" value="${dt(c.starts_at)}"></label><label class="field"><span>Valid till</span><input id="cp_end" type="datetime-local" value="${dt(c.expires_at)}"></label></div>
     <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cp_active"${c.is_active ? ' checked' : ''}> <span>Active (members can use it; untick to hide it completely)</span></label>
     <label style="display:flex;gap:8px;align-items:center;padding:6px 16px"><input type="checkbox" id="cp_listed"${c.listed ? ' checked' : ''}> <span>Show in members' Coupons &amp; Offers (untick for a private code you share yourself)</span></label>
     <div class="actions"><button class="btn" id="cpSave">Save coupon</button><button class="btn ghost" id="cpClose2">Cancel</button></div>`;
   openSheet('cpedit');
+  CPA.pick = (c.story_ids && c.story_ids.length ? c.story_ids : (c.story_id ? [c.story_id] : [])).slice();
+  cpChips();
+  const cpIn = $('#cp_story'); if (cpIn){ cpIn.addEventListener('change', cpAddStory); cpIn.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); cpAddStory(); } }); }
+  const cpBox = $('#cp_chips'); if (cpBox) cpBox.addEventListener('click', e => { const b = e.target.closest('[data-cprm]'); if (!b) return; CPA.pick = CPA.pick.filter(x => x !== b.dataset.cprm); cpChips(); });
+}
+function cpChips(){
+  const box = $('#cp_chips'); if (!box) return;
+  box.innerHTML = (CPA.pick || []).map(id => { const s = CPA.stories.find(x => x.id === id); return `<span class="tick" style="display:inline-flex;gap:6px;align-items:center">${esc(s ? s.title : id)} <button type="button" class="btn ghost small" data-cprm="${esc(id)}" aria-label="Remove ${esc(s ? s.title : id)}" style="padding:0 8px">&times;</button></span>`; }).join('');
+}
+function cpAddStory(){
+  const el = $('#cp_story'); if (!el) return true;
+  const v = el.value.trim(); if (!v) return true;
+  const s = CPA.stories.find(x => x.title.toLowerCase() === v.toLowerCase());
+  if (!s){ toast('Pick the story from the list.', 3500); return false; }
+  if (!CPA.pick.includes(s.id)) CPA.pick.push(s.id);
+  el.value = ''; cpChips(); return true;
 }
 async function saveCoupon(){
   await once('cpsave', async () => {
     const g = k => $('#cp_' + k), dt = v => v ? Math.floor(new Date(v).getTime() / 1000) : null;
-    const sTitle = g('story').value.trim(), sPick = sTitle ? CPA.stories.find(x => x.title.toLowerCase() === sTitle.toLowerCase()) : null;
-    if (sTitle && !sPick) return toast('Pick the story from the list, or clear that box for every story.', 5000);
+    if (!cpAddStory()) return;
     if (g('ordmode').value && !(+g('ordno').value >= 1)) return toast('Type the order number (1 = first purchase), or choose Every order.', 5000);
-    const body = {id: CPA.id, story_id: sPick ? sPick.id : '', min_stories: g('mins').value || 0, order_mode: g('ordmode').value, order_no: g('ordno').value || 0, headline: g('head').value.trim(), statuses: $$('.cp_st:checked').map(x => x.value), sections: $$('.cp_sec:checked').map(x => +x.value), code: g('code').value.trim(), title: g('title').value.trim(), discount_type: g('type').value, discount_value: g('value').value, min_order_value: g('min').value || 0,
+    const body = {id: CPA.id, story_ids: (CPA.pick || []).slice(), story_id: (CPA.pick || []).join(','), min_stories: g('mins').value || 0, order_mode: g('ordmode').value, order_no: g('ordno').value || 0, headline: g('head').value.trim(), statuses: $$('.cp_st:checked').map(x => x.value), sections: $$('.cp_sec:checked').map(x => +x.value), code: g('code').value.trim(), title: g('title').value.trim(), discount_type: g('type').value, discount_value: g('value').value, min_order_value: g('min').value || 0,
       usage_limit: g('use').value || 0, per_user_limit: g('per').value || 0, starts_at: dt(g('start').value), expires_at: dt(g('end').value), is_active: g('active').checked, listed: g('listed').checked};
     try{ await api('/api/admin/coupon', {method: 'POST', retry: false, body: JSON.stringify(body)}); toast('Coupon saved'); closeSheet('cpedit'); loadAdmin(); loadOffers(); }
     catch(e){ toast(adminErr(e), 5000); }
@@ -3655,7 +3670,8 @@ async function openEditor(id){
     <div class="actions" style="margin-bottom:14px"><button class="btn ghost small" id="autofill" type="button">Auto-fill details</button></div>
     <label class="field"><span>Title *</span><input id="e_title" value="${esc(s.title || '')}" maxlength="120"></label>
     <label class="field"><span>Other titles (one per line)</span><textarea id="e_aliases" rows="3" maxlength="3600" placeholder="Names the sources used before or use now">${esc((s.aliases || []).join('\n'))}</textarea><small class="note">Sources rename stories. Members find the story by any of these names; they see the Title above.</small></label>
-    <label class="field"><span>Platform or author</span><input id="e_author" value="${esc(s.author || '')}" placeholder="Pocket FM"></label>
+    <label class="field"><span>Platform (where the story comes from)</span><input id="e_platform" value="${esc(s.platform || '')}" maxlength="60" placeholder="Pocket FM, Kuku FM, YouTube..."></label>
+    <label class="field"><span>Author</span><input id="e_author" value="${esc(s.author || '')}" placeholder="AJ's FM"></label>
     <div class="two"><label class="field"><span>Main genre</span><input id="e_genre" value="${esc(hasSubField(s) ? (s.genre || '') : mainGenres(s).join(', '))}" placeholder="Romance, Drama"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
     <label class="field"><span>Sub genres</span><input id="e_sub" value="${esc(hasSubField(s) ? (s.sub_genre || '') : subGenres(s).join(', '))}" placeholder="Forced Marriage, Revenge and Retribution"><small class="note">Separate genres with a comma, "and" or "&amp;". Main genres are the filters members browse by; sub genres show on the story page.</small></label>
     <div class="two"><label class="field"><span>Status</span><input id="e_status" list="e_status_l" maxlength="30" placeholder="Ongoing"><datalist id="e_status_l"><option value="Ongoing"><option value="Completed"><option value="Upcoming"></datalist></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
@@ -3719,6 +3735,7 @@ async function saveEditor(){
     if (!title) return toast('Add a title first');
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: splitGenres($('#e_genre').value).join(', '), sub_genre: splitGenres($('#e_sub').value).join(', '), language: $('#e_lang').value.trim(),
       status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '', free_days: $('#e_fdays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_fdays').value) || 0)),
+      platform: ($('#e_platform') ? $('#e_platform').value.trim() : (s.platform || '')),
       aliases: $('#e_aliases').value.split('\n').map(x => x.trim()).filter(Boolean),
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts').concat(readPairs())};
     const pairBad = pairProblem(readPairs()); if (pairBad) return toast(pairBad, 5000);
@@ -4405,7 +4422,7 @@ const BKCAP = {
   collections: {label: 'Collections', exp: 'collections', imp: 'collections'},
   combos:      {label: 'Combinations', exp: 'combos', imp: 'combos'},
   rooms:       {label: 'Deliveries', exp: 'deliveries'},
-  updates:     {label: 'Updates', exp: 'updates', note: 'The update days and report time of every story are also columns of the Stories file, so you can change them in bulk there.'},
+  updates:     {label: 'Updates', exp: 'updates', note: 'The update days and report time of every story are also in the Stories workbook (tab Update Details), so you can change them in bulk there.'},
   feedback:    {label: 'Feedback', exp: 'feedback'},
   stats:       {label: 'Analytics', exp: 'analytics'},
   audit:       {label: 'Audit log', exp: 'audit'},
@@ -4416,9 +4433,9 @@ const BKCAP = {
 const BK = {tab: 'home', mode: 'export', fmt: 'xlsx', style: 'simple', files: [], covers: [], pv: null, run: 0, delTok: null, lastJob: null};
 const bkPost = (p, body) => api(p, {method: 'POST', retry: false, timeout: 90000, body: JSON.stringify(body || {})});
 const bkCap = () => BKCAP[BK.tab] || BKCAP.home;
-const BKADD = {stories: 'You do not type any ID: it is made from the title when the story is created. In Extra plans write the story name exactly as in the Stories sheet. A title that already exists is left as it is.',
-  coupons: 'You do not type any ID. The code is the word members type at checkout.', collections: 'You do not type any ID. In Stories write the story names separated by ; (semicolon).',
-  combos: 'You do not type any ID.', index: 'Write the story name. The supergroup and topic numbers come from Telegram. You do not type any other ID.'};
+const BKADD = {stories: 'One workbook with 7 tabs: Main Details, Update Details, Main Plan Details, Topics Creators, Topic Plans, Bundle Plans and Index. You do not type any ID. In every tab write the Story name exactly as the Title in Main Details. Leave a plan price empty and that plan is not made. A title that already exists is left as it is. In More Banners and Cover you can write Telegram post links, picture file names from the ZIP, or image links.',
+  coupons: 'You do not type any ID. The code is the word members type at checkout. The columns follow the coupon screen. In Only for this story write one story or 2 or more, separated by ; (semicolon).', collections: 'You do not type any ID. In Stories write the story names separated by ; (semicolon).',
+  combos: 'Two sheets: Combination rules (discount tiers) and Combo list (the story combinations themselves). You do not type any ID. In Combo list write the story names separated by ; (semicolon).', index: 'Write the story name. The supergroup and topic numbers come from Telegram. Story topic is the name of the story topic; Story topic ID is its own ID (filled in the Edit file). You do not type any other ID.'};
 const bkModes = cap => [cap.imp && ['add', '➕ Add new'], cap.imp && ['edit', '✏️ Edit'], cap.del && ['delete', '🗑 Delete'], cap.exp && ['export', '⬇ Export'], cap.restore && ['restore', '♻️ Restore']].filter(Boolean);
 
 function bkDecorate(){
