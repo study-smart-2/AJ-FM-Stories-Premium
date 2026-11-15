@@ -4416,6 +4416,9 @@ const BKCAP = {
 const BK = {tab: 'home', mode: 'export', fmt: 'xlsx', style: 'simple', files: [], covers: [], pv: null, run: 0, delTok: null, lastJob: null};
 const bkPost = (p, body) => api(p, {method: 'POST', retry: false, timeout: 90000, body: JSON.stringify(body || {})});
 const bkCap = () => BKCAP[BK.tab] || BKCAP.home;
+const BKADD = {stories: 'You do not type any ID: it is made from the title when the story is created. In Extra plans write the story name exactly as in the Stories sheet. A title that already exists is left as it is.',
+  coupons: 'You do not type any ID. The code is the word members type at checkout.', collections: 'You do not type any ID. In Stories write the story names separated by ; (semicolon).',
+  combos: 'You do not type any ID.', index: 'Write the story name. The supergroup and topic numbers come from Telegram. You do not type any other ID.'};
 const bkModes = cap => [cap.imp && ['add', '➕ Add new'], cap.imp && ['edit', '✏️ Edit'], cap.del && ['delete', '🗑 Delete'], cap.exp && ['export', '⬇ Export'], cap.restore && ['restore', '♻️ Restore']].filter(Boolean);
 
 function bkDecorate(){
@@ -4436,7 +4439,7 @@ function bkOpen(tab){
 function bkPaint(){
   const cap = bkCap(), m = bkModes(cap);
   $('#datasheet').innerHTML = `<div class="top"><button class="btn ghost small" data-bk="close" type="button">Back</button><strong>Data · ${esc(cap.label)}</strong></div>
-    ${m.length > 1 ? `<div class="chips" role="tablist" aria-label="What to do">${m.map(([k, t]) => `<button class="chip${BK.mode === k ? ' on' : ''}" role="tab" aria-selected="${BK.mode === k}" data-bk="mode:${k}" type="button">${t}</button>`).join('')}</div>` : ''}
+    ${m.length > 1 ? `<div class="chips" role="tablist" aria-label="What to do" style="flex-wrap:wrap;overflow:visible">${m.map(([k, t]) => `<button class="chip${BK.mode === k ? ' on' : ''}" role="tab" aria-selected="${BK.mode === k}" data-bk="mode:${k}" type="button">${t}</button>`).join('')}</div>` : ''}
     ${cap.note ? `<div class="by" style="padding:0 16px 10px">${esc(cap.note)}</div>` : ''}
     <div id="bkPane"></div><div id="bkJob" aria-live="polite"></div>`;
   bkPane();
@@ -4460,7 +4463,7 @@ function bkPane(){
   const cap = bkCap(), el = $('#bkPane'); if (!el) return;
   const what = esc(cap.label.toLowerCase());
   if (BK.mode === 'add' && cap.imp){
-    el.innerHTML = `<div class="dcard"><b>1. Download the blank file</b><div class="by">Fill one row for each new item. Gold headings are required, the rest is optional. A grey example row shows how.</div>${bkFmtChips()}
+    el.innerHTML = `<div class="dcard"><b>1. Download the blank file</b><div class="by">Fill one row for each new item. Gold headings are required, the rest is optional. A grey example row shows how. ${esc(BKADD[cap.imp] || '')}</div>${bkFmtChips()}
         <div class="actions" style="padding:0"><button class="btn small" data-bk="sample" type="button">Download blank file</button><button class="btn ghost small" data-bk="sendsample" type="button">Send to my Telegram</button></div></div>
       <div class="dcard"><b>2. Choose the filled file</b>${bkPicker(cap)}${cap.covers ? '<div class="by">In <b>Cover</b> write a Telegram post link, a picture file name from the ZIP, an image link or one emoji.</div>' : ''}</div>
       <div class="dcard"><b>3. Check, then confirm</b><div class="by">Only new items are added. Anything that already exists is left as it is. You see a preview first and nothing is saved until you confirm.</div>
@@ -4473,7 +4476,7 @@ function bkPane(){
       <div class="dcard"><b>3. Check, then confirm</b><div class="by">Only existing items are changed. <b>An empty cell keeps the current value.</b> To clear a value type <b>-</b>. Nothing is ever deleted by an upload. You see a preview first.</div>
         <div class="actions" style="padding:10px 0 0"><button class="btn" data-bk="check" type="button">Check file</button></div></div>`;
   } else if (BK.mode === 'delete' && cap.del){
-    el.innerHTML = `<div class="dcard"><b>1. Download the list</b><div class="by">You get every ${what} in a file with an empty <b>Delete</b> column.</div>${bkFmtChips()}
+    el.innerHTML = `<div class="dcard"><b>1. Download the list</b><div class="by">You get the list in a file with an empty <b>Delete</b> column.</div>${bkFmtChips()}
         <div class="actions" style="padding:0"><button class="btn small" data-bk="delfile" type="button">Download the list</button></div></div>
       <div class="dcard"><b>2. Mark what to delete</b><div class="by">Type <b>yes</b> in the Delete column of the rows you want to remove. Leave all other rows empty. Then choose the file.</div>${bkPicker(cap)}</div>
       <div class="dcard"><b>3. Check, then confirm twice</b><div class="by">Nothing is deleted by the upload. You get a report here and in Telegram and must confirm two times. A safety copy is made first. Files waiting in the queue are put on hold. Episodes that are already indexed stay.</div>
@@ -4552,7 +4555,7 @@ function bkFinished(j){
       <div class="actions" style="padding:10px 0 0"><button class="btn small" data-bk="download" data-id="${esc(j.id)}" type="button">Download</button><button class="btn ghost small" data-bk="send" data-id="${esc(j.id)}" type="button">Send to my Telegram</button></div></div>`);
   if (j.kind === 'delete') return bkCard(`<div class="dcard"><b>🗑 ${esc(r.summary || 'Done')}</b><div class="by">A safety copy was made first${r.snapshot ? ' (' + esc(r.snapshot) + ')' : ''}.</div><div class="actions" style="padding:10px 0 0">${bkErrBtns(j)}</div></div>`);
   if ((j.kind === 'import' || j.kind === 'restore') && j.stage !== 'preview')
-    return bkCard(`<div class="dcard"><b>✅ ${esc(r.summary || 'Done')}</b><div class="by">${r.snapshot ? 'A safety copy of the database was made first (' + esc(r.snapshot) + '). ' : ''}${j.kind === 'import' ? 'Open the tab to see the result.' : ''}</div>${j.errors ? `<div class="by" style="color:var(--bad)">${j.errors} problems</div>` : ''}<div class="actions" style="padding:10px 0 0">${bkErrBtns(j)}</div></div>`);
+    return bkCard(`<div class="dcard"><b>✅ ${esc(r.summary || 'Done')}</b>${(r.new_ids || []).length ? `<div class="by" style="margin:6px 0"><b>New IDs</b><br>${r.new_ids.slice(0, 12).map(x => esc(x.title) + ' → <code>' + esc(x.id) + '</code>').join('<br>')}${r.new_ids.length > 12 ? '<br>… and ' + (r.new_ids.length - 12) + ' more (see the Edit file)' : ''}</div>` : ''}<div class="by">${r.snapshot ? 'A safety copy of the database was made first (' + esc(r.snapshot) + '). ' : ''}${j.kind === 'import' ? 'Open the tab to see the result.' : ''}</div>${j.errors ? `<div class="by" style="color:var(--bad)">${j.errors} problems</div>` : ''}<div class="actions" style="padding:10px 0 0">${bkErrBtns(j)}</div></div>`);
   if (j.kind === 'import') return bkPreview(j);
   if (j.kind === 'restore') return bkRestorePreview(j);
 }
