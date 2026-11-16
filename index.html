@@ -1263,7 +1263,7 @@ function goBot(payload){
 }
 
 /* ---------- shared pieces ---------- */
-const splitGenres = t => { const seen = new Set(); return String(t || '').split(/\s*(?:,|;|&|\band\b)\s*/i).map(x => x.trim().replace(/^[\s.;]+|[\s.;]+$/g, '')).filter(x => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())); };   // "," "and" "&" separate genres
+const splitGenres = t => { const seen = new Set(); return String(t || '').split(/\s*,\s*/).map(x => x.trim().replace(/^[\s.;]+|[\s.;]+$/g, '')).filter(x => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase())); };   // "," "and" "&" separate genres
 const genreList = s => splitGenres(s && s.genre);
 const hasSubField = s => !!s && s.sub_genre != null;                              // saved with the two fields; an older story has one "genre" field: first = main, the rest = sub genres
 const mainGenres = s => hasSubField(s) ? genreList(s) : genreList(s).slice(0, 1);
@@ -1272,7 +1272,8 @@ const mainGenres = s => hasSubField(s) ? genreList(s) : genreList(s).slice(0, 1)
 let GENRE_CTX = '';
 let GSEED = String(Math.random());
 const hashStr = t => { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return Math.abs(h); };
-const mainGenre = s => {
+const mainGenre = s => mainGenres(s).join(', ');           // outside cards show ALL main genres (sub genres stay on the story page)
+const mainGenreOne = s => {
   const g = mainGenres(s); if (g.length < 2) return g[0] || '';
   const ctx = GENRE_CTX && g.find(x => x.toLowerCase() === GENRE_CTX.toLowerCase());
   return ctx || g[hashStr(String(s.id) + GSEED + Math.floor(Date.now() / 20000)) % g.length];      // changes with every new screen and every 20 seconds, not on each repaint
@@ -2599,9 +2600,9 @@ function storyBack(){                                                           
   else closeSheet('story');
 }
 function topicCards(){
-  const s = V.story, tps = shownTopics(), list = tps.map(t => ({id: t.id, name: t.name, n: t.episodes, first: t.first, last: t.last, note: t.note || ''}));
-  if (s.episodes_unassigned && tps.length) list.push({id: '_none', name: 'More episodes', n: s.episodes_unassigned, note: ''});
-  if (!tps.length) list.push({id: '', name: 'All episodes', n: V.totalAll, first: s.ep_first, last: s.ep_last, note: ''});     // a story without topics shows one card
+  const s = V.story, tps = shownTopics(), list = tps.map(t => ({id: t.id, name: t.name, n: t.episodes, first: t.first, last: t.last, note: t.note || '', gaps: t.gaps || ''}));
+  if (s.episodes_unassigned && tps.length) list.push({id: '_none', name: 'More episodes', n: s.episodes_unassigned, note: '', gaps: s.gaps_none || ''});
+  if (!tps.length) list.push({id: '', name: 'All episodes', n: V.totalAll, first: s.ep_first, last: s.ep_last, note: '', gaps: s.gaps_none || ''});     // a story without topics shows one card
   return list;
 }
 const optsFor = id => ((V.story && V.story.options) || []).filter(o => !o.topic || o.topic === id || isBundle(o));
@@ -2784,7 +2785,7 @@ function renderStory(){
   const range = rangeOf(s.options || []);
   const cards = topicCards().map((t, i) => {
     const opts = optsFor(t.id);
-    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${esc(epRange(t.first, t.last, t.n))}</small><span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
+    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${esc(epRange(t.first, t.last, t.n))}</small>${t.gaps ? `<small style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}</small>` : ''}<span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
   }).join('');
   el.innerHTML = `<div class="sh">${heroBg(s)}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
@@ -2804,7 +2805,7 @@ function renderTopicPage(){
   const t = topicCards().find(x => x.id === V.topic) || {name: 'Episodes', n: V.total, note: ''};
   const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
-    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${esc(epRange(t.first, t.last, t.n))} | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
+    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${esc(epRange(t.first, t.last, t.n))} | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.gaps ? `<div class="by" style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}. They will be added soon.</div>` : ''}${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
     ${full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
@@ -3185,8 +3186,8 @@ const bnPrompt = c => `Create an image of a coupon with the text: "Use code - ${
 const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JSON.stringify(body)});
 /* ---------------- Admin → Index Bot (added section; talks only to /api/admin/index/*) ---------------- */
 const IX = {view: 'overview', edit: null, maps: null, step: 'list'};
-const DY = {step: 'list', edit: null, src: null, status: 'review', stories: [], sources: []};   // Do it yourself tab
-const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['diy', '🛠 Do it yourself'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
+const DY = {step: 'list', edit: null, src: null, status: 'review', stories: [], sources: []};   // Multiple Mapping tab
+const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['diy', '🛠 Multiple Mapping'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
 const ixPost = body => api('/api/admin/index/action', {method: 'POST', retry: false, body: JSON.stringify(body)});
 const ixWhen = t => t ? new Date(t * 1000).toLocaleString() : '-';
 const ixSize = n => { n = +n || 0; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; };
@@ -3225,7 +3226,7 @@ async function indexAdmin(body, sig, tab){
       <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="mapsave" type="button">Save mapping</button><button class="btn ghost small" data-ixa="mapcancel" type="button">Cancel</button></div>
       <small class="note">Telegram does not let a bot list a group's topics. Easiest: send <b>/mapthis &lt;story_id&gt;</b> inside the topic to the Index Bot. Topics the bot has seen (when created or posted in) appear as suggestions above.</small></div>`;
     } else {
-      h = `<div class="actions" style="padding:0 0 10px;margin:0 16px"><button class="btn small" data-ixa="mapnew" type="button">＋ Add mapping</button></div>` + d.mappings.map(m => `<div class="mrow scard" data-ixa="mapcard" data-id="${m.id}" role="button" tabindex="0" style="cursor:pointer" aria-label="Open mapping of ${esc(m.story_title)}">
+      h = `<p class="note" style="margin:0 16px 10px">⚠ Topic Mapping = <b>one</b> topic → <b>one</b> story. If a group / channel / topic holds <b>several stories</b>, use <b>🛠 Multiple Mapping</b> instead. A place cannot have both.</p>` + `<div class="actions" style="padding:0 0 10px;margin:0 16px"><button class="btn small" data-ixa="mapnew" type="button">＋ Add mapping</button></div>` + d.mappings.map(m => `<div class="mrow scard" data-ixa="mapcard" data-id="${m.id}" role="button" tabindex="0" style="cursor:pointer" aria-label="Open mapping of ${esc(m.story_title)}">
         <div style="display:flex;gap:12px;align-items:flex-start">${cov(m.story_cover)}<div style="min-width:0;flex:1"><h4 style="margin:0 0 4px">${esc(m.story_title)}${m.story_topic_name ? ' / ' + esc(m.story_topic_name) : ''}</h4>
           <div><span class="tag ${m.status === 'active' ? 'live' : 'warn'}">${m.status === 'active' ? 'Active' : 'Disabled'}</span> ${m.authorized ? '<span class="tag live">Authorized</span>' : '<span class="tag warn">Not authorized</span>'}</div></div></div>
         <div class="by" style="margin-top:8px">${esc(m.supergroup_name || m.supergroup_id)} (${m.supergroup_id}) · topic ${esc(m.topic_name || '')} #${m.topic_id} · waiting: ${m.waiting}</div><div class="by">Created ${ixWhen(m.created)} · Updated ${ixWhen(m.updated)}</div>
@@ -3330,7 +3331,7 @@ async function ixClick(ev){
       const pid = b.dataset.pid, q = c => document.querySelector(c + '[data-pid="' + pid + '"]');
       return once('dyfix' + pid, async () => { try{ const r = await ixPost({op: 'diy_fix', ids: [+pid], story: q('.dy_ps').value, topic: q('.dy_pt').value, ep: q('.dy_pe').value, title: q('.dy_ptitle').value}); toast(r.errors && r.errors.length ? r.errors[0] : 'Saved'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
     }
-    if (a === 'dycsv') return once('dycsv', async () => { try{ const r = await ixPost({op: 'diy_csv', id}); const u = URL.createObjectURL(new Blob(['\ufeff' + r.csv], {type: 'text/csv'})); const l = document.createElement('a'); l.href = u; l.download = 'diy_' + id + '.csv'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }catch(e){ toast(adminErr(e)); } });
+    if (a === 'dycsv') return once('dycsv', async () => { try{ const r = await ixPost({op: 'diy_csv', id}); const u = URL.createObjectURL(new Blob(['\ufeff' + r.csv], {type: 'text/csv'})); const l = document.createElement('a'); l.href = u; l.download = 'multiple_mapping_' + id + '.csv'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }catch(e){ toast(adminErr(e)); } });
     return;
   }
   if (a === 'mapsave') return run({op: 'map_save', id: IX.edit && IX.edit.id, supergroup_id: $('#ix_sg').value.trim(), topic_id: $('#ix_tp').value.trim(), supergroup_name: $('#ix_sgn').value, topic_name: $('#ix_tpn').value, story_id: $('#ix_story').value, story_topic_id: $('#ix_stopic').value}, () => { IX.edit = null; IX.step = 'list'; return 'Mapping saved'; });
