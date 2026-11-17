@@ -3448,18 +3448,32 @@ function vfHome(){
   if (!s.free) return vfShell('<div class="vf-card"><p>Free access is not available right now.</p></div>');
   if (s.ban) return vfShell(`<div class="vf-card"><b>&#9940; Access suspended</b><p>${s.ban.permanent ? 'Your access has been permanently suspended. For any concerns, please contact the administrator.' : 'Your access is suspended until ' + esc(new Date(s.ban.until * 1000).toLocaleString()) + '.'}</p></div>`);
   const sess = s.session, live = s.link, cd = s.cooldown;
-  const resume = live ? `<div class="vf-card"><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small><button class="btn block" data-vfgo="resume" style="margin-top:10px" type="button">Continue</button></div>` : '';
+  const resume = live ? `<div class="vf-card"><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small><button class="btn block" data-vfgo="resume" style="margin-top:10px" type="button">Continue</button>${live.state === 'opened' ? '<button class="btn block ghost" data-vfgo="swap" style="margin-top:8px" type="button">&#128260; Link not working? Get another link</button>' : ''}</div>` : '';
   const one = !VF.story ? '' : (p.story || p.global) ? `<div class="vf-card"><b>&#9989; This story is unlocked</b><small>${p.story ? 'Active for ' + vfLeft(p.story - nowS) : 'Covered by your all-stories pass'}</small></div>`
     : `<div class="vf-card"><b>&#128214; Unlock this story</b><small>1 verification &middot; ${s.pass_hours} hours &middot; every episode of this story</small>${cd['1'] > 0 ? `<p>Please try again in ${vfLeft(cd['1'])}.</p>` : `<button class="btn block" data-vfgo="1" style="margin-top:10px" type="button">Start</button>`}</div>`;
   const four = p.global ? `<div class="vf-card"><b>&#127881; All stories are unlocked</b><small>Active for ${vfLeft(p.global - nowS)}</small></div>`
     : `<div class="vf-card"><b>&#127760; Unlock all stories</b><small>4 verifications in a row &middot; ${s.pass_hours} hours &middot; any story</small>${sess && sess.mode === 4 ? `<p>Verification ${sess.done} of ${sess.need} complete &middot; links used ${sess.links_used} of ${sess.links_max}</p>` : ''}${cd['4'] > 0 && !(sess && sess.mode === 4) ? `<p>Please try again in ${vfLeft(cd['4'])}.</p>` : `<button class="btn block" data-vfgo="4" style="margin-top:10px" type="button">${sess && sess.mode === 4 ? 'Next verification' : 'Start'}</button>`}</div>`;
   vfShell(`${resume}${one}${four}${s.tutorial && s.tutorial !== 'off' ? '<button class="btn block ghost" data-vftut="1" style="margin-bottom:12px" type="button">&#128250; Tutorial: how to verify</button>' : ''}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`);
-  $('#verify').onclick = e => { if (e.target.closest('[data-vftut]')) return vfTutorial(); const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); b.disabled = true; vfStart(+m); };
+  $('#verify').onclick = e => { if (e.target.closest('[data-vftut]')) return vfTutorial(); const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; vfStart(+m); };
 }
 async function vfStart(mode){
   try{ const j = await api('/api/vf/start', {method: 'POST', retry: false, body: JSON.stringify({mode, story: mode === 1 ? VF.story : ''})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
   catch(e){ const d = e.data || {}, m = {cooldown: 'Please try again in ' + vfLeft(d.seconds || 0) + '.', busy: 'Another verification is already in progress. Please complete it first.', banned: 'Your access is currently suspended.', exhausted: 'Verification Not Complete. All available links have been used. Please try again after the cooldown.', already: 'You already have access.', disabled: 'Free access is not available right now.'}[d.error];
     toast(m || vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} }
+}
+function vfWaiting(){
+  const s = VF.st.session || {}, left = Math.max(0, (s.links_max || 2) - (s.links_used || 0));
+  vfShell(`<div class="vf-card"><b>&#8987; Waiting for the ad</b><p>Complete the ad in your browser. You will return here automatically.</p></div>
+    <div class="vf-card"><b>Link not working?</b><small>Get another link from a different shortener. This link is closed and counts as used. Links left after this: ${left}.</small><button class="btn block ghost" id="vfSwap" style="margin-top:10px" type="button">&#128260; Get another link</button></div>`);
+  $('#vfSwap').onclick = vfSwap;
+}
+async function vfSwap(){
+  const tok = VF.link && VF.link.token || (VF.st.link && VF.st.link.token); if (!tok) return;
+  const s = VF.st.session || {}, left = Math.max(0, (s.links_max || 2) - (s.links_used || 0));
+  const msg = left > 0 ? 'Get another link? This link will be closed and counts as used.' : 'This is your last link. Closing it ends this verification and starts the cooldown. Continue?';
+  const go = async () => { try{ const j = await api('/api/vf/swap', {method: 'POST', retry: false, body: JSON.stringify({token: tok})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
+    catch(e){ const d = e.data || {}; toast(d.error === 'cooldown' ? 'Verification Not Complete. Please try again in ' + vfLeft(d.seconds || 0) + '.' : vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} } };
+  if (tg && tg.showConfirm) tg.showConfirm(msg, ok => { if (ok) go(); }); else if (confirm(msg)) go();
 }
 async function vfTutorial(){
   try{ const r = await api('/api/vf/tutorial', {method: 'POST', retry: false, body: '{}'});
@@ -3470,7 +3484,7 @@ async function vfTutorial(){
 function vfResume(){
   const l = VF.st.link; if (!l) return vfHome(); VF.link = {token: l.token, idx: l.idx, role: l.role};
   if (l.state === 'issued' || l.state === 'started') return vfStartPage();
-  if (l.state === 'opened') return vfShell(`<div class="vf-card"><b>&#8987; Waiting for the ad</b><p>Complete the ad in your browser. You will return here automatically.</p></div>`);
+  if (l.state === 'opened') return vfWaiting();
   vfEnd(l.token);
 }
 function vfCaptcha(box, stage, onOk){
@@ -3512,7 +3526,7 @@ async function vfStartPage(){
   const go = $('#vfGo'), paint = vfGate(go, b.wait); if ($('#vfTut2')) $('#vfTut2').onclick = vfTutorial;
   vfCaptcha($('#vfC'), 1, () => { VF.done.c = true; paint(); }); vfSlider($('#vfP'), 1, b.pz, () => { VF.done.p = true; paint(); });
   go.onclick = async () => { go.disabled = true; try{ const r = await api('/api/vf/open', {method: 'POST', retry: false, body: JSON.stringify({token: l.token})}); clearInterval(VF.timer);
-      vfShell(`<div class="vf-card"><b>&#8987; Waiting for the ad</b><p>Complete the ad in your browser. You will return here automatically.</p></div>`);
+      vfWaiting();
       if (tg && tg.openLink) tg.openLink(r.url); else window.open(r.url, '_blank'); }
     catch(e){ toast(vfErr(e)); paint(); } };
 }
@@ -3594,6 +3608,10 @@ function paintTiers(body){
     <div class="tg-card"><b>Tutorial video</b><small>A button in the verification screen and the /tutorial command. "Open link" opens the channel post; "Send copy" makes the bot copy the video into the member's chat (the bot must be able to read that channel).</small>
       <div class="tg-one" style="margin-top:8px"><label>How to show it<select data-k="tutorial_mode" style="width:100%;margin-top:4px;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--text)"><option value="off"${c.tutorial_mode === 'off' ? ' selected' : ''}>Off</option><option value="link"${c.tutorial_mode === 'link' ? ' selected' : ''}>Open link</option><option value="copy"${c.tutorial_mode === 'copy' ? ' selected' : ''}>Send copy</option></select></label></div>
       <div class="tg-one" style="margin-top:8px"><label>Channel post link (https://t.me/channel/12 or https://t.me/c/123456789/12)<input type="text" data-k="tutorial_link" value="${esc(c.tutorial_link)}" autocomplete="off"></label></div></div>
+    <div class="tg-card"><b>AJ Group Manager</b><small>Story search works in this one group (/search name). Add the Group Manager bot to the group, then put the group's ID here. 0 = off.</small>
+      <div class="tg-one" style="margin-top:8px"><label>Group ID (-100...)<input type="text" data-k="group_chat" value="${esc(c.group_chat)}" autocomplete="off"></label></div>
+      <div class="tg-one" style="margin-top:8px"><label>Remove the answer after (seconds, 0 = keep)<input type="number" data-k="group_delete_sec" value="${esc(c.group_delete_sec)}"></label></div>
+      <div class="tg-row" style="margin-top:12px"><div><b>Search by typing</b><small>Typing a story name is enough. The bot answers only when something matches. Needs the bot's privacy mode switched off.</small></div><label class="tg-sw"><input type="checkbox" data-k="group_plain"${c.group_plain ? ' checked' : ''}><i></i></label></div></div>
     <div class="tg-card"><b>Links and channels</b>${TIER_TXT.map(txt).join('')}</div>
     <div class="actions" style="padding:0 16px 12px"><button class="btn block" id="tgSave" type="button">Save settings</button></div>
     <div class="tg-card"><b>Banned members</b><div style="margin-top:6px">${bans}</div></div>
@@ -4608,6 +4626,9 @@ function splashInit(){
   splashInit(); updateCartBadge();
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
   if (new URLSearchParams(location.search).get('open') === 'feedback') setTimeout(openFeedback, 500);          // the button under the support row
+  { const _q = new URLSearchParams(location.search), vt = _q.get('vf'), vs = _q.get('verify');                  // opened by the AJ Verification bot
+    if (vt && /^[\w-]{16,100}$/.test(vt)) setTimeout(() => vfEnd(vt), 500);                                    // back from the ad: the last step
+    else if (vs) setTimeout(() => openVerify(vs === 'all' ? '' : vs), 500); }                                  // verify for one story, or for all
   try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
   try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
   api('/api/away').then(a => { S.away = a; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
