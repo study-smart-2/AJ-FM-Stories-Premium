@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>(function(){try{var e=localStorage.getItem('ajfm_env');if(e==='free')document.documentElement.className+=' env-free';}catch(x){}})();</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AJ's FM Stories Premium</title>
@@ -16,6 +17,34 @@
   --sans:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+/* ===== two separate environments in this one file: html.env-free shows the Free tier app, otherwise the Premium app ===== */
+#freeApp,#envPill{display:none}
+html.env-free #freeApp{display:block}
+html.env-free body>header.appbar,html.env-free body>main#view,html.env-free body>nav.bnav,html.env-free body>#splash,html.env-free body>section.sheet:not(#verify):not(#vffb):not(#fa-story){display:none!important}
+#envPill.on{display:block;position:fixed;right:12px;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 12px);z-index:12;border:1px solid var(--line);background:var(--panel2);color:var(--gold-2);border-radius:999px;padding:9px 14px;font-weight:700;box-shadow:0 4px 18px #0008}
+html.env-free #envPill.on{bottom:calc(env(safe-area-inset-bottom,0px) + 14px)}
+#freeApp{min-height:100vh;padding-bottom:90px}
+.fa-hd{position:sticky;top:0;z-index:5;background:var(--ink);padding:calc(12px + env(safe-area-inset-top,0px)) 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fa-hd b{font-family:var(--serif);font-size:22px}.fa-hd small{display:block;color:var(--muted);font-size:12px}.fa-acts{display:flex;gap:8px}
+.fa-b{background:var(--gold);color:#1a1405;border:0;border-radius:12px;padding:11px 16px;font-weight:800;font-family:inherit;cursor:pointer}
+.fa-b.g{background:transparent;color:var(--gold-2);border:1px solid var(--line)}.fa-b.s{padding:7px 12px;font-size:13px}.fa-b.w{display:block;width:100%}.fa-b:disabled{opacity:.5}
+.fa-search{padding:0 14px 8px;position:sticky;top:62px;z-index:4;background:var(--ink)}
+.fa-search input{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surf);color:var(--text);font-family:inherit}
+.fa-tabs{display:flex;gap:8px;padding:0 14px 10px;overflow-x:auto}.fa-tabs button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:20px;padding:7px 14px;white-space:nowrap;font-family:inherit;cursor:pointer}
+.fa-tabs button.on{background:var(--gold);border-color:var(--gold);color:#1a1405;font-weight:800}
+.fa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:4px 14px 20px}@media(min-width:560px){.fa-grid{grid-template-columns:repeat(3,1fr)}}
+.fa-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:left;color:inherit;padding:0;font-family:inherit;cursor:pointer}
+.fa-cv{aspect-ratio:1/1;background:linear-gradient(135deg,var(--cv-a),var(--cv-b));display:grid;place-items:center;font-size:40px;overflow:hidden}.fa-cv img{width:100%;height:100%;object-fit:cover;display:block}
+.fa-card .m{padding:10px}.fa-card b{display:block;font-size:14px;line-height:1.3;overflow-wrap:anywhere}.fa-card small{display:block;color:var(--muted);font-size:12px;margin-top:3px;overflow-wrap:anywhere}
+.fa-note{color:var(--muted);font-size:13px;margin:10px 14px}.fa-pad{padding:0 14px}
+.fa-sk{height:120px;border-radius:14px;background:linear-gradient(90deg,var(--sk-a),var(--sk-b),var(--sk-a));background-size:200% 100%;animation:fask 1.2s infinite}@keyframes fask{to{background-position:-200% 0}}
+.fa-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;position:sticky;top:0;background:var(--ink);z-index:2;border-bottom:1px solid var(--line)}.fa-top strong{flex:1;text-align:center;font-size:16px}
+.fa-sh{display:flex;gap:14px;padding:14px}.fa-sh .fa-cv{width:110px;flex:none;border-radius:14px}.fa-sh h2{margin:0 0 4px;font-family:var(--serif);font-size:24px;line-height:1.15}.fa-sh small{display:block;color:var(--muted);margin-top:4px}
+.fa-chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 8px}.fa-chips button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:18px;padding:6px 12px;font-family:inherit;cursor:pointer}.fa-chips button.on{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:800}
+.fa-ep{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line)}.fa-en{min-width:44px;color:var(--gold-2);font-weight:800}.fa-et{flex:1;min-width:0}.fa-et b{display:block;overflow-wrap:anywhere}.fa-et small{color:var(--muted)}
+.fa-warn{color:var(--warn);font-size:13px;padding:2px 14px}
+.fa-player{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--panel2);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}.fa-player b{display:block;font-size:13px;margin-bottom:4px}.fa-player audio{width:100%}
 .nopremium .pr,.nopremium .atc,.nopremium .sbar,.nopremium [data-atc],.nopremium [data-tab="cart"]{display:none!important}
 .vf-body{padding:16px}.vf-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}.vf-card small{color:var(--muted);display:block}.vf-card p{margin:6px 0}
 .vf-track{position:relative;height:46px;border-radius:23px;background:var(--surf);border:1px solid var(--line);margin:8px 0;touch-action:none}
@@ -1171,6 +1200,15 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="combopage" aria-label="Story combinations"></section>
 <section class="sheet" id="couponed" aria-label="Coupon editor"></section>
+<div id="freeApp" aria-label="Free stories">
+  <div class="fa-hd"><div><b>AJ FM Stories</b><small>Free listening</small></div><div class="fa-acts"><button class="fa-b g s" id="faAccess" type="button">&#128275; My access</button><button class="fa-b g s" id="faFb" type="button" aria-label="Feedback">&#128172;</button></div></div>
+  <div class="fa-search"><input id="faQ" type="search" placeholder="Search stories" autocomplete="off" enterkeyhint="search"></div>
+  <div class="fa-tabs" id="faTabs"></div>
+  <main id="faList"></main>
+  <div class="fa-player" id="faPlayer" hidden><b id="faPT"></b><audio id="faAud" controls preload="none"></audio></div>
+</div>
+<section class="sheet" id="fa-story" aria-label="Story"></section>
+<button id="envPill" type="button"></button>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -4622,18 +4660,116 @@ function splashInit(){
   }).catch(() => {});
 }
 
+/* ===================== Two environments in this one file ===================== */
+const ENV = (() => {
+  const root = document.documentElement, e = {cur: null, ready: null};
+  const get = k => { try{ return localStorage.getItem(k); }catch(x){ return null; } }, put = (k, v) => { try{ localStorage.setItem(k, v); }catch(x){} };
+  e.set = env => {
+    e.cur = env; root.classList.toggle('env-free', env === 'free'); put('ajfm_env', env);
+    const pill = $('#envPill'), can = TIERS.free && (TIERS.premium || S.admin);                       // a way to the other app, only when the admin allows both (or to preview as admin)
+    pill.classList.toggle('on', !!can); pill.textContent = env === 'free' ? '\u{1F48E} Premium' : '\u{1F193} Free stories';
+    if (env === 'free') FreeApp.start();
+  };
+  e.decide = m => {
+    const t = (m && m.tiers) || TIERS, admin = !!(m && m.admin), want = new URLSearchParams(location.search).get('env'), pick = get('ajfm_pick'); let env = 'premium';
+    if (t.free && !t.premium) env = admin ? (want === 'free' || pick === 'free' ? 'free' : 'premium') : 'free';              // only Free allowed: members get the Free app
+    else if (t.free && t.premium) env = (want === 'free' || (!want && pick === 'free')) ? 'free' : 'premium';                 // both allowed: the member's last choice
+    e.set(env);
+  };
+  e.flip = () => { const next = e.cur === 'free' ? 'premium' : 'free'; put('ajfm_pick', next); e.set(next); window.scrollTo(0, 0); };
+  return e;
+})();
+document.addEventListener('click', ev => { if (ev.target.closest('#envPill')) ENV.flip(); });
+
+const FreeApp = (() => {
+  /* The Free tier app: its own screens and its own components, with nothing about money in them. It shares only the engine: api(), the verification and feedback screens. */
+  const H = {q: '', tab: 'all', items: [], total: 0, loading: false}, V = {id: null, story: null, eps: [], total: 0, topic: '', loading: false};
+  let started = false;
+  const src = c => String(c).startsWith('/') && !String(c).startsWith('//') ? API_URL.replace(/\/$/, '') + c : c;
+  const cv = c => isImg(c) ? '<img src="' + esc(src(c)) + '" alt="" loading="lazy" data-fb="&#128214;">' : '<span>' + esc(c || '\u{1F4D6}') + '</span>';
+  const dur = s => { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ' h ' + m + ' min' : m ? m + ' min' : s + ' s'; };
+  const err = e => (e && e.data && e.data.message) || (e && e.message) || 'Something went wrong. Please try again.';
+
+  function paintTabs(){ $('#faTabs').innerHTML = [['all', 'All'], ['ongoing', 'Ongoing'], ['completed', 'Completed']].map(([k, l]) => '<button class="' + (H.tab === k ? 'on' : '') + '" data-tab="' + k + '" type="button">' + l + '</button>').join(''); }
+  function paintHome(){
+    const list = H.items.filter(s => H.tab === 'all' || String(s.status || '').toLowerCase() === H.tab); let out = '';
+    if (H.loading && !H.items.length) out = '<div class="fa-pad"><div class="fa-sk"></div></div>';
+    else if (!list.length) out = '<p class="fa-note">' + (H.q ? 'No story matches your search.' : 'No stories here yet.') + '</p>';
+    else out = '<div class="fa-grid">' + list.map(s => '<button class="fa-card" data-open="' + esc(s.id) + '" type="button"><div class="fa-cv">' + cv(s.cover) + '</div><div class="m"><b>' + esc(s.title) + '</b><small>' + esc([s.genre, s.language].filter(Boolean).join(' \u00b7 ')) + '</small><small>' + esc(s.status || '') + (s.episodes ? ' \u00b7 ' + s.episodes + ' ep' : '') + '</small></div></button>').join('') + '</div>';
+    if (H.items.length < H.total) out += '<div class="fa-pad"><button class="fa-b g w" id="faMore" type="button">' + (H.loading ? 'Loading...' : 'Load more') + '</button></div>';
+    $('#faList').innerHTML = out;
+  }
+  async function loadHome(reset){
+    if (H.loading) return; H.loading = true; if (reset){ H.items = []; H.total = 0; } paintHome();
+    try{ const j = await api('/api/catalog?limit=60&offset=' + H.items.length + (H.q ? '&q=' + encodeURIComponent(H.q) : '')); H.items = H.items.concat(j.stories || []); H.total = j.total || H.items.length; }
+    catch(e){ toast(err(e)); }
+    H.loading = false; paintHome();
+  }
+  async function loadEps(reset){
+    if (V.loading) return; V.loading = true; if (reset) V.eps = [];
+    try{ const j = await api('/api/story/' + encodeURIComponent(V.id) + '?limit=50&offset=' + V.eps.length + (V.topic ? '&topic=' + encodeURIComponent(V.topic) : '')); V.story = j.story; V.total = j.total || 0; V.eps = V.eps.concat(j.eps || []); }
+    catch(e){ toast(err(e)); if (!V.story){ V.loading = false; return closeSheet('fa-story'); } }
+    V.loading = false; paintStory();
+  }
+  function paintStory(){
+    const s = V.story, el = $('#fa-story'), top = t => '<div class="fa-top"><button class="fa-b g s" id="faBack" type="button">Back</button><strong>' + esc(t) + '</strong><span style="width:60px"></span></div>';
+    if (!s){ el.innerHTML = top('') + '<div class="fa-pad" style="margin-top:14px"><div class="fa-sk"></div></div>'; return; }
+    const tps = s.topics || [], locked = V.eps.some(e => e.locked), gaps = V.topic ? (tps.find(t => t.id === V.topic) || {}).gaps : (tps.length ? '' : s.gaps_none);
+    el.innerHTML = top(s.title)
+      + '<div class="fa-sh"><div class="fa-cv">' + cv(s.cover) + '</div><div><h2>' + esc(s.title) + '</h2><small>' + esc(s.author || '') + '</small><small>' + esc([s.genre, s.sub_genre].filter(Boolean).join(', ')) + '</small><small>' + esc([s.language, s.status].filter(Boolean).join(' \u00b7 ')) + '</small></div></div>'
+      + (s.desc ? '<p class="fa-note" style="color:var(--text)">' + esc(s.desc) + '</p>' : '')
+      + (tps.length ? '<div class="fa-chips"><button class="' + (V.topic ? '' : 'on') + '" data-topic="" type="button">All</button>' + tps.map(t => '<button class="' + (V.topic === t.id ? 'on' : '') + '" data-topic="' + esc(t.id) + '" type="button">' + esc(t.name) + '</button>').join('') + '</div>' : '')
+      + (TIERS.free && locked ? '<div class="fa-pad" style="margin:6px 0 10px"><button class="fa-b w" data-vf="1" type="button">&#128275; Unlock with free verification</button></div>' : '')
+      + (gaps ? '<div class="fa-warn">&#9888; Missing episodes: ' + esc(gaps) + '</div>' : '')
+      + V.eps.map(e => '<div class="fa-ep"><div class="fa-en">' + e.no + (e.to && e.to > e.no ? '-' + e.to : '') + '</div><div class="fa-et"><b>' + esc(e.title || 'Episode ' + e.no) + '</b><small>' + (e.duration ? dur(e.duration) : '') + '</small></div>'
+        + (e.locked ? '<button class="fa-b g s" data-lock="1" type="button" aria-label="Locked">&#128274;</button>' : '<button class="fa-b s" data-play="' + e.id + '" type="button" aria-label="Play here">&#9654;</button> <button class="fa-b g s" data-send="' + e.id + '" type="button" aria-label="Send to my chat">&#128233;</button>') + '</div>').join('')
+      + (V.eps.length < V.total ? '<div class="fa-pad" style="margin-top:10px"><button class="fa-b g w" id="faMoreEps" type="button">' + (V.loading ? 'Loading...' : 'Load more episodes') + '</button></div>' : '')
+      + (!V.eps.length && !V.loading ? '<p class="fa-note">No episodes yet.</p>' : '');
+  }
+  async function openStory(id){ Object.assign(V, {id, story: null, eps: [], total: 0, topic: ''}); paintStory(); openSheet('fa-story'); $('#fa-story').scrollTop = 0; await loadEps(true); }
+  async function play(id){
+    try{ const r = await api('/api/play/' + id, {method: 'POST', retry: false, body: '{}'}), e = V.eps.find(x => x.id === id), a = $('#faAud');
+      $('#faPT').textContent = (V.story ? V.story.title + ' \u00b7 ' : '') + (e ? 'Ep ' + e.no : ''); $('#faPlayer').hidden = false; a.src = r.url; await a.play().catch(() => {}); }
+    catch(er){ if (er.data && er.data.error === 'locked') openVerify(V.id); else toast(err(er)); }
+  }
+  async function send(id){
+    try{ const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: id, count: 1})}); toast('Opening the audio bot...', 2500);
+      const url = 'https://t.me/' + r.bot + '?start=d_' + r.token;
+      if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank'); }
+    catch(er){ if (er.data && er.data.error === 'locked') openVerify(V.id); else toast(err(er)); }
+  }
+  function start(){
+    if (started) return; started = true; paintTabs(); loadHome(true);
+    $('#freeApp').addEventListener('click', e => {
+      const t = e.target.closest('button'); if (!t) return;
+      if (t.dataset.tab){ H.tab = t.dataset.tab; paintTabs(); return paintHome(); }
+      if (t.dataset.open) return openStory(t.dataset.open);
+      if (t.id === 'faMore') return loadHome(false);
+      if (t.id === 'faAccess') return openVerify('');
+      if (t.id === 'faFb') return openFeedback();
+    });
+    $('#fa-story').addEventListener('click', e => {
+      const t = e.target.closest('button'); if (!t) return;
+      if (t.id === 'faBack') return closeSheet('fa-story');
+      if (t.id === 'faMoreEps') return loadEps(false);
+      if (t.dataset.topic !== undefined){ V.topic = t.dataset.topic; return loadEps(true); }
+      if (t.dataset.play) return play(+t.dataset.play);
+      if (t.dataset.send) return send(+t.dataset.send);
+      if (t.dataset.lock || t.dataset.vf) return openVerify(V.id);
+    });
+    let timer; $('#faQ').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { H.q = e.target.value.trim(); loadHome(true); }, 350); });
+  }
+  return {start, openStory};
+})();
+
 (function boot(){
   splashInit(); updateCartBadge();
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
-  if (new URLSearchParams(location.search).get('open') === 'feedback') setTimeout(openFeedback, 500);          // the button under the support row
-  { const _q = new URLSearchParams(location.search), vt = _q.get('vf'), vs = _q.get('verify');                  // opened by the AJ Verification bot
-    if (vt && /^[\w-]{16,100}$/.test(vt)) setTimeout(() => vfEnd(vt), 500);                                    // back from the ad: the last step
-    else if (vs) setTimeout(() => openVerify(vs === 'all' ? '' : vs), 500); }                                  // verify for one story, or for all
   try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
   try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
   api('/api/away').then(a => { S.away = a; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/terms').then(t => { if (t.user && !t.accepted) showTerms(); }).catch(() => {});
-  api('/api/me').then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; if (m.tiers){ TIERS = m.tiers; vfApplyTiers(); } }).catch(() => {});
+  ENV.ready = api('/api/me', {timeout: 9000, retry: false}).then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; if (m.tiers){ TIERS = m.tiers; vfApplyTiers(); } ENV.decide(m); }).catch(() => ENV.decide(null));      // which app this member sees: the admin's Free / Premium switches
   applyTheme(); applyLang(); renderHeader();
   api('/api/reviews?limit=12').then(d => { S.reviews = d; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
@@ -4641,9 +4777,15 @@ function splashInit(){
   setTab(S.tab);
   const _sid = new URLSearchParams(location.search).get('story');
   const _sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
-  if (_sp.startsWith('story_')) setTimeout(() => openStory(_sp.slice(6)), 300);       // shared link: opens the story directly
-  else if (/^vf_[\w-]{16,100}$/.test(_sp)) setTimeout(() => vfEnd(_sp.slice(3)), 400);            // back from the ad: the end step of the verification
-  else if (_sid) setTimeout(() => openStory(_sid), 300);      // deep link from the bot: ?story=<story id>
+  ENV.ready.then(() => {                                                                  // links are opened in the app the member is actually in
+    const q = new URLSearchParams(location.search), vt = q.get('vf'), vs = q.get('verify'), free = ENV.cur === 'free', open = id => free ? FreeApp.openStory(id) : openStory(id);
+    if (/^vf_[\w-]{16,100}$/.test(_sp)) vfEnd(_sp.slice(3));                                // back from the ad: the end step of the verification
+    else if (vt && /^[\w-]{16,100}$/.test(vt)) vfEnd(vt);                                   // opened by the AJ Verification bot: the last step
+    else if (vs) openVerify(vs === 'all' ? '' : vs);                                       // verify for one story, or for all
+    else if (q.get('open') === 'feedback') openFeedback();                                 // the button under the support row
+    else if (_sp.startsWith('story_')) open(_sp.slice(6));                                 // shared link: opens the story directly
+    else if (_sid) open(_sid);                                                             // deep link from the bot: ?story=<story id>
+  });
 })();
 
 
