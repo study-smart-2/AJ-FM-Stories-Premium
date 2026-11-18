@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>(function(){try{var e=localStorage.getItem('ajfm_env');if(e==='free')document.documentElement.className+=' env-free';}catch(x){}})();</script>
+<script>
+/* One page for both bots. Free build:  index.html?tier=free   Premium build: index.html (or ?tier=premium). Remembered for the session. */
+(function(){var f=false;try{var q=new URLSearchParams(location.search),h=new URLSearchParams((location.hash||'').replace(/^#\??/,'')),t=q.get('tier')||h.get('tier')||(q.has('free')?'free':'')||(h.has('free')?'free':'')||(q.has('premium')?'premium':'');
+if(!t){try{t=sessionStorage.getItem('aj_tier')||''}catch(e){}}f=t==='free';try{sessionStorage.setItem('aj_tier',f?'free':'premium')}catch(e){}}catch(e){}
+window.__FREE_BUILD=f;if(f)document.documentElement.className+=' free-build';})();
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AJ's FM Stories Premium</title>
+<title>AJ's FM Stories</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,34 +23,9 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
-/* ===== two separate environments in this one file: html.env-free shows the Free tier app, otherwise the Premium app ===== */
-#freeApp,#envPill{display:none}
-html.env-free #freeApp{display:block}
-html.env-free body>header.appbar,html.env-free body>main#view,html.env-free body>nav.bnav,html.env-free body>#splash,html.env-free body>section.sheet:not(#verify):not(#vffb):not(#fa-story){display:none!important}
-#envPill.on{display:block;position:fixed;right:12px;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 12px);z-index:12;border:1px solid var(--line);background:var(--panel2);color:var(--gold-2);border-radius:999px;padding:9px 14px;font-weight:700;box-shadow:0 4px 18px #0008}
-html.env-free #envPill.on{bottom:calc(env(safe-area-inset-bottom,0px) + 14px)}
-#freeApp{min-height:100vh;padding-bottom:90px}
-.fa-hd{position:sticky;top:0;z-index:5;background:var(--ink);padding:calc(12px + env(safe-area-inset-top,0px)) 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.fa-hd b{font-family:var(--serif);font-size:22px}.fa-hd small{display:block;color:var(--muted);font-size:12px}.fa-acts{display:flex;gap:8px}
-.fa-b{background:var(--gold);color:#1a1405;border:0;border-radius:12px;padding:11px 16px;font-weight:800;font-family:inherit;cursor:pointer}
-.fa-b.g{background:transparent;color:var(--gold-2);border:1px solid var(--line)}.fa-b.s{padding:7px 12px;font-size:13px}.fa-b.w{display:block;width:100%}.fa-b:disabled{opacity:.5}
-.fa-search{padding:0 14px 8px;position:sticky;top:62px;z-index:4;background:var(--ink)}
-.fa-search input{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surf);color:var(--text);font-family:inherit}
-.fa-tabs{display:flex;gap:8px;padding:0 14px 10px;overflow-x:auto}.fa-tabs button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:20px;padding:7px 14px;white-space:nowrap;font-family:inherit;cursor:pointer}
-.fa-tabs button.on{background:var(--gold);border-color:var(--gold);color:#1a1405;font-weight:800}
-.fa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:4px 14px 20px}@media(min-width:560px){.fa-grid{grid-template-columns:repeat(3,1fr)}}
-.fa-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:left;color:inherit;padding:0;font-family:inherit;cursor:pointer}
-.fa-cv{aspect-ratio:1/1;background:linear-gradient(135deg,var(--cv-a),var(--cv-b));display:grid;place-items:center;font-size:40px;overflow:hidden}.fa-cv img{width:100%;height:100%;object-fit:cover;display:block}
-.fa-card .m{padding:10px}.fa-card b{display:block;font-size:14px;line-height:1.3;overflow-wrap:anywhere}.fa-card small{display:block;color:var(--muted);font-size:12px;margin-top:3px;overflow-wrap:anywhere}
-.fa-note{color:var(--muted);font-size:13px;margin:10px 14px}.fa-pad{padding:0 14px}
-.fa-sk{height:120px;border-radius:14px;background:linear-gradient(90deg,var(--sk-a),var(--sk-b),var(--sk-a));background-size:200% 100%;animation:fask 1.2s infinite}@keyframes fask{to{background-position:-200% 0}}
-.fa-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;position:sticky;top:0;background:var(--ink);z-index:2;border-bottom:1px solid var(--line)}.fa-top strong{flex:1;text-align:center;font-size:16px}
-.fa-sh{display:flex;gap:14px;padding:14px}.fa-sh .fa-cv{width:110px;flex:none;border-radius:14px}.fa-sh h2{margin:0 0 4px;font-family:var(--serif);font-size:24px;line-height:1.15}.fa-sh small{display:block;color:var(--muted);margin-top:4px}
-.fa-chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 8px}.fa-chips button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:18px;padding:6px 12px;font-family:inherit;cursor:pointer}.fa-chips button.on{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:800}
-.fa-ep{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line)}.fa-en{min-width:44px;color:var(--gold-2);font-weight:800}.fa-et{flex:1;min-width:0}.fa-et b{display:block;overflow-wrap:anywhere}.fa-et small{color:var(--muted)}
-.fa-warn{color:var(--warn);font-size:13px;padding:2px 14px}
-.fa-player{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--panel2);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}.fa-player b{display:block;font-size:13px;margin-bottom:4px}.fa-player audio{width:100%}
 .nopremium .pr,.nopremium .atc,.nopremium .sbar,.nopremium [data-atc],.nopremium [data-tab="cart"]{display:none!important}
+.nopremium .tpr,.nopremium .tlist .tv,.nopremium .flash,.nopremium .cmb-own,.nopremium .cmb-sec{display:none!important}
+html.free-build .pstats{grid-template-columns:repeat(2,1fr)}
 .vf-body{padding:16px}.vf-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}.vf-card small{color:var(--muted);display:block}.vf-card p{margin:6px 0}
 .vf-track{position:relative;height:46px;border-radius:23px;background:var(--surf);border:1px solid var(--line);margin:8px 0;touch-action:none}
 .vf-notch{position:absolute;top:5px;width:36px;height:34px;transform:translateX(-50%);border:2px dashed var(--gold);border-radius:10px}
@@ -1153,7 +1133,7 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <body>
 <div id="splash" role="status" aria-live="polite">
   <div class="sp-deck" id="spDeck"><div class="sp-card p0"><div class="sp-emo">&#128081;</div></div></div>
-  <div class="sp-txt"><h1 id="spTitle">Welcome to AJ's FM Stories Premium</h1><p id="spSub">Your premium audio story store inside Telegram, delivered instantly to your chat.</p></div>
+  <div class="sp-txt"><h1 id="spTitle">Welcome to AJ's FM Stories</h1><p id="spSub">Free audio stories inside Telegram, delivered straight to your chat.</p></div>
   <div class="sp-spin" aria-hidden="true"></div>
 </div>
 
@@ -1200,15 +1180,6 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <section class="sheet" id="offerpage" aria-label="Coupons and offers"></section>
 <section class="sheet" id="combopage" aria-label="Story combinations"></section>
 <section class="sheet" id="couponed" aria-label="Coupon editor"></section>
-<div id="freeApp" aria-label="Free stories">
-  <div class="fa-hd"><div><b>AJ FM Stories</b><small>Free listening</small></div><div class="fa-acts"><button class="fa-b g s" id="faAccess" type="button">&#128275; My access</button><button class="fa-b g s" id="faFb" type="button" aria-label="Feedback">&#128172;</button></div></div>
-  <div class="fa-search"><input id="faQ" type="search" placeholder="Search stories" autocomplete="off" enterkeyhint="search"></div>
-  <div class="fa-tabs" id="faTabs"></div>
-  <main id="faList"></main>
-  <div class="fa-player" id="faPlayer" hidden><b id="faPT"></b><audio id="faAud" controls preload="none"></audio></div>
-</div>
-<section class="sheet" id="fa-story" aria-label="Story"></section>
-<button id="envPill" type="button"></button>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -1217,6 +1188,8 @@ const API_URL      = "https://aj-bot-2.onrender.com";   // your bot server addre
 const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
 const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
+const FREE_BUILD   = !!window.__FREE_BUILD;   // true only for the Free bot (index.html?tier=free): no prices, no cart, no Buy now
+if (FREE_BUILD) document.title = "AJ's FM Stories";
 const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and get the episodes in your bot chat.";
@@ -1341,13 +1314,13 @@ const subGenres = s => hasSubField(s) ? splitGenres(s.sub_genre) : genreList(s).
 const priceMax = s => { if (s.max_price != null) return +s.max_price; if (s.options && s.options.length) return Math.max(...s.options.map(o => +o.price)); return null; };
 const dealOf = (p, s) => Math.round(+p * (100 - s.deal.pct) / 100);
 const priceLabel = s => {                                                       // ONE price, never a range: the highest plan of the story
-  if (!TIERS.premium && !S.admin) return '';
+  if (FREE_BUILD || (!TIERS.premium && !S.admin)) return '';
   if (s.plans === 0) return 'Price soon';
   const hi = priceMax(s), lo = +s.min_price;
   if (hi != null && hi > 0) return money(s.deal ? dealOf(hi, s) : hi) + (s.deal ? ' (-' + s.deal.pct + '%)' : '');
   return lo === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(lo));
 };
-const priceHtml = s => {                                                       // struck-through MRP | highest price | % OFF, all on one line (no MRP / deal: just the price)
+const priceHtml = s => { if (FREE_BUILD) return '';                                                       // struck-through MRP | highest price | % OFF, all on one line (no MRP / deal: just the price)
   const hi = priceMax(s); let cur, old, pct;
   if (s.plans > 0 && hi > 0 && s.deal){ cur = dealOf(hi, s); old = hi; pct = s.deal.pct; }
   else if (s.plans > 0 && hi > 0){
@@ -1357,14 +1330,15 @@ const priceHtml = s => {                                                       /
   if (cur == null) return `<span class="pr">${priceLabel(s)}</span>`;
   return `<span class="pr prx"><span class="prrow"><s class="mrp" aria-label="MRP">${money(old)}</s><span class="prn">${money(cur)}</span><em class="off">${pct}% OFF</em></span></span>`;
 };
-const atcShow = s => (TIERS.premium || S.admin) && s.plans > 0 && (+s.min_price > 0 || (priceMax(s) || 0) > 0 || !!s.deal);          // a story with at least one paid plan gets the button
+const atcShow = s => !FREE_BUILD && (TIERS.premium || S.admin) && s.plans > 0 && (+s.min_price > 0 || (priceMax(s) || 0) > 0 || !!s.deal);          // a story with at least one paid plan gets the button
 const atcBtn = s => atcShow(s) ? `<button class="btn small atc" data-atc="${esc(s.id)}" aria-label="Add ${esc(s.title)} to cart">&#128722; Add to cart</button>` : '';
-const card = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}
+const cardBadge = s => FREE_BUILD ? (s.status === 'Completed' ? 'Completed' : '') : (s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''));
+const card = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, cardBadge(s))}
   <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small>${priceHtml(s)}</button>${atcBtn(s)}</div>`;
 
 /* list card: cover on the left (full height) | title, genre, one line per topic "price | MRP | OFF", Add to cart */
 const tpRows = s => {
-  if (s.plans === 0) return [];
+  if (FREE_BUILD || s.plans === 0) return [];
   let rows = Array.isArray(s.tprice) ? s.tprice.slice() : null;
   if (!rows){ const hi = priceMax(s); if (!(hi > 0)) return []; const m = s.top_mrp !== undefined ? s.top_mrp : (hi === +s.max_price ? s.max_mrp : null); rows = [{name: 'Full Story', price: hi, mrp: +m > hi ? +m : null, pct: +m > hi ? Math.round((m - hi) * 100 / m) : 0}]; }
   return rows.map(r => s.deal && r.price > 0 ? {name: r.name, price: dealOf(r.price, s), mrp: r.price, pct: s.deal.pct} : r);
@@ -1374,8 +1348,8 @@ const rowCard = s => {
   const lines = shown.map(r => `<span class="trow"><span class="tn">${esc(r.name)}</span><span class="tv">${r.price > 0 ? `<span class="prn">${money(r.price)}</span>${r.mrp ? `<s class="mrp" aria-label="MRP">${money(r.mrp)}</s><em class="off">${r.pct}% OFF</em>` : ''}` : '<span class="prn">Free</span>'}</span></span>`).join('')
     + (more > 0 ? `<span class="tmore">+${more} more topic${more === 1 ? '' : 's'}</span>` : '');
   const sub = [mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | ');
-  return `<div class="card rcard cwrap"><button class="plain rcv" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''))}</button>
-  <button class="plain rcb" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><b>${esc(s.title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}<span class="tlist">${lines || `<span class="trow"><span class="tn">${esc(priceLabel(s))}</span></span>`}</span></button>${atcBtn(s)}</div>`;
+  return `<div class="card rcard cwrap"><button class="plain rcv" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, cardBadge(s))}</button>
+  <button class="plain rcb" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}"><b>${esc(s.title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}<span class="tlist">${lines || (priceLabel(s) ? `<span class="trow"><span class="tn">${esc(priceLabel(s))}</span></span>` : '')}</span></button>${atcBtn(s)}</div>`;
 };
 const homeCard = card;                                    // no list shows an episode count any more
 const tierCard = s => homeCard(s);                 // Super deals: same card, highest plan price with its MRP and % OFF
@@ -1399,21 +1373,21 @@ const TR = {
     recents:'Recent searches', tops:'Top searches', clear:'Clear', notif:'Notifications', nonotif:'No notifications yet.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
     cartnote:'Cart and checkout arrive in the next update. For now, open a story and tap Rent or Buy.', melib:'My library', lang:'Language', theme:'Theme', soon:'Soon',
-    wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', sptitle:"Welcome to AJ's FM Stories Premium", spsub:'Your premium audio story store inside Telegram, delivered instantly to your chat.', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'Everything in your cart is paid together in one checkout in the bot. One payment, one screenshot.', ctopic:'Topic', cplanl:'Plan', cskip:'{n} item(s) are not sold any more and were left out', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
+    wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', sptitle:"Welcome to AJ's FM Stories", spsub:'Free audio stories inside Telegram, delivered straight to your chat.', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'Everything in your cart is paid together in one checkout in the bot. One payment, one screenshot.', ctopic:'Topic', cplanl:'Plan', cskip:'{n} item(s) are not sold any more and were left out', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
   hi: {sby:'लेखक', splat:'प्लेटफ़ॉर्म', seps:'एपिसोड', shrs:'घंटे', splan:'प्लान चुनें', smore:'और पढ़ें', sless:'कम दिखाएँ', sbanners:'बैनर', ssub:'उप-शैलियाँ:', stopics:'विषय', slisten:'सुनें', snotes:'नोट्स', stransl:'अनुवादित', sorig:'मूल दिखाएँ',
     gm:'सुप्रभात', ga:'नमस्कार', ge:'शुभ संध्या', cont:'जहाँ छोड़ा था वहीं से सुनें', trending:'ट्रेंडिंग कहानियाँ', flash:'फ्लैश ऑफ़र', deals:'सुपर डील्स', under:'{p} से कम',
     recent:'हाल ही में जोड़ी गईं', ongoing:'चल रही कहानियाँ', completed:'पूरी हो चुकी कहानियाँ', upcoming:'आने वाली कहानियाँ', viewall:'सभी देखें', listen:'अभी सुनें', searchph:'नाम, लेखक, जॉनर या भाषा खोजें',
     recents:'हाल की खोजें', tops:'टॉप सर्च', clear:'हटाएँ', notif:'सूचनाएँ', nonotif:'अभी कोई सूचना नहीं।', home:'होम', discover:'खोजें', library:'लाइब्रेरी', cart:'कार्ट', me:'मैं',
     ends:'खत्म होने में', ended:'खत्म', caught:'आप सब देख चुके हैं। हर हफ्ते नई कहानियाँ आती हैं।', removed:'हिस्ट्री से हटा दिया', cartempty:'आपका कार्ट खाली है',
     cartnote:'कार्ट और चेकआउट अगले अपडेट में आएगा। अभी कहानी खोलकर Rent या Buy दबाएँ।', melib:'मेरी लाइब्रेरी', lang:'भाषा', theme:'थीम', soon:'जल्द',
-    wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', sptitle:"AJ's FM Stories Premium में आपका स्वागत है", spsub:'टेलीग्राम के अंदर आपका प्रीमियम ऑडियो स्टोरी स्टोर, सीधे आपकी चैट में।', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'आपके कार्ट की सभी चीज़ें बॉट में एक ही चेकआउट में खरीदी जाती हैं। एक भुगतान, एक स्क्रीनशॉट।', ctopic:'टॉपिक', cplanl:'प्लान', cskip:'{n} आइटम अब उपलब्ध नहीं हैं, उन्हें छोड़ दिया', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
+    wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', sptitle:"AJ's FM Stories में आपका स्वागत है", spsub:'टेलीग्राम के अंदर मुफ़्त ऑडियो कहानियाँ, सीधे आपकी चैट में।', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'आपके कार्ट की सभी चीज़ें बॉट में एक ही चेकआउट में खरीदी जाती हैं। एक भुगतान, एक स्क्रीनशॉट।', ctopic:'टॉपिक', cplanl:'प्लान', cskip:'{n} आइटम अब उपलब्ध नहीं हैं, उन्हें छोड़ दिया', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
   hing: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Ghante', splan:'Plan chuno', smore:'Aur padho', sless:'Kam dikhao', sbanners:'Banners', ssub:'Sub genres:', stopics:'Topics', slisten:'Suno', snotes:'Notes', stransl:'Translate kiya gaya', sorig:'Original dikhao',
     gm:'Good morning', ga:'Namaste', ge:'Shubh sandhya', cont:'Jahan chhoda wahin se suno', trending:'Trending kahaniyan', flash:'Flash offers', deals:'Super deals', under:'{p} se kam',
     recent:'Naye add hue', ongoing:'Chal rahi kahaniyan', completed:'Poori ho chuki kahaniyan', upcoming:'Aane wali kahaniyan', viewall:'Sab dekho', listen:'Abhi suno', searchph:'Naam, author, genre ya language search karo',
     recents:'Recent searches', tops:'Top searches', clear:'Hatao', notif:'Notifications', nonotif:'Abhi koi notification nahi.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
     ends:'Khatam hone mein', ended:'Khatam', caught:'Aap sab dekh chuke ho. Har hafte nayi kahaniyan aati hain.', removed:'History se hata diya', cartempty:'Aapka cart khali hai',
     cartnote:'Cart aur checkout agle update mein aayega. Abhi story kholkar Rent ya Buy dabao.', melib:'Meri library', lang:'Language', theme:'Theme', soon:'Jald',
-    wishon:'Wishlist mein add hua', wishoff:'Wishlist se hataya', close:'Band karo', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Kahaniyan load ho rahi hain...', more:'Aur explore karo', sptip1:'Secure vault se connect ho rahe hain...', sptip2:'Aapki library sync ho rahi hai...', sptip3:'Kahaniyan load ho rahi hain...', sptip4:'Aapki theme lag rahi hai...', splbl:'LOAD HO RAHA HAI', sptitle:"AJ's FM Stories Premium mein swagat hai", spsub:'Telegram ke andar aapka premium audio story store, seedha aapki chat mein.', dtitle:'Discover aur Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} kahaniyan', dsee:'Saari {n} kahaniyan dekho', dtrend:'Abhi trending', dupd:'Haal mein update', dbud:'Sabse kam price pehle', dnone:'Yahan abhi koi kahani nahi.', dback:'Discover', ltitle:'Meri Library', lw:'Wishlist', ll:'Listening', lo:'Meri Stories', lr:'Rentals', lh:'History', lopen:'Kholo', lres:'Resume', lrem:'Hatao', lref:'Refresh', lhead:'Sunne ki history', lew:'Wishlist khali hai. Kahani par heart dabake yahan save karo.', lel:'Abhi continue karne ko kuch nahi. Koi kahani shuru karo.', leo:'Abhi koi kahani nahi. Payment approve hone par kahani yahan dikhegi.', ler:'Abhi koi active rental nahi.', leh:'Abhi koi purchase request nahi.', lkeep:'Hamesha aapki', luntil:'{d} tak access', lleft:'{t} baaki', ctitle:'Shopping Cart', cempty:'Cart mein koi kahani nahi', cemptynote:'Catalog dekho aur pasandida kahaniyan add karo.', cbrowse:'Home page par dekho', crem:'Hatao', csub:'Subtotal', ctotal:'Total bill', cgo:'Secure checkout par jao', cpay:'Pay karo', cnote:'Cart ki sab cheezein bot mein ek hi checkout mein pay hoti hain. Ek payment, ek screenshot.', ctopic:'Topic', cplanl:'Plan', cskip:'{n} item ab available nahi hain, unhe chhod diya', cadd:'Cart mein add karo', cin:'Cart mein hai', cadded:'Cart mein add hua', cremd:'Cart se hataya', citems:'{n} items', cown:'Pehle se aapki hai, cart se hata di', ptitle:'Mera Account', pguide:'App kaise kaam karta hai aur Guide', preq:'Kahani request karo', psup:'Help aur Support', pfb:'Feedback aur Suggestions', pdisp:'Display Settings', preset:'App data reset karo', presetq:'Isse is device ka cart, theme, language aur search history saaf hogi. Aapki purchases aur library par asar nahi padega.', presetdone:'App data reset ho gaya', preqph:'Kahani ka naam ya keywords', preqgo:'Search', preqfound:'Store mein pehle se hai:', preqnone:'Abhi store mein nahi hai. Bot se request bhejo.', preqbot:'Bot mein request karo', pid:'Telegram ID', pbot:'Bot mein khulega'}
+    wishon:'Wishlist mein add hua', wishoff:'Wishlist se hataya', close:'Band karo', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Kahaniyan load ho rahi hain...', more:'Aur explore karo', sptip1:'Secure vault se connect ho rahe hain...', sptip2:'Aapki library sync ho rahi hai...', sptip3:'Kahaniyan load ho rahi hain...', sptip4:'Aapki theme lag rahi hai...', splbl:'LOAD HO RAHA HAI', sptitle:"AJ's FM Stories mein swagat hai", spsub:'Telegram ke andar free audio kahaniyan, seedha aapki chat mein.', dtitle:'Discover aur Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} kahaniyan', dsee:'Saari {n} kahaniyan dekho', dtrend:'Abhi trending', dupd:'Haal mein update', dbud:'Sabse kam price pehle', dnone:'Yahan abhi koi kahani nahi.', dback:'Discover', ltitle:'Meri Library', lw:'Wishlist', ll:'Listening', lo:'Meri Stories', lr:'Rentals', lh:'History', lopen:'Kholo', lres:'Resume', lrem:'Hatao', lref:'Refresh', lhead:'Sunne ki history', lew:'Wishlist khali hai. Kahani par heart dabake yahan save karo.', lel:'Abhi continue karne ko kuch nahi. Koi kahani shuru karo.', leo:'Abhi koi kahani nahi. Payment approve hone par kahani yahan dikhegi.', ler:'Abhi koi active rental nahi.', leh:'Abhi koi purchase request nahi.', lkeep:'Hamesha aapki', luntil:'{d} tak access', lleft:'{t} baaki', ctitle:'Shopping Cart', cempty:'Cart mein koi kahani nahi', cemptynote:'Catalog dekho aur pasandida kahaniyan add karo.', cbrowse:'Home page par dekho', crem:'Hatao', csub:'Subtotal', ctotal:'Total bill', cgo:'Secure checkout par jao', cpay:'Pay karo', cnote:'Cart ki sab cheezein bot mein ek hi checkout mein pay hoti hain. Ek payment, ek screenshot.', ctopic:'Topic', cplanl:'Plan', cskip:'{n} item ab available nahi hain, unhe chhod diya', cadd:'Cart mein add karo', cin:'Cart mein hai', cadded:'Cart mein add hua', cremd:'Cart se hataya', citems:'{n} items', cown:'Pehle se aapki hai, cart se hata di', ptitle:'Mera Account', pguide:'App kaise kaam karta hai aur Guide', preq:'Kahani request karo', psup:'Help aur Support', pfb:'Feedback aur Suggestions', pdisp:'Display Settings', preset:'App data reset karo', presetq:'Isse is device ka cart, theme, language aur search history saaf hogi. Aapki purchases aur library par asar nahi padega.', presetdone:'App data reset ho gaya', preqph:'Kahani ka naam ya keywords', preqgo:'Search', preqfound:'Store mein pehle se hai:', preqnone:'Abhi store mein nahi hai. Bot se request bhejo.', preqbot:'Bot mein request karo', pid:'Telegram ID', pbot:'Bot mein khulega'}
 };
 Object.assign(TR.en, {cmbtitle:'Story Combinations', cmbbest:'BEST DEAL', cmball:'All', cmbn:'{n} Stories', cmbcombo:'{n}-story combo', cmbsave:'Save {a}', cmbown:'Build your own', cmbmore:'Buy more, save more:', cmbrule:'{m}+ = {t}',
   cmbpick:'Pick 2 to 5 stories to see your combo deal', cmbcheck:'Check combo', cmbbuy:'Buy combo', cmbtotal:'Total', cmbdisc:'Combo discount', cmbnodisc:'not yet', cmbpay:'You pay', cmbadd:'Add {a} more to get {t}', cmbsel:'{n} selected',
@@ -1427,6 +1401,7 @@ Object.assign(TR.hing, {cmbtitle:'Story Combinations', cmbbest:'BEST DEAL', cmba
 const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi'}, LANG_NAME = {en:'English', hi:'हिन्दी', hing:'Hinglish'};
 let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
 let THEME = store.get('ajt', 'dark'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'dark';      // Dark (warm) is the default; Light and Warm stay available
+if (!FREE_BUILD){ TR.en.sptitle="Welcome to AJ's FM Stories Premium"; TR.en.spsub='Your premium audio story store inside Telegram, delivered instantly to your chat.'; TR.hi.sptitle="AJ's FM Stories Premium में आपका स्वागत है"; TR.hi.spsub='टेलीग्राम के अंदर आपका प्रीमियम ऑडियो स्टोरी स्टोर, सीधे आपकी चैट में।'; TR.hing.sptitle="AJ's FM Stories Premium mein swagat hai"; TR.hing.spsub='Telegram ke andar aapka premium audio story store, seedha aapki chat mein.'; document.title="AJ's FM Stories Premium"; $('#spTitle').textContent=TR.en.sptitle; $('#spSub').textContent=TR.en.spsub; }
 const tr = (k, v) => { let s = (TR[LANG] && TR[LANG][k]) || TR.en[k] || k; if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]); return s; };
 // ---- auto-translate story text (description, notes) into the app language; the server caches every translation
 const TC = {}, TQ = new Set(); let TT = 0;
@@ -1556,13 +1531,13 @@ const colCard = s => `<button class="card ccard" data-story="${esc(s.id)}" aria-
 const colMore = c => `<button class="card cmore" data-colopen="${esc(String(c.id))}" aria-label="See everything in ${esc(c.name)}"><span class="cm-in"><i aria-hidden="true">&#43;</i><b>And more</b></span></button>`;
 const colSection = c => {
   if (!c.items || !c.items.length) return '';
-  const art = c.art ? `<button class="card colart" data-colopen="${esc(String(c.id))}" aria-label="Open collection ${esc(c.name)}"><div class="cv has-img"><img src="${esc(c.art)}" alt="" loading="lazy" decoding="async"></div></button>` : '';
-  return `<section class="colbox" aria-label="${esc(c.name)}"><div class="colhead"><h2 class="sec">${esc((c.emoji ? c.emoji + ' ' : '') + c.name)}</h2></div><div class="rail${c.art ? ' hasart' : ''}">${art}${c.items.map(colCard).join('')}</div></section>`;
+  const art = !FREE_BUILD && c.art ? `<button class="card colart" data-colopen="${esc(String(c.id))}" aria-label="Open collection ${esc(c.name)}"><div class="cv has-img"><img src="${esc(c.art)}" alt="" loading="lazy" decoding="async"></div></button>` : '';
+  return `<section class="colbox" aria-label="${esc(c.name)}"><div class="colhead"><h2 class="sec">${esc((c.emoji ? c.emoji + ' ' : '') + c.name)}</h2></div><div class="rail${art ? ' hasart' : ''}">${art}${c.items.map(colCard).join('')}</div></section>`;
 };
 const secRail = (title, items, key, render = homeCard, lead = '') => items && items.length ? (lead ? '' : `<div class="sechead"><h2 class="sec">${title}</h2>${key ? `<button class="link" data-viewall="${key}" aria-label="${esc(tr('viewall'))}: ${esc(title)}">${tr('viewall')}</button>` : ''}</div>`) + `
   <div class="rail${lead ? ' hasart' : ''}">${lead}${items.map(render).join('')}</div>` : '';
 const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
-const dealBadge = s => s.deal ? `-${s.deal.pct}% OFF` : '';
+const dealBadge = s => !FREE_BUILD && s.deal ? `-${s.deal.pct}% OFF` : '';
 const big = u => typeof u === 'string' ? u.replace('size=thumb', 'size=full') : u;      // the large home cards use the full-size picture
 const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([mainGenre(s)].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
 const dealCard = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>${atcBtn(s)}</div>`;
@@ -1591,12 +1566,12 @@ function renderHome(){
   const sections = [
     awayBanner(),
     secRail(tr('trending'), hero, heroKey, slide),
-    h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
-    tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
+    !FREE_BUILD && h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
+    !FREE_BUILD && tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
     ...(h.collections || []).map(colSection),
-    offersStrip(),                                                                            // between Ongoing and Completed
+    FREE_BUILD ? '' : offersStrip(),                                                                            // between Ongoing and Completed
     secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
-    ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (i % 4 === 1 ? offersStrip() : i % 4 === 3 ? dailyCombosSection() : ''))      // then a coupon strip / daily combos after every 2 genre rows
+    ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (FREE_BUILD ? '' : i % 4 === 1 ? offersStrip() : i % 4 === 3 ? dailyCombosSection() : ''))      // then a coupon strip / daily combos after every 2 genre rows
   ].join('');
   v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
     (S.homeState === 'error' ? `<div class="msg bad">Could not refresh: ${esc(S.homeErr)} <button class="link" id="retryHome">Retry</button></div>` : '');
@@ -2252,13 +2227,13 @@ function renderMe(){
   const item = (ic, label, attr) => `<button class="pm-i" ${attr}><span class="ic">${ic}</span><span class="tx">${label}</span><span class="ar">&rsaquo;</span></button>`;
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ptitle')}</h2></div>
     <div class="pcard"><div class="avatar" ${avatarStyle()}>${avatarInit()}</div><div class="pm"><b>${esc(NAME)}</b>${TGU.username ? `<small>@${esc(TGU.username)}</small>` : ''}${TGU.id ? `<small>${tr('pid')}: ${esc(TGU.id)}</small>` : ''}</div></div>
-    <div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>
-    <div style="margin-top:14px">${ownComboBlock()}</div>
-    <div class="pmenu">${item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="guide"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="help"')}${item('\u2B50', tr('pfb'), 'id="pfbBtn"')}</div>
+    ${FREE_BUILD ? `<div class="pstats"><button class="pst" data-pgo="listening"><b id="pcOwn">-</b><small>My Access</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button></div>` : `<div class="pstats"><button class="pst" data-pgo="owned"><b id="pcOwn">-</b><small>${tr('lo')}</small></button><button class="pst" data-pgo="wishlist"><b id="pcWish">${S.wish ? S.wish.size : '-'}</b><small>${tr('lw')}</small></button><button class="pst" data-pgo="cart"><b>${CART.length}</b><small>${tr('cart')}</small></button></div>`}
+    ${FREE_BUILD ? '' : `<div style="margin-top:14px">${ownComboBlock()}</div>`}
+    <div class="pmenu">${FREE_BUILD ? '' : item('\uD83C\uDFF7\uFE0F', tr('otitle'), 'data-offers="1"')}${item('\uD83D\uDCDC', 'Terms & Conditions', 'data-terms="1"')}${item('\uD83D\uDCD6', tr('pguide'), 'data-pbot="guide"')}${item('\uD83D\uDD0D', tr('preq'), 'id="preqBtn"')}${item('\uD83D\uDCAC', tr('psup'), 'data-pbot="help"')}${item('\u2B50', tr('pfb'), 'id="pfbBtn"')}</div>
     <h3 class="lsub">${tr('pdisp')}</h3>
     <div class="pad" style="display:grid;gap:10px;margin-bottom:12px"><button class="btn ghost block" data-act="lang" style="margin-top:0">${tr('lang')}: ${LANG_NAME[LANG]}</button><div><div class="by" style="margin:2px 0 8px;text-align:left">${tr('theme')}</div>${sel}</div></div>
     <button class="pdanger" id="presetBtn">&#9888;&#65039; ${tr('preset')}</button>`;
-  api('/api/library').then(d => { const e = $('#pcOwn'); if (e) e.textContent = d.stories.length; }).catch(() => {});
+  (FREE_BUILD ? api('/api/vf/status').then(d => { const e = $('#pcOwn'); if (e) e.textContent = (d.pass && d.pass.global > Date.now() / 1000) ? 'ON' : 'OFF'; }) : api('/api/library').then(d => { const e = $('#pcOwn'); if (e) e.textContent = (d.stories || d.items || []).length; })).catch(() => {});
   if (!S.wish) api('/api/wishlist').then(d => { S.wish = new Set(d.ids); const e = $('#pcWish'); if (e) e.textContent = S.wish.size; }).catch(() => {});
 }
 function resetAppData(){
@@ -2424,7 +2399,7 @@ function paintBrowse(){
   if (B.painted === 'discover'){ paintDiscover(); if (B.allState === 'idle') loadDiscover(); return; }
   const sts = (B.facets && B.facets.statuses && B.facets.statuses.length) ? B.facets.statuses : ['Ongoing', 'Completed'];
   body.innerHTML = `<div class="pad" style="padding-top:8px"><button class="link" id="dback">&larr; ${tr('dback')}</button></div>
-    <div class="ctl" style="padding-top:6px"><select id="bsort" aria-label="Sort"><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">A to Z</option><option value="popular">Most listened</option><option value="updated">Recently updated</option><option value="price_low">Price: Low to High</option><option value="price_high">Price: High to Low</option></select>
+    <div class="ctl" style="padding-top:6px"><select id="bsort" aria-label="Sort"><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">A to Z</option><option value="popular">Most listened</option><option value="updated">Recently updated</option>${FREE_BUILD ? '' : '<option value="price_low">Price: Low to High</option><option value="price_high">Price: High to Low</option>'}</select>
     <select id="bstatus" aria-label="Status"><option value="">All stories</option>${sts.map(x => `<option>${esc(x)}</option>`).join('')}</select></div>
     <div id="blang"></div><div class="chips" id="bchips" aria-label="Genres"></div><div class="actions" id="bclearbox" style="padding-bottom:8px"></div><div id="bres"></div>`;
   $('#bsort').value = B.sort; $('#bstatus').value = B.status;
@@ -2440,7 +2415,7 @@ function discoverRows(){
   mk('dcol', 'trend', '\uD83D\uDD25', tr('dtrend'), all.filter(s => s.listeners > 0).sort((a, b) => b.listeners - a.listeners || byUpd(a, b)), {sort:'popular'});
   mk('dcol', 'new', '\u2728', tr('recent'), all.slice().sort((a, b) => b.created - a.created), {sort:'newest'});
   mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
-  mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
+  !FREE_BUILD && mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
   (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
   ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => mainGenres(s).includes(g.name)).sort(byUpd), {genre:g.name, sort:'updated'}); });
   if ((f.languages || []).length > 1) f.languages.forEach(l => mk('dlang', 'l:' + l, '\uD83C\uDF10', l, all.filter(s => s.language === l).sort(byUpd), {language:l, sort:'updated'}));
@@ -2555,13 +2530,14 @@ async function loadVall(reset){
 const STATUS = {approved:['Active','free'], pending:['Pending approval','warn'], expired:['Expired',''], rejected:['Rejected','bad'], revoked:['Revoked','bad'], refunded:['Refunded','bad'], cancelled:['Cancelled','']};
 const statusPill = s => { const [t, c] = STATUS[s] || [s, '']; return `<span class="tag ${c === 'free' ? 'live' : c}">${esc(t)}</span>`; };
 const rangeText = r => r.from ? `Episodes ${r.from} to ${r.to || 'Ongoing'}` : 'All episodes';
-const LIB_TABS = [['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
+const LIB_TABS = FREE_BUILD ? [['listening', '\uD83D\uDD13', 'My Access'], ['wishlist', '\u2764\uFE0F', 'lw']]
+  : [['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
 const lthumb = c => `<span class="lth">${isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="?">` : esc(c || '?')}</span>`;
 const lrow = o => `<div class="lrow"><button class="lmain" ${o.attrs || `data-story="${esc(o.sid)}"`} ${o.avail === false ? 'data-avail="0"' : ''} aria-label="Open ${esc(o.title)}">${lthumb(o.cover)}<span class="lmt"><b>${esc(o.title)}</b>${(o.lines || []).filter(Boolean).map(l => `<small>${l}</small>`).join('')}${o.bar !== undefined ? `<span class="bar"><i style="width:${o.bar}%"></i></span>` : ''}</span></button><div class="lact">${o.actions || ''}</div></div>`;
 const leftText = ts => { const s = ts - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), hr = Math.floor(s % 86400 / 3600); return d ? d + 'd ' + hr + 'h' : hr + 'h ' + Math.floor(s % 3600 / 60) + 'm'; };
 const libEmpty = k => `<div class="empty">${tr(k)}</div>`;
 function renderLibrary(){
-  if (!LIB_TABS.some(t => t[0] === L.seg)) L.seg = 'owned';
+  if (!LIB_TABS.some(t => t[0] === L.seg)) L.seg = LIB_TABS[0][0];
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ltitle')}</h2><span><button class="link" id="libRefresh" aria-label="${esc(tr('lref'))}">${tr('lref')}</button></span></div>
     <div class="seg" role="tablist">${LIB_TABS.map(([k, ic, lb]) => `<button class="chip${L.seg === k ? ' on' : ''}" data-seg="${k}" role="tab" aria-selected="${L.seg === k}">${ic} ${tr(lb)}</button>`).join('')}</div><div id="libBody"></div>`;
   loadLibrary();
@@ -2572,8 +2548,10 @@ async function loadLibrary(){
   const sig = fresh('library'), seg = L.seg;
   try{
     if (seg === 'listening'){
-      const [c, hd] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []}))]); if (L.seg !== seg) return;
-      body.innerHTML = (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
+      const [c, hd, vs] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []})), api('/api/vf/status', {signal: sig}).catch(() => ({}))]); if (L.seg !== seg) return;
+      const gp = vs.pass && vs.pass.global, on = gp && gp > Date.now() / 1000;
+      const accessCard = `<div class="mrow"><h4>\uD83D\uDD13 My Access</h4><div style="margin:6px 0"><span class="tag ${on ? 'live' : 'warn'}">${on ? 'Active' : 'No active pass'}</span></div><div class="by">${on ? 'All stories unlocked | ' + esc(tr('lleft', {t: leftText(gp)})) + ' | until ' + esc(dateStr(gp)) : 'Open any story and tap Unlock with free verification to get free access' + (vs.pass_hours ? ' for ' + vs.pass_hours + ' hours.' : '.')}</div>${vs.latest_n ? `<div class="by">The newest ${vs.latest_n} episodes of every story are always free.</div>` : ''}</div>`;
+      body.innerHTML = accessCard + (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
           lines: [`Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}`], bar: i.episode.duration ? Math.min(100, Math.round(i.pos / i.episode.duration * 100)) : 0,
           actions: `<button class="lbtn" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}">${tr('lres')}</button><button class="lbtn rm" data-lcx="${esc(i.story.id)}">${tr('lrem')}</button>`}))).join('') : libEmpty('lel')) +
         (hd.items.length ? `<h3 class="lsub">${tr('lhead')}</h3>` + hd.items.map(h => (HIST[h.episode_id] = h, `<div class="eprow"><button class="ep" data-hist="${h.episode_id}" data-story="${esc(h.story_id)}" data-pos="${h.pos}" ${h.available ? '' : 'disabled'}>
@@ -2618,7 +2596,7 @@ function openChat(){
 const playEpisode = ep => sendEpisode(ep, false);      // other callers pass a story as the 2nd argument, so the demo flag lives in its own function
 async function sendEpisode(ep, demo){
   if (!ep) return;
-  if (ep.locked){ if (TIERS.free) return openVerify(V.id); return toast('Locked. Choose a plan to unlock it.'); }
+  if (ep.locked){ if (FREE_BUILD) return openVerify(V.id); return toast('Locked. Choose a plan to unlock it.'); }
   return once('send' + ep.id, async () => {
     try{
       const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN(), ...(demo ? {demo: true} : {})})});
@@ -2651,7 +2629,7 @@ async function copyStoryLink(){
 }
 function shareStory(){
   const s = V.story; if (!s) return;
-  const url = `https://t.me/share/url?url=${encodeURIComponent(storyLink(V.id))}&text=${encodeURIComponent('\uD83C\uDFA7 ' + s.title + ' on AJ\'s FM Stories Premium')}`;
+  const url = `https://t.me/share/url?url=${encodeURIComponent(storyLink(V.id))}&text=${encodeURIComponent('\uD83C\uDFA7 ' + s.title + ' on AJ\'s FM Stories' + (FREE_BUILD ? '' : ' Premium'))}`;
   if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
 }
 function storyBack(){                                                              // topic page -> story overview -> close
@@ -2820,6 +2798,7 @@ document.addEventListener('scroll', e => {                  // the dots under th
   if (d && d.classList.contains('pl-dots')) [...d.children].forEach((x, k) => x.classList.toggle('on', k === i));
 }, true);
 function sbarHtml(){
+  if (FREE_BUILD) return '';
   const o = visOpts().find(x => String(x.id) === String(V.sel)); if (!o) return '';
   const inCart = cartHas(V.id, o.id), why = !inCart && !planOwned(o) ? cartBlock(V.id, V.story, o, V.access) : '';
   return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}${o.credit ? ' | upgrade credit -' + money(o.credit) : ''}</small><b>${money(payOf(o))}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
@@ -2838,40 +2817,40 @@ function renderStory(){
   if (V.state === 'unavailable'){ el.innerHTML = bar() + '<div class="empty"><h3 class="sec">This story is no longer available</h3><p>It may have been removed or hidden. If you bought it, your purchase is kept and you can see it under Library &rarr; Purchases.</p></div>'; return; }
   if (V.state === 'error'){ el.innerHTML = bar() + retryBox(V.err, 'retryStory'); return; }
   if (V.mode === 'topic') return renderTopicPage();
-  const s = V.story, a = V.access, showPlans = !(a.full || a.admin) && visOpts().length > 0; pickPlan();
+  const s = V.story, a = V.access, showPlans = !FREE_BUILD && !(a.full || a.admin) && visOpts().length > 0; pickPlan();
   const act = false ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${epn(V.resume)}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
   const wishOn = S.wish && S.wish.has(V.id);
   const range = rangeOf(s.options || []);
   const cards = topicCards().map((t, i) => {
     const opts = optsFor(t.id);
-    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${esc(epRange(t.first, t.last, t.n))}</small>${t.gaps ? `<small style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}</small>` : ''}<span class="tpr">${esc(rangeOf(opts))}</span>${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
+    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${esc(epRange(t.first, t.last, t.n))}</small>${t.gaps ? `<small style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}</small>` : ''}${FREE_BUILD ? '' : `<span class="tpr">${esc(rangeOf(opts))}</span>`}${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
   }).join('');
   el.innerHTML = `<div class="sh">${heroBg(s)}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
       ${heroBanners(s)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${mainGenres(s).map(g => `<span class="tag gold">${esc(g)}</span>`).join('')}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
-      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
+      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${FREE_BUILD || a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
     <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || (s.ep_first && s.ep_last ? s.ep_first + '-' + s.ep_last : V.totalAll || 0))}</b></div>
       <div class="stat"><small>${tr('shrs')}</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}${act}
-    ${showPlans ? `<h3 class="h3" id="plans">${tr('splan')}</h3><div id="planPills">${plansHtml()}</div>` : (a.admin ? adminPlansHtml() : '')}
+    ${showPlans ? `<h3 class="h3" id="plans">${tr('splan')}</h3><div id="planPills">${plansHtml()}</div>` : (a.admin && !FREE_BUILD ? adminPlansHtml() : '')}
     <h3 class="h3">${shownTopics().length ? tr('stopics') : tr('slisten')}</h3><div id="topicCards">${cards}</div>
     ${s.notes ? `<h3 class="h3">${tr('snotes')}</h3><div class="tnotes" data-tx="${esc(s.notes)}">${esc(tx(s.notes))}</div>` : ''}${showPlans ? `<div class="sbar" id="sbar">${sbarHtml()}</div>` : ''}`;
 }
 function renderTopicPage(){
   const el = $('#story'), s = V.story, a = V.access, full = a.full || a.admin; pickPlan();
   const t = topicCards().find(x => x.id === V.topic) || {name: 'Episodes', n: V.total, note: ''};
-  const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
+  const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${FREE_BUILD || a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
-    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${esc(epRange(t.first, t.last, t.n))} | ${esc(rangeOf(optsFor(V.topic)))}</div>${t.gaps ? `<div class="by" style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}. They will be added soon.</div>` : ''}${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
+    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${esc(epRange(t.first, t.last, t.n))}${FREE_BUILD ? '' : ' | ' + esc(rangeOf(optsFor(V.topic)))}</div>${t.gaps ? `<div class="by" style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}. They will be added soon.</div>` : ''}${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
-    ${full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
+    ${FREE_BUILD ? '' : full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
       <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Tap an episode and the audio bot opens and sends it to you. It stays in the chat for 48 hours. Forwarding and saving are switched off.</small></span></div>
       <div class="irow"><span class="ic">&#128172;</span><span><b>Questions before you buy?</b><small>Tap Buy now to open our bot. It answers your doubts first, then shows how to pay.</small></span></div>`}
-    <h3 class="h3">Episodes</h3>${TIERS.free && !S.admin ? '<div class="pad" style="margin-bottom:8px"><button class="btn block ghost" data-vf="1" type="button">&#128275; Unlock with free verification</button></div>' : ''}<div id="epBox"></div>${full ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
+    <h3 class="h3">Episodes</h3>${FREE_BUILD ? '<div class="pad" style="margin-bottom:8px"><button class="btn block ghost" data-vf="1" type="button">&#128275; Unlock with free verification</button></div>' : ''}<div id="epBox"></div>${full || FREE_BUILD ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
   renderEps();
 }
 function freeLeft(ts){                                    // time left of a free window: "3d left", "5h left"
@@ -3470,7 +3449,7 @@ async function openStoryDetails(id){                         // tap on a story c
 /* ===================== Free tier: ad verification (Mini App steps) ===================== */
 const VF = {story: '', st: null, link: null, wait: 0, timer: null, done: {c: false, p: false}};
 const vfLeft = s => { s = Math.max(0, Math.ceil(s)); return s >= 3600 ? Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min' : s >= 60 ? Math.ceil(s / 60) + ' min' : s + ' s'; };
-function vfApplyTiers(){ document.body.classList.toggle('nopremium', !TIERS.premium && !S.admin); if (S.tab === 'home' && S.home) renderHome(); }
+function vfApplyTiers(){ document.body.classList.toggle('nopremium', FREE_BUILD || (!TIERS.premium && !S.admin)); if (S.tab === 'home' && S.home) renderHome(); }
 function vfShell(inner, title){
   $('#verify').innerHTML = `<div class="top"><button class="btn ghost small" id="vfBack" aria-label="Back">Back</button><strong>${esc(title || 'Free access')}</strong><span style="width:60px"></span></div><div class="vf-body">${inner}</div>`;
   $('#vfBack').onclick = () => { clearInterval(VF.timer); closeSheet('verify'); };
@@ -4368,7 +4347,7 @@ document.addEventListener('click', async e => {
     try{ await api('/api/wishlist', {method:'POST', retry:false, body: JSON.stringify({story_id: id, on})}); toast(tr(on ? 'wishon' : 'wishoff')); }
     catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? tr('smore') : tr('sless'); return; }
-  if (c('#startListen')) return once('start', () => playFirst(1, !(V.access && (V.access.owned || V.access.admin))));
+  if (c('#startListen')) return once('start', () => playFirst(1, !FREE_BUILD && !(V.access && (V.access.owned || V.access.admin))));
   if (c('#openChatBtn')) return openChat();
   if ((m = c('[data-sendn]'))){ store.set('ajsendn', m.dataset.sendn); return renderEps(); }
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
@@ -4377,7 +4356,7 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-vf]'))) return openVerify(V.id);
   if ((m = c('#story [data-ep]'))){
     const ep = V.eps.find(v => String(v.id) === m.dataset.ep); if (!ep) return;
-    if (ep.locked){ if (TIERS.free) return openVerify(V.id); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
+    if (ep.locked){ if (FREE_BUILD) return openVerify(V.id); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
     return playEpisode(ep, storyTag(V.story));
   }
   if ((m = c('[data-pg]'))){ const pages = Math.ceil(V.total / PAGE_SIZE), p = Math.min(pages, Math.max(1, V.page + (m.dataset.pg === 'next' ? 1 : -1))); return loadStoryPage(p); }
@@ -4660,116 +4639,15 @@ function splashInit(){
   }).catch(() => {});
 }
 
-/* ===================== Two environments in this one file ===================== */
-const ENV = (() => {
-  const root = document.documentElement, e = {cur: null, ready: null};
-  const get = k => { try{ return localStorage.getItem(k); }catch(x){ return null; } }, put = (k, v) => { try{ localStorage.setItem(k, v); }catch(x){} };
-  e.set = env => {
-    e.cur = env; root.classList.toggle('env-free', env === 'free'); put('ajfm_env', env);
-    const pill = $('#envPill'), can = TIERS.free && (TIERS.premium || S.admin);                       // a way to the other app, only when the admin allows both (or to preview as admin)
-    pill.classList.toggle('on', !!can); pill.textContent = env === 'free' ? '\u{1F48E} Premium' : '\u{1F193} Free stories';
-    if (env === 'free') FreeApp.start();
-  };
-  e.decide = m => {
-    const t = (m && m.tiers) || TIERS, admin = !!(m && m.admin), want = new URLSearchParams(location.search).get('env'), pick = get('ajfm_pick'); let env = 'premium';
-    if (t.free && !t.premium) env = admin ? (want === 'free' || pick === 'free' ? 'free' : 'premium') : 'free';              // only Free allowed: members get the Free app
-    else if (t.free && t.premium) env = (want === 'free' || (!want && pick === 'free')) ? 'free' : 'premium';                 // both allowed: the member's last choice
-    e.set(env);
-  };
-  e.flip = () => { const next = e.cur === 'free' ? 'premium' : 'free'; put('ajfm_pick', next); e.set(next); window.scrollTo(0, 0); };
-  return e;
-})();
-document.addEventListener('click', ev => { if (ev.target.closest('#envPill')) ENV.flip(); });
-
-const FreeApp = (() => {
-  /* The Free tier app: its own screens and its own components, with nothing about money in them. It shares only the engine: api(), the verification and feedback screens. */
-  const H = {q: '', tab: 'all', items: [], total: 0, loading: false}, V = {id: null, story: null, eps: [], total: 0, topic: '', loading: false};
-  let started = false;
-  const src = c => String(c).startsWith('/') && !String(c).startsWith('//') ? API_URL.replace(/\/$/, '') + c : c;
-  const cv = c => isImg(c) ? '<img src="' + esc(src(c)) + '" alt="" loading="lazy" data-fb="&#128214;">' : '<span>' + esc(c || '\u{1F4D6}') + '</span>';
-  const dur = s => { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ' h ' + m + ' min' : m ? m + ' min' : s + ' s'; };
-  const err = e => (e && e.data && e.data.message) || (e && e.message) || 'Something went wrong. Please try again.';
-
-  function paintTabs(){ $('#faTabs').innerHTML = [['all', 'All'], ['ongoing', 'Ongoing'], ['completed', 'Completed']].map(([k, l]) => '<button class="' + (H.tab === k ? 'on' : '') + '" data-tab="' + k + '" type="button">' + l + '</button>').join(''); }
-  function paintHome(){
-    const list = H.items.filter(s => H.tab === 'all' || String(s.status || '').toLowerCase() === H.tab); let out = '';
-    if (H.loading && !H.items.length) out = '<div class="fa-pad"><div class="fa-sk"></div></div>';
-    else if (!list.length) out = '<p class="fa-note">' + (H.q ? 'No story matches your search.' : 'No stories here yet.') + '</p>';
-    else out = '<div class="fa-grid">' + list.map(s => '<button class="fa-card" data-open="' + esc(s.id) + '" type="button"><div class="fa-cv">' + cv(s.cover) + '</div><div class="m"><b>' + esc(s.title) + '</b><small>' + esc([s.genre, s.language].filter(Boolean).join(' \u00b7 ')) + '</small><small>' + esc(s.status || '') + (s.episodes ? ' \u00b7 ' + s.episodes + ' ep' : '') + '</small></div></button>').join('') + '</div>';
-    if (H.items.length < H.total) out += '<div class="fa-pad"><button class="fa-b g w" id="faMore" type="button">' + (H.loading ? 'Loading...' : 'Load more') + '</button></div>';
-    $('#faList').innerHTML = out;
-  }
-  async function loadHome(reset){
-    if (H.loading) return; H.loading = true; if (reset){ H.items = []; H.total = 0; } paintHome();
-    try{ const j = await api('/api/catalog?limit=60&offset=' + H.items.length + (H.q ? '&q=' + encodeURIComponent(H.q) : '')); H.items = H.items.concat(j.stories || []); H.total = j.total || H.items.length; }
-    catch(e){ toast(err(e)); }
-    H.loading = false; paintHome();
-  }
-  async function loadEps(reset){
-    if (V.loading) return; V.loading = true; if (reset) V.eps = [];
-    try{ const j = await api('/api/story/' + encodeURIComponent(V.id) + '?limit=50&offset=' + V.eps.length + (V.topic ? '&topic=' + encodeURIComponent(V.topic) : '')); V.story = j.story; V.total = j.total || 0; V.eps = V.eps.concat(j.eps || []); }
-    catch(e){ toast(err(e)); if (!V.story){ V.loading = false; return closeSheet('fa-story'); } }
-    V.loading = false; paintStory();
-  }
-  function paintStory(){
-    const s = V.story, el = $('#fa-story'), top = t => '<div class="fa-top"><button class="fa-b g s" id="faBack" type="button">Back</button><strong>' + esc(t) + '</strong><span style="width:60px"></span></div>';
-    if (!s){ el.innerHTML = top('') + '<div class="fa-pad" style="margin-top:14px"><div class="fa-sk"></div></div>'; return; }
-    const tps = s.topics || [], locked = V.eps.some(e => e.locked), gaps = V.topic ? (tps.find(t => t.id === V.topic) || {}).gaps : (tps.length ? '' : s.gaps_none);
-    el.innerHTML = top(s.title)
-      + '<div class="fa-sh"><div class="fa-cv">' + cv(s.cover) + '</div><div><h2>' + esc(s.title) + '</h2><small>' + esc(s.author || '') + '</small><small>' + esc([s.genre, s.sub_genre].filter(Boolean).join(', ')) + '</small><small>' + esc([s.language, s.status].filter(Boolean).join(' \u00b7 ')) + '</small></div></div>'
-      + (s.desc ? '<p class="fa-note" style="color:var(--text)">' + esc(s.desc) + '</p>' : '')
-      + (tps.length ? '<div class="fa-chips"><button class="' + (V.topic ? '' : 'on') + '" data-topic="" type="button">All</button>' + tps.map(t => '<button class="' + (V.topic === t.id ? 'on' : '') + '" data-topic="' + esc(t.id) + '" type="button">' + esc(t.name) + '</button>').join('') + '</div>' : '')
-      + (TIERS.free && locked ? '<div class="fa-pad" style="margin:6px 0 10px"><button class="fa-b w" data-vf="1" type="button">&#128275; Unlock with free verification</button></div>' : '')
-      + (gaps ? '<div class="fa-warn">&#9888; Missing episodes: ' + esc(gaps) + '</div>' : '')
-      + V.eps.map(e => '<div class="fa-ep"><div class="fa-en">' + e.no + (e.to && e.to > e.no ? '-' + e.to : '') + '</div><div class="fa-et"><b>' + esc(e.title || 'Episode ' + e.no) + '</b><small>' + (e.duration ? dur(e.duration) : '') + '</small></div>'
-        + (e.locked ? '<button class="fa-b g s" data-lock="1" type="button" aria-label="Locked">&#128274;</button>' : '<button class="fa-b s" data-play="' + e.id + '" type="button" aria-label="Play here">&#9654;</button> <button class="fa-b g s" data-send="' + e.id + '" type="button" aria-label="Send to my chat">&#128233;</button>') + '</div>').join('')
-      + (V.eps.length < V.total ? '<div class="fa-pad" style="margin-top:10px"><button class="fa-b g w" id="faMoreEps" type="button">' + (V.loading ? 'Loading...' : 'Load more episodes') + '</button></div>' : '')
-      + (!V.eps.length && !V.loading ? '<p class="fa-note">No episodes yet.</p>' : '');
-  }
-  async function openStory(id){ Object.assign(V, {id, story: null, eps: [], total: 0, topic: ''}); paintStory(); openSheet('fa-story'); $('#fa-story').scrollTop = 0; await loadEps(true); }
-  async function play(id){
-    try{ const r = await api('/api/play/' + id, {method: 'POST', retry: false, body: '{}'}), e = V.eps.find(x => x.id === id), a = $('#faAud');
-      $('#faPT').textContent = (V.story ? V.story.title + ' \u00b7 ' : '') + (e ? 'Ep ' + e.no : ''); $('#faPlayer').hidden = false; a.src = r.url; await a.play().catch(() => {}); }
-    catch(er){ if (er.data && er.data.error === 'locked') openVerify(V.id); else toast(err(er)); }
-  }
-  async function send(id){
-    try{ const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: id, count: 1})}); toast('Opening the audio bot...', 2500);
-      const url = 'https://t.me/' + r.bot + '?start=d_' + r.token;
-      if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank'); }
-    catch(er){ if (er.data && er.data.error === 'locked') openVerify(V.id); else toast(err(er)); }
-  }
-  function start(){
-    if (started) return; started = true; paintTabs(); loadHome(true);
-    $('#freeApp').addEventListener('click', e => {
-      const t = e.target.closest('button'); if (!t) return;
-      if (t.dataset.tab){ H.tab = t.dataset.tab; paintTabs(); return paintHome(); }
-      if (t.dataset.open) return openStory(t.dataset.open);
-      if (t.id === 'faMore') return loadHome(false);
-      if (t.id === 'faAccess') return openVerify('');
-      if (t.id === 'faFb') return openFeedback();
-    });
-    $('#fa-story').addEventListener('click', e => {
-      const t = e.target.closest('button'); if (!t) return;
-      if (t.id === 'faBack') return closeSheet('fa-story');
-      if (t.id === 'faMoreEps') return loadEps(false);
-      if (t.dataset.topic !== undefined){ V.topic = t.dataset.topic; return loadEps(true); }
-      if (t.dataset.play) return play(+t.dataset.play);
-      if (t.dataset.send) return send(+t.dataset.send);
-      if (t.dataset.lock || t.dataset.vf) return openVerify(V.id);
-    });
-    let timer; $('#faQ').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { H.q = e.target.value.trim(); loadHome(true); }, 350); });
-  }
-  return {start, openStory};
-})();
-
 (function boot(){
+  if (FREE_BUILD) document.body.classList.add('nopremium');
   splashInit(); updateCartBadge();
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
   try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
   try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
   api('/api/away').then(a => { S.away = a; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/terms').then(t => { if (t.user && !t.accepted) showTerms(); }).catch(() => {});
-  ENV.ready = api('/api/me', {timeout: 9000, retry: false}).then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; if (m.tiers){ TIERS = m.tiers; vfApplyTiers(); } ENV.decide(m); }).catch(() => ENV.decide(null));      // which app this member sees: the admin's Free / Premium switches
+  const meReady = api('/api/me', {timeout: 9000, retry: false}).then(m => { S.admin = FREE_BUILD ? false : !!m.admin; $('#adminBtn').hidden = !S.admin; if (m.tiers){ TIERS = m.tiers; vfApplyTiers(); } }).catch(() => {});      // which app this member sees: the admin's Free / Premium switches
   applyTheme(); applyLang(); renderHeader();
   api('/api/reviews?limit=12').then(d => { S.reviews = d; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
@@ -4777,8 +4655,8 @@ const FreeApp = (() => {
   setTab(S.tab);
   const _sid = new URLSearchParams(location.search).get('story');
   const _sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
-  ENV.ready.then(() => {                                                                  // links are opened in the app the member is actually in
-    const q = new URLSearchParams(location.search), vt = q.get('vf'), vs = q.get('verify'), free = ENV.cur === 'free', open = id => free ? FreeApp.openStory(id) : openStory(id);
+  meReady.then(() => {                                                                  // links are opened in the app the member is actually in
+    const q = new URLSearchParams(location.search), vt = q.get('vf'), vs = q.get('verify'), open = id => openStory(id);
     if (/^vf_[\w-]{16,100}$/.test(_sp)) vfEnd(_sp.slice(3));                                // back from the ad: the end step of the verification
     else if (vt && /^[\w-]{16,100}$/.test(vt)) vfEnd(vt);                                   // opened by the AJ Verification bot: the last step
     else if (vs) openVerify(vs === 'all' ? '' : vs);                                       // verify for one story, or for all
