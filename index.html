@@ -1183,8 +1183,8 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-2.onrender.com";   // your bot server address
-const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
-const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
+const AUDIO_BOT_USERNAME = "AJFMAudioExpressBot";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
+const BOT_USERNAME = "AjFMStoriesPremium_bot";      // your bot, without @
 const CURRENCY     = "₹";
 /* Access mode, set by the admin (Admin > Access Tiers) and sent by /api/me:  Free only | Premium only | Free + Premium.
    FREE_BUILD = free only (no prices, no cart, no Buy now).  FREE_ON = free verification unlock is available (Free or Free + Premium). */
@@ -1194,11 +1194,11 @@ let FREE_BUILD = TIERS.free && !TIERS.premium, FREE_ON = !!TIERS.free;
 /* Per-story access type. Free mode: every story is 'free'. Premium mode: every story is 'premium'. Free + Premium mode: the story's own setting (admin sets it per story):
      premium = only premium (buy with pay) | free = only free (verify to unlock) | both = free story that also offers a premium plan to skip verification */
 const accOf = s => !FREE_ON ? 'premium' : FREE_BUILD ? 'free' : (s && (s.access === 'free' || s.access === 'both') ? s.access : 'premium');
-const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
+const MINIAPP_SHORT = "Ajfm";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and get the episodes in your bot chat.";
 const HOW_IT_WORKS = "Pick a plan, pay, and send the payment screenshot to our bot. Once it is confirmed, your episodes unlock here and you can send them to your chat.";
-const PAGE_SIZE    = 50;
+const PAGE_SIZE    = 100;
 /* ============================================== */
 
 const tg = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
