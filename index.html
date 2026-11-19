@@ -3239,7 +3239,8 @@ const cpPost = (path, body) => api(path, {method: 'POST', retry: false, body: JS
 /* ---------------- Admin → Index Bot (added section; talks only to /api/admin/index/*) ---------------- */
 const IX = {view: 'overview', edit: null, maps: null, step: 'list'};
 const DY = {step: 'list', edit: null, src: null, status: 'review', stories: [], sources: []};   // Multiple Mapping tab
-const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['diy', '🛠 Multiple Mapping'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
+const RT = {edit: null, preview: null, rules: [], seen: []};   // Auto Route tab
+const IX_VIEWS = [['overview', 'Overview'], ['mappings', 'Topic Mapping'], ['diy', '🛠 Multiple Mapping'], ['route', '🔀 Auto Route'], ['stories', 'Authorized Stories'], ['live', 'Live File Reports'], ['pending', 'Pending Queue'], ['history', 'Index History'], ['failed', 'Failed Files'], ['reports', 'Daily Reports'], ['settings', 'Bot Settings']];
 const ixPost = body => api('/api/admin/index/action', {method: 'POST', retry: false, body: JSON.stringify(body)});
 const ixWhen = t => t ? new Date(t * 1000).toLocaleString() : '-';
 const ixSize = n => { n = +n || 0; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; };
@@ -3331,6 +3332,43 @@ async function indexAdmin(body, sig, tab){
           <div class="by">✅ ${s.counts.assigned} assigned · 👀 ${s.counts.review} review · ❓ ${s.counts.unmatched} unmatched</div>
           <div class="actions" style="padding:8px 0 0;flex-wrap:wrap;gap:6px"><button class="btn small" data-ixa="dyopen" data-id="${s.id}" type="button">Review</button><button class="btn ghost small" data-ixa="dyedit" data-id="${s.id}" type="button">Edit</button><button class="btn ghost small" data-ixa="${s.status === 'active' ? 'dypause' : 'dyresume'}" data-id="${s.id}" type="button">${s.status === 'active' ? 'Pause' : 'Resume'}</button><button class="btn ghost small" data-ixa="dydel" data-id="${s.id}" type="button">Delete</button></div></div>`).join('') || '<div class="empty">No source yet. Tap New source.</div>');
     }
+  } else if (IX.view === 'route'){
+    RT.rules = d.rules; RT.seen = d.seen_topics || [];
+    const chip = (c, t) => `<span class="tag ${c}">${t}</span>`;
+    const seg = (items, cur, act) => items.map(([v, t]) => `<button class="btn ${v === cur ? '' : 'ghost '}small" data-ixa="${act}" data-v="${v}" type="button">${t}</button>`).join('');
+    h = `<div class="box"><b>🔀 Auto Route</b> ${d.bot.on ? chip('live', 'Route Bot @' + esc(d.bot.username)) : chip('warn', 'Route Bot not started')}
+      <p class="note" style="margin:6px 0 0">When a story becomes <b>Completed</b>, the Route Bot forwards its posts to the topic you set for its genre, adds the story to that topic's Multiple Mapping, switches the old mapping off and sends you a report with <b>Undo</b>. Nothing is deleted by itself. ${d.bot.on ? '' : 'Add the bot in Telegram: <b>/connect → 🔀 Route Bot</b>, then restart.'}</p></div>
+      <div class="box"><b>When a story completes</b><div class="actions" style="padding:8px 0 0;flex-wrap:wrap">${seg([['approve', 'Ask me first'], ['auto', 'Move at once'], ['off', 'Off']], d.mode, 'rtmode')}</div>
+      <b style="display:block;margin-top:12px">Posts are sent by</b><div class="actions" style="padding:8px 0 0;flex-wrap:wrap">${seg([['bot', 'The Route Bot'], ['user', 'My admin account']], d.sender, 'rtsender')}</div>
+      <small class="note">${d.sender === 'bot' ? 'A bot\'s posts always show the <b>bot\'s name</b> (give the bot your group\'s name in @BotFather). To show the <b>group name</b>, choose your admin account.' : (d.session ? 'Posts show the <b>group name</b> when that account is an <b>anonymous admin</b> of the new group. Check it with /routeas in the Route Bot.' : '⚠ The account session is not set on the host (ROUTE_USER_SESSION, API_ID, API_HASH). Nothing can be forwarded until it is, or choose The Route Bot.')}</small></div>`;
+    const e = RT.edit;
+    if (e){
+      const pk = e.pick || 'first', pm = pk === 'first' || pk === 'all' ? pk : 'custom';
+      h += `<div class="box"><b>${e.id ? 'Edit rule #' + e.id : 'New rule'}</b>
+        <div class="two"><label class="field"><span>Posts of</span><select id="rt_kind"><option value="normal"${e.kind !== 'merged' ? ' selected' : ''}>Normal Story Topics</option><option value="merged"${e.kind === 'merged' ? ' selected' : ''}>Merged Story Topics (name says merge / combine)</option></select></label>
+        <label class="field"><span>Genre * (or * for any)</span><input id="rt_genre" list="rt_genres" maxlength="120" placeholder="Romance" value="${esc(e.genre || '')}"></label></div>
+        <datalist id="rt_genres">${d.genres.map(g => `<option value="${esc(g)}">`).join('')}</datalist>
+        ${RT.seen.length ? `<label class="field"><span>Pick a topic the bot has seen (fills the boxes below)</span><select id="rt_seen"><option value="">Choose…</option>${RT.seen.map((t, i) => `<option value="${i}">${esc(t.supergroup_name || t.supergroup_id)} / ${esc(t.name || '')} #${t.topic_id}</option>`).join('')}</select></label>` : ''}
+        <div class="two"><label class="field"><span>Destination Supergroup ID *</span><input id="rt_sg" inputmode="numeric" placeholder="-1001234567890" value="${esc(e.chat_id || '')}"></label><label class="field"><span>Destination Topic ID * (General = 1)</span><input id="rt_tp" inputmode="numeric" value="${esc(e.topic_id || '')}"></label></div>
+        <div class="two"><label class="field"><span>Supergroup name (for reports)</span><input id="rt_sgn" maxlength="100" value="${esc(e.chat_name || '')}"></label><label class="field"><span>Topic name (for reports)</span><input id="rt_tpn" maxlength="100" value="${esc(e.topic_name || '')}"></label></div>
+        <label class="field"><span>Which Story Topics of the story go here</span><select id="rt_pm"><option value="first"${pm === 'first' ? ' selected' : ''}>Only topic 1 (the first)</option><option value="all"${pm === 'all' ? ' selected' : ''}>All of them (Human + AI voice …)</option><option value="custom"${pm === 'custom' ? ' selected' : ''}>These ones (type the names)</option></select></label>
+        <label class="field"><span>Names, separated by commas (only for “These ones”)</span><input id="rt_pl" maxlength="200" placeholder="Human Voice, AI Voice" value="${pm === 'custom' ? esc(pk) : ''}"></label>
+        <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="rtsave" type="button">Save rule</button><button class="btn ghost small" data-ixa="rtcancel" type="button">Cancel</button></div>
+        <small class="note">Open the destination group → topic to find its ids (or use /routehere inside the topic in the Route Bot, which fills all of this). The Route Bot (or your account) must be an admin of the old and the new group.</small></div>`;
+    } else {
+      h += `<div class="actions" style="padding:0 16px 10px"><button class="btn small" data-ixa="rtnew" type="button">➕ New rule</button></div>` +
+        (d.rules.map(r => `<div class="mrow"><b>${esc(r.genre)}</b> ${chip(r.kind === 'merged' ? 'gold' : 'live', r.kind)} <span class="by">takes: ${esc(r.pick)}</span>
+          <div class="by">→ ${esc(r.chat_name || r.chat_id)} (${r.chat_id}) · topic ${esc(r.topic_name || '')} #${r.topic_id}</div>
+          <div class="actions" style="padding:8px 0 0"><button class="btn small" data-ixa="rtedit" data-id="${r.id}" type="button">Edit</button><button class="btn ghost small" data-ixa="rtdel" data-id="${r.id}" type="button">Delete</button></div></div>`).join('') || '<div class="empty">No rules yet. Add one for each genre of your Completed and Merged groups.</div>');
+    }
+    h += `<div class="box"><b>Move a story now</b><p class="note" style="margin:6px 0 8px">For a story that is already completed, or to try a rule. You see the plan first; nothing moves until you press Start. Failed files are tried again.</p>
+      <label class="field"><span>Story</span><select id="rt_sid"><option value="">Choose a story</option>${d.stories.map(s => `<option value="${esc(s.id)}">${s.completed ? '✅ ' : ''}${esc(s.title)}${s.genre ? ' · ' + esc(s.genre) : ''}</option>`).join('')}</select></label>
+      <label class="field"><span>Genre (empty = the story's first genre)</span><input id="rt_gen" maxlength="120" list="rt_genres2"></label><datalist id="rt_genres2">${d.genres.map(g => `<option value="${esc(g)}">`).join('')}</datalist>
+      <div class="actions" style="padding:6px 0 0"><button class="btn small" data-ixa="rtpreview" type="button">Preview</button></div>
+      ${RT.preview ? `<pre style="white-space:pre-wrap;margin:10px 0 0;font:inherit;font-size:13px">${esc(RT.preview.preview)}</pre>` + (RT.preview.plan_id ? `<div class="actions" style="padding:8px 0 0"><button class="btn small" data-ixa="rtgo" data-id="${RT.preview.plan_id}" type="button">▶ Start moving</button><button class="btn ghost small" data-ixa="rtskip" data-id="${RT.preview.plan_id}" type="button">Skip</button></div>` : '<small class="note">Nothing to move here.</small>') : ''}</div>`;
+    h += '<h4 style="margin:12px 16px 6px">Recent moves</h4>' + (d.plans.map(p => `<div class="mrow"><b>${esc(p.title)}</b> <span class="by">${esc(p.genre)}</span> ${chip(p.state === 'done' ? 'live' : (p.state === 'running' ? 'gold' : 'warn'), esc(p.state))}
+      <div class="by">#${p.id} · ${p.done} moved${p.failed ? ' · <b>' + p.failed + ' failed</b>' : ''}${p.todo ? ' · ' + p.todo + ' waiting' : ''} · ${ixWhen(p.created)}</div>
+      <div class="actions" style="padding:8px 0 0"><button class="btn ghost small" data-ixa="rtreport" data-id="${p.id}" type="button">Report</button>${p.state === 'done' && !p.old_deleted ? `<button class="btn ghost small" data-ixa="rtundo" data-id="${p.id}" type="button">Undo</button>` : ''}</div></div>`).join('') || '<div class="empty">Nothing moved yet.</div>');
   } else if (IX.view === 'settings'){
     const s = d.settings;
     h = `<div class="box"><b>Bot settings</b>
@@ -3349,6 +3387,7 @@ function ixTopicOpts(stories, sid, cur){
 }
 async function ixChange(ev){
   const t = ev.target;
+  if (t.id === 'rt_seen'){ const x = RT.seen[+t.value]; if (x){ const set = (i, v) => { const el = document.getElementById(i); if (el) el.value = v; }; set('rt_sg', x.supergroup_id); set('rt_tp', x.topic_id); set('rt_sgn', x.supergroup_name || ''); set('rt_tpn', x.name || ''); } return; }
   if (t.classList && t.classList.contains('dy_ps')){ const tp = document.querySelector('.dy_pt[data-pid="' + t.dataset.pid + '"]'); if (tp) tp.innerHTML = ixTopicOpts(DY.stories, t.value, ''); return; }
   if (t.id === 'dy_file' && t.files && t.files[0]){
     const txt = await t.files[0].text();
@@ -3367,6 +3406,27 @@ async function ixClick(ev){
   const b = ev.target.closest('[data-ixa]'); if (!b) return;
   const a = b.dataset.ixa, id = +b.dataset.id || null, sid = b.dataset.sid;
   const run = async (body, ok) => once('ix' + a + (id || sid || ''), async () => { try{ const r = await ixPost(body); toast(ok ? ok(r) : 'Done'); }catch(e){ toast(adminErr(e)); } loadAdmin(); });
+  if (a.startsWith('rt')){
+    if (a === 'rtmode') return run({op: 'route_mode', mode: b.dataset.v});
+    if (a === 'rtsender') return run({op: 'route_sender', who: b.dataset.v});
+    if (a === 'rtnew'){ RT.edit = {kind: 'normal', pick: 'first'}; return loadAdmin(); }
+    if (a === 'rtedit'){ RT.edit = RT.rules.find(r => r.id === id) || null; return loadAdmin(); }
+    if (a === 'rtcancel'){ RT.edit = null; return loadAdmin(); }
+    if (a === 'rtdel') return askConfirm('Delete this rule? Stories already moved stay where they are.', () => run({op: 'route_rule_del', id}));
+    if (a === 'rtsave') return once('rtsave', async () => {
+      const g = i => ($('#' + i) || {value: ''}).value.trim(), pm = g('rt_pm');
+      try{ await ixPost({op: 'route_rule_save', id: RT.edit && RT.edit.id, kind: g('rt_kind'), genre: g('rt_genre'), chat_id: g('rt_sg'), topic_id: g('rt_tp'), chat_name: g('rt_sgn'), topic_name: g('rt_tpn'), pick: pm === 'custom' ? (g('rt_pl') || 'first') : pm}); RT.edit = null; toast('Rule saved'); }catch(e){ toast(adminErr(e)); }
+      loadAdmin(); });
+    if (a === 'rtpreview') return once('rtpreview', async () => {
+      const s = ($('#rt_sid') || {}).value, gen = ($('#rt_gen') || {}).value || ''; if (!s) return toast('Choose a story first');
+      try{ RT.preview = await ixPost({op: 'route_run', story_id: s, genre: gen}); }catch(e){ RT.preview = null; toast(adminErr(e)); }
+      loadAdmin(); });
+    if (a === 'rtgo'){ RT.preview = null; return run({op: 'route_go', plan_id: id}, () => 'Moving started. The report arrives in Telegram.'); }
+    if (a === 'rtskip'){ RT.preview = null; return run({op: 'route_skip', plan_id: id}, () => 'Skipped'); }
+    if (a === 'rtundo') return askConfirm('Undo this move? The records and the old mapping go back; the forwarded copies are removed.', () => run({op: 'route_undo', plan_id: id}, r => 'Undone. Copies removed: ' + r.removed + (r.kept ? ', could not remove ' + r.kept : '')));
+    if (a === 'rtreport') return once('rtreport' + id, async () => { try{ const r = await ixPost({op: 'route_report', plan_id: id}); if (tg && tg.showAlert) tg.showAlert(r.text.slice(0, 3500)); else alert(r.text); }catch(e){ toast(adminErr(e)); } });
+    return;
+  }
   if (a.startsWith('dy')){
     if (a === 'dynew'){ DY.edit = null; DY.step = 'form'; return loadAdmin(); }
     if (a === 'dyedit'){ DY.edit = DY.sources.find(s => s.id === id); DY.step = 'form'; return loadAdmin(); }
@@ -3796,7 +3856,7 @@ async function adminDelete(id, title){
 
 /* ---- admin data reset: 5 confirmations, also counted by the server ---- */
 const RESET_NAME = {app: 'CLEAR ALL APP DATA', bot: 'CLEAR ALL BOT DATA', all: 'CLEAR ALL DATA (APP + BOT)'};
-const RESET_WHAT = {app: 'all stories, episodes, covers, purchases, rentals, listening activity and wishlists', bot: 'all users, requests, support data, FAQs, bans, banners and the audit log', all: 'EVERYTHING: the whole app and the whole bot'};
+const RESET_WHAT = {app: 'all stories, episodes, covers, purchases, rentals, listening activity and wishlists', bot: 'all users, requests, support and contact data, verification passes and bans, FAQs, banners and the audit log', all: 'EVERYTHING in the whole system: stories, users, orders, the Index Bot and Auto Route data, verification, groups, contact, settings and every other table. Only the bot tokens / admins / channels and the backup record are kept'};
 async function resetFlow(scope){
   await once('reset', async () => {
     const name = RESET_NAME[scope], what = RESET_WHAT[scope];
@@ -3819,7 +3879,7 @@ async function resetFlow(scope){
       const total = Object.values(r.deleted || {}).reduce((a, b) => a + b, 0);
       S.home = null; S.homeState = 'idle'; S.wish = new Set(); Object.assign(S.feed, {items: [], offset: 0, state: 'idle', done: false, seeded: false, err: ''});
       Object.assign(B, {all: null, allState: 'idle', items: [], state: 'idle'});
-      toast(`Done. ${total} records erased.`, 6000);
+      toast(`Done. ${total} records erased.${r.restart ? ' Restart the bot once so every part starts fresh.' : ''}`, 9000);
       loadAdmin(); loadHome();
     }catch(e){ toast(adminErr(e), 7000); }
   });
