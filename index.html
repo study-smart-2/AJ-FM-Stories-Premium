@@ -933,6 +933,7 @@ html[data-theme=warm]{--gold:#6a3fd0; --gold-2:#52299f; --gold-rgb:106,63,208; -
 .g0{background:linear-gradient(110deg,#c92a2a,#ef4a30 55%,#a31212)}
 .g1{background:linear-gradient(110deg,#d93a3a,#f57c00)}.g1 .cpt-code,.g1 .tk-code{background:linear-gradient(#f7ae4c,#c46a0d)}
 .g2{background:linear-gradient(110deg,#fde4ea,#ffe9c8);color:#3a1a1a}.g2 .cpt-code{background:linear-gradient(#ead9bd,#b79b72);color:#3a2a14}
+.g4{background:linear-gradient(110deg,#0f766e,#14b8a6)}.g4 .cpt-code{background:#fff;color:#0b5a53}
 .g3{background:linear-gradient(110deg,#5b33c2,#9a73f0)}.g3 .cpt-code{background:#fff;color:#3b1f86}
 /* coupon page: ticket cards */
 .tk{margin:0 16px 14px;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--panel);box-shadow:0 6px 18px rgba(0,0,0,.18)}
@@ -1580,9 +1581,9 @@ function renderHome(){
     !FREE_BUILD && dealsP.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${dealsP.map(dealCard).join('')}</div></div>` : '',
     !FREE_BUILD && tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.filter(x => accOf(x) !== 'free').map(tierCard).join('')}</div>` : '',
     ...(h.collections || []).map(colSection),
-    FREE_BUILD ? '' : offersStrip(),                                                                            // between Ongoing and Completed
+    offersStrip(),                                                                            // between Ongoing and Completed (free build: only the Verify all stories card)
     secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
-    ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (FREE_BUILD ? '' : i % 4 === 1 ? offersStrip() : i % 4 === 3 ? dailyCombosSection() : ''))      // then a coupon strip / daily combos after every 2 genre rows
+    ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (i % 4 === 1 ? offersStrip() : (!FREE_BUILD && i % 4 === 3) ? dailyCombosSection() : ''))      // then a coupon strip / daily combos after every 2 genre rows
   ].join('');
   v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
     (S.homeState === 'error' ? `<div class="msg bad">Could not refresh: ${esc(S.homeErr)} <button class="link" id="retryHome">Retry</button></div>` : '');
@@ -1771,7 +1772,8 @@ const heroBanners = s => (s.banners || []).length
 const ordw = n => n === 1 ? 'first' : n === 2 ? '2nd' : n === 3 ? '3rd' : n + 'th';
 const cpV = i => 'g' + (i % 4);                              // ticket colours cycle: red, orange, cream, violet
 function offersStrip(){                                      // coupons (and admin banners) in one strip that slides by itself; the big title is never cut
-  const o = CP.offers || {}, bn = o.banners || [], cs = o.coupons || [], slides = [];
+  const o = CP.offers || {}, bn = FREE_BUILD ? [] : (o.banners || []), cs = FREE_BUILD ? [] : (o.coupons || []), slides = [];
+  if (FREE_ON) slides.push(`<div class="cps-s"><div class="cpt g4"><button class="cpt-l" data-vfall="1" aria-label="Verify all stories"><b>&#127760; Verify all stories</b><small>4 quick verifications unlock every story for a few hours</small></button><button class="cpt-code" data-vfall="1" aria-label="Verify all stories">VERIFY</button></div></div>`);
   cs.forEach((c, i) => {
     const sub = c.title && c.title !== c.headline ? c.title : (c.headline !== c.text ? c.text : '');
     slides.push(`<div class="cps-s"><div class="cpt ${cpV(i)}"><button class="cpt-l" data-offers="1" aria-label="Coupons and offers"><b>${esc(c.headline || c.text)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</button><button class="cpt-code" data-cpcopy="${esc(c.code)}" aria-label="Copy code ${esc(c.code)}">CODE: ${esc(c.code)}</button></div></div>`);
@@ -2187,7 +2189,8 @@ async function atcOpen(sid, btn){
 }
 function atcClick(c){
   let m;
-  if ((m = c('[data-vfstory]'))){ openVerify(m.dataset.vfstory); return true; }
+  if ((m = c('[data-vfall]'))){ goBot('v_all'); return true; }
+  if ((m = c('[data-vfstory]'))){ goBot('v_' + m.dataset.vfstory); return true; }
   if ((m = c('[data-atc]'))){ atcOpen(m.dataset.atc, m); return true; }
   const ov = $('#atcOv'); if (!ov) return false;
   if (c('[data-atcx]') || (c('#atcOv') && !c('.atc-sheet'))){ ov.remove(); return true; }
@@ -2613,7 +2616,7 @@ function openChat(){
 const playEpisode = ep => sendEpisode(ep, false);      // other callers pass a story as the 2nd argument, so the demo flag lives in its own function
 async function sendEpisode(ep, demo){
   if (!ep) return;
-  if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); return toast('Locked. Choose a plan to unlock it.'); }
+  if (ep.locked){ if (accOf(V.story) !== 'premium') return goBot('v_' + V.id); return toast('Locked. Choose a plan to unlock it.'); }
   return once('send' + ep.id, async () => {
     try{
       const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN(), ...(demo ? {demo: true} : {})})});
@@ -3504,8 +3507,8 @@ function vfHome(){
     : `<div class="vf-card"><b>&#128214; Unlock this story</b><small>1 verification &middot; ${s.pass_hours} hours &middot; every episode of this story</small>${cd['1'] > 0 ? `<p>Please try again in ${vfLeft(cd['1'])}.</p>` : `<button class="btn block" data-vfgo="1" style="margin-top:10px" type="button">Start</button>`}</div>`;
   const four = p.global ? `<div class="vf-card"><b>&#127881; All stories are unlocked</b><small>Active for ${vfLeft(p.global - nowS)}</small></div>`
     : `<div class="vf-card"><b>&#127760; Unlock all stories</b><small>4 verifications in a row &middot; ${s.pass_hours} hours &middot; any story</small>${sess && sess.mode === 4 ? `<p>Verification ${sess.done} of ${sess.need} complete &middot; links used ${sess.links_used} of ${sess.links_max}</p>` : ''}${cd['4'] > 0 && !(sess && sess.mode === 4) ? `<p>Please try again in ${vfLeft(cd['4'])}.</p>` : `<button class="btn block" data-vfgo="4" style="margin-top:10px" type="button">${sess && sess.mode === 4 ? 'Next verification' : 'Start'}</button>`}</div>`;
-  vfShell(`${resume}${one}${four}${s.tutorial && s.tutorial !== 'off' ? '<button class="btn block ghost" data-vftut="1" style="margin-bottom:12px" type="button">&#128250; Tutorial: how to verify</button>' : ''}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`);
-  $('#verify').onclick = e => { if (e.target.closest('[data-vftut]')) return vfTutorial(); const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
+  vfShell(`${resume}${one}${four}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
+  $('#verify').onclick = e => { const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
 }
 async function vfStart(mode){
   try{ const j = await api('/api/vf/start', {method: 'POST', retry: false, body: JSON.stringify({mode, story: mode === 1 ? VF.story : '', topic: mode === 1 ? (VF.topic || '') : ''})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
@@ -3581,9 +3584,8 @@ async function vfStartPage(){
   const l = VF.link, sess = VF.st.session || {};
   vfShell(`<div class="vf-card"><b>Verification ${sess.mode === 4 ? (sess.done + 1) + ' of ' + sess.need : ''}</b><small>Link ${l.idx} of ${sess.links_max || 2} &middot; ${l.role === 'required' ? 'Required' : 'Spare'}</small></div>
     <div class="vf-card"><div id="vfC"></div></div><div class="vf-card"><div id="vfP"></div></div><button class="btn block" id="vfGo" data-ready="Continue to the ad" data-todo="Complete the steps above" type="button" disabled>Complete the steps above</button>
-    ${VF.st.tutorial && VF.st.tutorial !== 'off' ? '<button class="btn block ghost" id="vfTut2" style="margin-top:10px" type="button">&#128250; Tutorial: how to verify</button>' : ''}
     <p class="note">The ad opens in your browser. When it finishes, you will return here for the last step.</p>`, 'Step 1');
-  const go = $('#vfGo'), paint = vfGate(go, b.wait); if ($('#vfTut2')) $('#vfTut2').onclick = vfTutorial;
+  const go = $('#vfGo'), paint = vfGate(go, b.wait);
   vfCaptcha($('#vfC'), 1, () => { VF.done.c = true; paint(); }); vfSlider($('#vfP'), 1, b.pz, () => { VF.done.p = true; paint(); });
   go.onclick = async () => { go.disabled = true; try{ const r = await api('/api/vf/open', {method: 'POST', retry: false, body: JSON.stringify({token: l.token})}); clearInterval(VF.timer);
       vfWaiting();
@@ -3604,7 +3606,7 @@ async function vfEnd(token){
     catch(e){ const d = e.data || {}; if (d.error === 'wrong'){ toast('That answer is incorrect. Attempts remaining: ' + d.left); if (d.question) $('#vfQ').textContent = d.question + ' = ?'; } else toast(vfErr(e)); paint(); } };
 }
 function vfCode(code){
-  const s = VF.st || {}, bot = String(AUDIO_BOT_USERNAME || s.bot || BOT_USERNAME || '').replace(/^@/, ''), tries = s.tries_max || 5, days = s.ban_days || 7;
+  const s = VF.st || {}, bot = String(BOT_USERNAME || '').replace(/^@/, ''), tries = s.tries_max || 5, days = s.ban_days || 7;
   vfShell(`<div class="vf-card"><b>&#128273; Your code</b><div class="vf-code" id="vfCodeBox">${esc(code)}</div>
     <button class="btn block" id="vfCopy" type="button">Copy code</button>
     <p>Step 1: paste this code in the bot chat within ${s.code_min || 10} minutes. Step 2: the bot then asks for your answer, write the answer of the sum you just solved.</p>${bot ? `<button class="btn block ghost" id="vfBot" type="button">Open the bot</button>` : ''}</div>`, 'Verification code');
@@ -4406,10 +4408,10 @@ document.addEventListener('click', async e => {
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
   if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
   if ((m = c('[data-buy]'))) return once('buy', async () => { goBot(`buy_${V.id}_${m.dataset.buy}`); await sleep(1200); });
-  if ((m = c('[data-vf]'))) return openVerify(V.id, V.topic || '');
+  if ((m = c('[data-vf]'))) return once('vf', async () => { goBot('v_' + V.id); await sleep(1200); });
   if ((m = c('#story [data-ep]'))){
     const ep = V.eps.find(v => String(v.id) === m.dataset.ep); if (!ep) return;
-    if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
+    if (ep.locked){ if (accOf(V.story) !== 'premium') return goBot('v_' + V.id); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
     return playEpisode(ep, storyTag(V.story));
   }
   if ((m = c('[data-pg]'))){ const pages = Math.ceil(V.total / PAGE_SIZE), p = Math.min(pages, Math.max(1, V.page + (m.dataset.pg === 'next' ? 1 : -1))); return loadStoryPage(p); }
