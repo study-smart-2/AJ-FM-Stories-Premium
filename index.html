@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>
-/* One page for both bots. Free build:  index.html?tier=free   Premium build: index.html (or ?tier=premium). Remembered for the session. */
-(function(){var f=false;try{var q=new URLSearchParams(location.search),h=new URLSearchParams((location.hash||'').replace(/^#\??/,'')),t=q.get('tier')||h.get('tier')||(q.has('free')?'free':'')||(h.has('free')?'free':'')||(q.has('premium')?'premium':'');
-if(!t){try{t=sessionStorage.getItem('aj_tier')||''}catch(e){}}f=t==='free';try{sessionStorage.setItem('aj_tier',f?'free':'premium')}catch(e){}}catch(e){}
-window.__FREE_BUILD=f;if(f)document.documentElement.className+=' free-build';})();
-</script>
+<script>/* Access mode (Free / Premium / Free + Premium) is set by the admin on the server; the last one is remembered only to avoid a flash on start. */
+try{var _m=JSON.parse(localStorage.getItem('aj_mode')||'null');if(_m&&_m.free&&!_m.premium)document.documentElement.className+=' free-build';}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AJ's FM Stories</title>
@@ -856,6 +852,8 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 @media(min-width:560px){.card.rcard{grid-template-columns:40% minmax(0,1fr);column-gap:14px;padding:12px}.rcard .rcb b{font-size:17px}.rcard .trow{font-size:13px}.rcard .prn{font-size:15px}}
 
 /* Add to cart under a story card + Select plan sheet (one line per topic) */
+.card.rcard.cwrap .vfb{grid-column:2;grid-row:2;margin-top:8px;align-self:end;min-height:40px;width:100%;padding:7px 8px;font-size:13px}
+.card.cwrap .vfb{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;min-height:40px;padding:6px 8px;white-space:nowrap}
 .card.cwrap .atc{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;min-height:40px;padding:6px 8px;white-space:nowrap}
 .atc-ov{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);display:flex;align-items:flex-end}
 .atc-sheet{width:100%;max-height:88vh;display:flex;flex-direction:column;background:var(--surf);border-top:1px solid var(--gold);border-radius:18px 18px 0 0;overflow:hidden}
@@ -1185,19 +1183,24 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-2.onrender.com";   // your bot server address
-const AUDIO_BOT_USERNAME = "AJFMAudioExpressBot";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
-const BOT_USERNAME = "AjFMStoriesPremium_bot";      // your bot, without @
+const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
+const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
-const FREE_BUILD   = !!window.__FREE_BUILD;   // true only for the Free bot (index.html?tier=free): no prices, no cart, no Buy now
-if (FREE_BUILD) document.title = "AJ's FM Stories";
-const MINIAPP_SHORT = "ajfm";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
+/* Access mode, set by the admin (Admin > Access Tiers) and sent by /api/me:  Free only | Premium only | Free + Premium.
+   FREE_BUILD = free only (no prices, no cart, no Buy now).  FREE_ON = free verification unlock is available (Free or Free + Premium). */
+let TIERS = {free: false, premium: true};
+try{ const _c = JSON.parse(localStorage.getItem('aj_mode') || 'null'); if (_c && (_c.free || _c.premium)) TIERS = {free: !!_c.free, premium: !!_c.premium}; }catch(e){}
+let FREE_BUILD = TIERS.free && !TIERS.premium, FREE_ON = !!TIERS.free;
+/* Per-story access type. Free mode: every story is 'free'. Premium mode: every story is 'premium'. Free + Premium mode: the story's own setting (admin sets it per story):
+     premium = only premium (buy with pay) | free = only free (verify to unlock) | both = free story that also offers a premium plan to skip verification */
+const accOf = s => !FREE_ON ? 'premium' : FREE_BUILD ? 'free' : (s && (s.access === 'free' || s.access === 'both') ? s.access : 'premium');
+const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and get the episodes in your bot chat.";
 const HOW_IT_WORKS = "Pick a plan, pay, and send the payment screenshot to our bot. Once it is confirmed, your episodes unlock here and you can send them to your chat.";
 const PAGE_SIZE    = 50;
 /* ============================================== */
 
-let TIERS = {free: false, premium: true};                 // what the admin allows members to see (from /api/me)
 const tg = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
 if (tg){ tg.ready(); tg.expand(); try{ tg.setHeaderColor('#0b101c'); tg.setBackgroundColor('#0b101c'); }catch(e){} }
 
@@ -1314,13 +1317,13 @@ const subGenres = s => hasSubField(s) ? splitGenres(s.sub_genre) : genreList(s).
 const priceMax = s => { if (s.max_price != null) return +s.max_price; if (s.options && s.options.length) return Math.max(...s.options.map(o => +o.price)); return null; };
 const dealOf = (p, s) => Math.round(+p * (100 - s.deal.pct) / 100);
 const priceLabel = s => {                                                       // ONE price, never a range: the highest plan of the story
-  if (FREE_BUILD || (!TIERS.premium && !S.admin)) return '';
+  if (accOf(s) === 'free' || (!TIERS.premium && !S.admin)) return '';
   if (s.plans === 0) return 'Price soon';
   const hi = priceMax(s), lo = +s.min_price;
   if (hi != null && hi > 0) return money(s.deal ? dealOf(hi, s) : hi) + (s.deal ? ' (-' + s.deal.pct + '%)' : '');
   return lo === 0 ? 'Free' : (s.has_free ? 'Free + paid' : 'From ' + money(lo));
 };
-const priceHtml = s => { if (FREE_BUILD) return '';                                                       // struck-through MRP | highest price | % OFF, all on one line (no MRP / deal: just the price)
+const priceHtml = s => { if (accOf(s) === 'free') return '';                                                       // struck-through MRP | highest price | % OFF, all on one line (no MRP / deal: just the price)
   const hi = priceMax(s); let cur, old, pct;
   if (s.plans > 0 && hi > 0 && s.deal){ cur = dealOf(hi, s); old = hi; pct = s.deal.pct; }
   else if (s.plans > 0 && hi > 0){
@@ -1330,15 +1333,16 @@ const priceHtml = s => { if (FREE_BUILD) return '';                             
   if (cur == null) return `<span class="pr">${priceLabel(s)}</span>`;
   return `<span class="pr prx"><span class="prrow"><s class="mrp" aria-label="MRP">${money(old)}</s><span class="prn">${money(cur)}</span><em class="off">${pct}% OFF</em></span></span>`;
 };
-const atcShow = s => !FREE_BUILD && (TIERS.premium || S.admin) && s.plans > 0 && (+s.min_price > 0 || (priceMax(s) || 0) > 0 || !!s.deal);          // a story with at least one paid plan gets the button
-const atcBtn = s => atcShow(s) ? `<button class="btn small atc" data-atc="${esc(s.id)}" aria-label="Add ${esc(s.title)} to cart">&#128722; Add to cart</button>` : '';
-const cardBadge = s => FREE_BUILD ? (s.status === 'Completed' ? 'Completed' : '') : (s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''));
+const atcShow = s => accOf(s) !== 'free' && (TIERS.premium || S.admin) && s.plans > 0 && (+s.min_price > 0 || (priceMax(s) || 0) > 0 || !!s.deal);          // a story with at least one paid plan gets the button
+const atcBtn = s => accOf(s) !== 'premium' ? (s.episodes || s.plans || accOf(s) === 'free' ? `<button class="btn small vfb" data-vfstory="${esc(s.id)}" aria-label="Verify to unlock ${esc(s.title)}">&#128275; Verify to unlock</button>` : '')
+  : atcShow(s) ? `<button class="btn small atc" data-atc="${esc(s.id)}" aria-label="Add ${esc(s.title)} to cart">&#128722; Add to cart</button>` : '';
+const cardBadge = s => accOf(s) === 'free' ? (s.status === 'Completed' ? 'Completed' : '') : (s.deal ? '-' + s.deal.pct + '% OFF' : s.has_free ? 'FREE' : (s.status === 'Completed' ? 'Completed' : ''));
 const card = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, cardBadge(s))}
   <b>${esc(s.title)}</b><small>${esc([mainGenre(s), s.episodes ? '' : 'Coming soon'].filter(Boolean).join(' | '))}</small>${priceHtml(s)}</button>${atcBtn(s)}</div>`;
 
 /* list card: cover on the left (full height) | title, genre, one line per topic "price | MRP | OFF", Add to cart */
 const tpRows = s => {
-  if (FREE_BUILD || s.plans === 0) return [];
+  if (accOf(s) === 'free' || s.plans === 0) return [];
   let rows = Array.isArray(s.tprice) ? s.tprice.slice() : null;
   if (!rows){ const hi = priceMax(s); if (!(hi > 0)) return []; const m = s.top_mrp !== undefined ? s.top_mrp : (hi === +s.max_price ? s.max_mrp : null); rows = [{name: 'Full Story', price: hi, mrp: +m > hi ? +m : null, pct: +m > hi ? Math.round((m - hi) * 100 / m) : 0}]; }
   return rows.map(r => s.deal && r.price > 0 ? {name: r.name, price: dealOf(r.price, s), mrp: r.price, pct: s.deal.pct} : r);
@@ -1401,7 +1405,14 @@ Object.assign(TR.hing, {cmbtitle:'Story Combinations', cmbbest:'BEST DEAL', cmba
 const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi'}, LANG_NAME = {en:'English', hi:'हिन्दी', hing:'Hinglish'};
 let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
 let THEME = store.get('ajt', 'dark'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'dark';      // Dark (warm) is the default; Light and Warm stay available
-if (!FREE_BUILD){ TR.en.sptitle="Welcome to AJ's FM Stories Premium"; TR.en.spsub='Your premium audio story store inside Telegram, delivered instantly to your chat.'; TR.hi.sptitle="AJ's FM Stories Premium में आपका स्वागत है"; TR.hi.spsub='टेलीग्राम के अंदर आपका प्रीमियम ऑडियो स्टोरी स्टोर, सीधे आपकी चैट में।'; TR.hing.sptitle="AJ's FM Stories Premium mein swagat hai"; TR.hing.spsub='Telegram ke andar aapka premium audio story store, seedha aapki chat mein.'; document.title="AJ's FM Stories Premium"; $('#spTitle').textContent=TR.en.sptitle; $('#spSub').textContent=TR.en.spsub; }
+const BRAND_FREE = {}, BRAND_PREM = {en:["Welcome to AJ's FM Stories Premium",'Your premium audio story store inside Telegram, delivered instantly to your chat.'], hi:["AJ's FM Stories Premium में आपका स्वागत है",'टेलीग्राम के अंदर आपका प्रीमियम ऑडियो स्टोरी स्टोर, सीधे आपकी चैट में।'], hing:["AJ's FM Stories Premium mein swagat hai",'Telegram ke andar aapka premium audio story store, seedha aapki chat mein.']};
+['en', 'hi', 'hing'].forEach(l => { BRAND_FREE[l] = [TR[l].sptitle, TR[l].spsub]; });
+function applyBrand(){                                              // splash / tab title follow the access mode
+  const premiumOnly = !TIERS.free;
+  ['en', 'hi', 'hing'].forEach(l => { const b = premiumOnly ? BRAND_PREM[l] : BRAND_FREE[l]; TR[l].sptitle = b[0]; TR[l].spsub = b[1]; });
+  document.title = premiumOnly ? "AJ's FM Stories Premium" : "AJ's FM Stories";
+  const a = $('#spTitle'), c = $('#spSub'); if (a) a.textContent = TR.en.sptitle; if (c) c.textContent = TR.en.spsub;
+}
 const tr = (k, v) => { let s = (TR[LANG] && TR[LANG][k]) || TR.en[k] || k; if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]); return s; };
 // ---- auto-translate story text (description, notes) into the app language; the server caches every translation
 const TC = {}, TQ = new Set(); let TT = 0;
@@ -1539,7 +1550,7 @@ const secRail = (title, items, key, render = homeCard, lead = '') => items && it
 const left = until => { const s = until - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
 const dealBadge = s => !FREE_BUILD && s.deal ? `-${s.deal.pct}% OFF` : '';
 const big = u => typeof u === 'string' ? u.replace('size=thumb', 'size=full') : u;      // the large home cards use the full-size picture
-const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([mainGenre(s)].filter(Boolean).join(' | '))}</small><span class="btn small">&#9654; ${tr('listen')}</span></div></button>`;
+const slide = s => `<button class="slide" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(big(s.cover), dealBadge(s))}<div class="sinfo"><b>${esc(s.title)}</b><small>${esc([mainGenre(s)].filter(Boolean).join(' | '))}</small>${accOf(s) !== 'premium' ? `<span class="btn small" data-vfstory="${esc(s.id)}">&#128275; Verify to unlock</span>` : `<span class="btn small">&#9654; ${tr('listen')}</span>`}</div></button>`;
 const dealCard = s => `<div class="card cwrap"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, dealBadge(s))}<b>${esc(s.title)}</b><span class="pr"><s>${money(s.min_price)}</s>${money(s.eff_price)}</span><small class="cd" data-until="${s.deal.until}">${tr('ends')} ${left(s.deal.until)}</small></button>${atcBtn(s)}</div>`;
 const upCard = s => { const on = S.wish.has(s.id); return `<div class="card up"><button class="plain" data-story="${esc(s.id)}" aria-label="Open ${esc(s.title)}">${cover(s.cover, tr('soon'))}<b>${esc(s.title)}</b><small>${esc(mainGenre(s))}</small></button><button class="wish${on ? ' on' : ''}" data-wish="${esc(s.id)}" aria-pressed="${on}" aria-label="Wishlist">${on ? '&#9829;' : '&#9825;'}</button></div>`; };
 const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data-contx="${esc(i.story.id)}" aria-label="Remove ${esc(i.story.title)} from continue listening">&times;</button></div>`;
@@ -1561,13 +1572,13 @@ function renderHome(){
   if (S.homeState === 'error' && !S.home){ v.innerHTML = retryBox(S.homeErr, 'retryHome'); return; }
   if (!S.home){ v.innerHTML = `<div class="sk hero"></div><div class="sk line" style="width:40%"></div><div class="rail">${cardSk(4)}</div><div class="sk line" style="width:50%"></div><div class="rail">${cardSk(4)}</div>
     <div class="empty"><small>${tr('loading')}</small></div>`; return; }
-  const h = S.home, heroKey = h.trending.length ? 'trending' : 'recent', hero = h[heroKey], tier = h.tiers[Math.min(S.tier, h.tiers.length - 1)];
+  const h = S.home, dealsP = h.deals.filter(x => accOf(x) !== 'free'), heroKey = h.trending.length ? 'trending' : 'recent', hero = h[heroKey], tier = h.tiers[Math.min(S.tier, h.tiers.length - 1)];
   if (!S.feed.seeded){ S.feed.items = [...h.recommended]; S.feed.seeded = true; }
   const sections = [
     awayBanner(),
     secRail(tr('trending'), hero, heroKey, slide),
-    !FREE_BUILD && h.deals.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${h.deals.map(dealCard).join('')}</div></div>` : '',
-    !FREE_BUILD && tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.map(tierCard).join('')}</div>` : '',
+    !FREE_BUILD && dealsP.length ? `<div class="flash"><div class="sechead"><h2 class="sec">&#9889; ${tr('flash')}</h2></div><div class="rail">${dealsP.map(dealCard).join('')}</div></div>` : '',
+    !FREE_BUILD && tier ? `<div class="sechead"><h2 class="sec">${tr('deals')}</h2></div><div class="chips" id="tierChips">${h.tiers.map((t2, i) => `<button class="chip${t2 === tier ? ' on' : ''}" data-tier="${i}">${esc(t2.max ? tr('under', {p: money(t2.max)}) : money(t2.over + 1) + '+')}</button>`).join('')}</div><div class="rail">${tier.items.filter(x => accOf(x) !== 'free').map(tierCard).join('')}</div>` : '',
     ...(h.collections || []).map(colSection),
     FREE_BUILD ? '' : offersStrip(),                                                                            // between Ongoing and Completed
     secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
@@ -2176,6 +2187,7 @@ async function atcOpen(sid, btn){
 }
 function atcClick(c){
   let m;
+  if ((m = c('[data-vfstory]'))){ openVerify(m.dataset.vfstory); return true; }
   if ((m = c('[data-atc]'))){ atcOpen(m.dataset.atc, m); return true; }
   const ov = $('#atcOv'); if (!ov) return false;
   if (c('[data-atcx]') || (c('#atcOv') && !c('.atc-sheet'))){ ov.remove(); return true; }
@@ -2415,7 +2427,7 @@ function discoverRows(){
   mk('dcol', 'trend', '\uD83D\uDD25', tr('dtrend'), all.filter(s => s.listeners > 0).sort((a, b) => b.listeners - a.listeners || byUpd(a, b)), {sort:'popular'});
   mk('dcol', 'new', '\u2728', tr('recent'), all.slice().sort((a, b) => b.created - a.created), {sort:'newest'});
   mk('dcol', 'upd', '\uD83C\uDD95', tr('dupd'), all.slice().sort(byUpd), {sort:'updated'});
-  !FREE_BUILD && mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.slice().sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
+  !FREE_BUILD && mk('dcol', 'bud', '\uD83D\uDCB0', tr('dbud'), all.filter(x => accOf(x) !== 'free').sort((a, b) => (a.min_price || 0) - (b.min_price || 0) || byUpd(a, b)), {sort:'price_low'});
   (f.statuses || []).forEach(n => mk('dstatus', 's:' + n, STATUS_ICON[n] || '\uD83D\uDCDA', n, all.filter(s => s.status === n).sort(byUpd), {status:n, sort:'updated'}));
   ((f.genres) || []).forEach(g => { const ic = (GENRE_ICON.find(x => x[0].test(g.name)) || [0, '\uD83C\uDFA7'])[1]; mk('dgenre', 'g:' + g.name, ic, g.name, all.filter(s => mainGenres(s).includes(g.name)).sort(byUpd), {genre:g.name, sort:'updated'}); });
   if ((f.languages || []).length > 1) f.languages.forEach(l => mk('dlang', 'l:' + l, '\uD83C\uDF10', l, all.filter(s => s.language === l).sort(byUpd), {language:l, sort:'updated'}));
@@ -2530,16 +2542,16 @@ async function loadVall(reset){
 const STATUS = {approved:['Active','free'], pending:['Pending approval','warn'], expired:['Expired',''], rejected:['Rejected','bad'], revoked:['Revoked','bad'], refunded:['Refunded','bad'], cancelled:['Cancelled','']};
 const statusPill = s => { const [t, c] = STATUS[s] || [s, '']; return `<span class="tag ${c === 'free' ? 'live' : c}">${esc(t)}</span>`; };
 const rangeText = r => r.from ? `Episodes ${r.from} to ${r.to || 'Ongoing'}` : 'All episodes';
-const LIB_TABS = FREE_BUILD ? [['listening', '\uD83D\uDD13', 'My Access'], ['wishlist', '\u2764\uFE0F', 'lw']]
-  : [['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']];
+const libTabs = () => FREE_BUILD ? [['listening', '\uD83D\uDD13', 'My Access'], ['wishlist', '\u2764\uFE0F', 'lw']]
+  : [['owned', '\uD83D\uDCDA', 'lo'], ['wishlist', '\u2764\uFE0F', 'lw'], ['rentals', '\u23F3', 'lr'], ['history', '\uD83D\uDCCB', 'lh']].concat(FREE_ON ? [['listening', '\uD83D\uDD13', 'My Access']] : []);
 const lthumb = c => `<span class="lth">${isImg(c) ? `<img src="${esc(c)}" alt="" loading="lazy" data-fb="?">` : esc(c || '?')}</span>`;
 const lrow = o => `<div class="lrow"><button class="lmain" ${o.attrs || `data-story="${esc(o.sid)}"`} ${o.avail === false ? 'data-avail="0"' : ''} aria-label="Open ${esc(o.title)}">${lthumb(o.cover)}<span class="lmt"><b>${esc(o.title)}</b>${(o.lines || []).filter(Boolean).map(l => `<small>${l}</small>`).join('')}${o.bar !== undefined ? `<span class="bar"><i style="width:${o.bar}%"></i></span>` : ''}</span></button><div class="lact">${o.actions || ''}</div></div>`;
 const leftText = ts => { const s = ts - Date.now() / 1000; if (s <= 0) return tr('ended'); const d = Math.floor(s / 86400), hr = Math.floor(s % 86400 / 3600); return d ? d + 'd ' + hr + 'h' : hr + 'h ' + Math.floor(s % 3600 / 60) + 'm'; };
 const libEmpty = k => `<div class="empty">${tr(k)}</div>`;
 function renderLibrary(){
-  if (!LIB_TABS.some(t => t[0] === L.seg)) L.seg = LIB_TABS[0][0];
+  if (!libTabs().some(t => t[0] === L.seg)) L.seg = libTabs()[0][0];
   $('#view').innerHTML = `<div class="sechead"><h2 class="sec">${tr('ltitle')}</h2><span><button class="link" id="libRefresh" aria-label="${esc(tr('lref'))}">${tr('lref')}</button></span></div>
-    <div class="seg" role="tablist">${LIB_TABS.map(([k, ic, lb]) => `<button class="chip${L.seg === k ? ' on' : ''}" data-seg="${k}" role="tab" aria-selected="${L.seg === k}">${ic} ${tr(lb)}</button>`).join('')}</div><div id="libBody"></div>`;
+    <div class="seg" role="tablist">${libTabs().map(([k, ic, lb]) => `<button class="chip${L.seg === k ? ' on' : ''}" data-seg="${k}" role="tab" aria-selected="${L.seg === k}">${ic} ${tr(lb)}</button>`).join('')}</div><div id="libBody"></div>`;
   loadLibrary();
 }
 async function loadLibrary(){
@@ -2568,7 +2580,7 @@ async function loadLibrary(){
       const by = new Map((cat.stories || []).map(s => [s.id, s])); S.wish = new Set(w.ids);
       const list = w.ids.map(id => by.get(id)).filter(Boolean);
       body.innerHTML = list.length ? list.map(s => lrow({sid: s.id, title: s.title, cover: s.cover, lines: [esc([mainGenre(s), s.status, s.episodes ? '' : tr('soon')].filter(Boolean).join(' | ')), esc(priceLabel(s))],
-        actions: `<button class="lbtn" data-story="${esc(s.id)}">${tr('lopen')}</button><button class="lbtn rm" data-lwx="${esc(s.id)}">${tr('lrem')}</button>`})).join('') : libEmpty('lew');
+        actions: `${accOf(s) !== 'premium' ? `<button class="lbtn" data-vfstory="${esc(s.id)}">&#128275; Verify to unlock</button>` : ''}<button class="lbtn" data-story="${esc(s.id)}">${tr('lopen')}</button><button class="lbtn rm" data-lwx="${esc(s.id)}">${tr('lrem')}</button>`})).join('') : libEmpty('lew');
     } else {
       const d = await api('/api/account?limit=60', {signal: sig}); if (L.seg !== seg) return;
       body.innerHTML = d.orders.length ? d.orders.map(o => `<div class="mrow"><h4>${esc(o.title)}</h4><div class="by">${esc(o.plan)} | ${money(o.price)}${o.from ? ` | Episodes ${o.from}-${o.to || 'Ongoing'}` : ''}</div>
@@ -2596,7 +2608,7 @@ function openChat(){
 const playEpisode = ep => sendEpisode(ep, false);      // other callers pass a story as the 2nd argument, so the demo flag lives in its own function
 async function sendEpisode(ep, demo){
   if (!ep) return;
-  if (ep.locked){ if (FREE_BUILD) return openVerify(V.id); return toast('Locked. Choose a plan to unlock it.'); }
+  if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); return toast('Locked. Choose a plan to unlock it.'); }
   return once('send' + ep.id, async () => {
     try{
       const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN(), ...(demo ? {demo: true} : {})})});
@@ -2629,7 +2641,7 @@ async function copyStoryLink(){
 }
 function shareStory(){
   const s = V.story; if (!s) return;
-  const url = `https://t.me/share/url?url=${encodeURIComponent(storyLink(V.id))}&text=${encodeURIComponent('\uD83C\uDFA7 ' + s.title + ' on AJ\'s FM Stories' + (FREE_BUILD ? '' : ' Premium'))}`;
+  const url = `https://t.me/share/url?url=${encodeURIComponent(storyLink(V.id))}&text=${encodeURIComponent('\uD83C\uDFA7 ' + s.title + ' on AJ\'s FM Stories' + (TIERS.free ? '' : ' Premium'))}`;
   if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
 }
 function storyBack(){                                                              // topic page -> story overview -> close
@@ -2798,7 +2810,7 @@ document.addEventListener('scroll', e => {                  // the dots under th
   if (d && d.classList.contains('pl-dots')) [...d.children].forEach((x, k) => x.classList.toggle('on', k === i));
 }, true);
 function sbarHtml(){
-  if (FREE_BUILD) return '';
+  if (accOf(V.story) === 'free') return '';
   const o = visOpts().find(x => String(x.id) === String(V.sel)); if (!o) return '';
   const inCart = cartHas(V.id, o.id), why = !inCart && !planOwned(o) ? cartBlock(V.id, V.story, o, V.access) : '';
   return `<div class="sb-row"><div class="sb-plan"><small>${esc(o.label)} | ${esc(planSub(o))}${o.credit ? ' | upgrade credit -' + money(o.credit) : ''}</small><b>${money(payOf(o))}</b></div><button class="link" id="sbBuy">Buy now &rarr;</button></div>
@@ -2817,40 +2829,41 @@ function renderStory(){
   if (V.state === 'unavailable'){ el.innerHTML = bar() + '<div class="empty"><h3 class="sec">This story is no longer available</h3><p>It may have been removed or hidden. If you bought it, your purchase is kept and you can see it under Library &rarr; Purchases.</p></div>'; return; }
   if (V.state === 'error'){ el.innerHTML = bar() + retryBox(V.err, 'retryStory'); return; }
   if (V.mode === 'topic') return renderTopicPage();
-  const s = V.story, a = V.access, showPlans = !FREE_BUILD && !(a.full || a.admin) && visOpts().length > 0; pickPlan();
+  const s = V.story, a = V.access, ac = accOf(s), showPlans = ac !== 'free' && !(a.full || a.admin) && visOpts().length > 0; pickPlan();
   const act = false ? `<div class="pad" style="margin-bottom:10px"><button class="btn block" id="resume">${V.resume.next ? 'Next' : 'Continue'}: Episode ${epn(V.resume)}${V.resume.pos ? ' (' + clock(V.resume.pos) + ')' : ''}</button></div>` : '';
   const wishOn = S.wish && S.wish.has(V.id);
   const range = rangeOf(s.options || []);
   const cards = topicCards().map((t, i) => {
     const opts = optsFor(t.id);
-    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${esc(epRange(t.first, t.last, t.n))}</small>${t.gaps ? `<small style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}</small>` : ''}${FREE_BUILD ? '' : `<span class="tpr">${esc(rangeOf(opts))}</span>`}${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
+    return `<button class="tcard" data-topic="${esc(t.id)}" aria-label="Open ${esc(t.name)}"><span class="tic">${i + 1}</span><span class="tmt"><b>${esc(t.name)}</b><small>${esc(epRange(t.first, t.last, t.n))}</small>${t.gaps ? `<small style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}</small>` : ''}${accOf(V.story) === 'free' ? '' : `<span class="tpr">${esc(rangeOf(opts))}</span>`}${t.note ? `<span class="tnote" data-tx="${esc(t.note)}">${esc(tx(t.note))}</span>` : ''}</span><span class="ar">&rsaquo;</span></button>`;
   }).join('');
   el.innerHTML = `<div class="sh">${heroBg(s)}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
       ${heroBanners(s)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
       <div class="tags">${mainGenres(s).map(g => `<span class="tag gold">${esc(g)}</span>`).join('')}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
-      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${FREE_BUILD || a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
+      <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${ac === 'free' || a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
     <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || (s.ep_first && s.ep_last ? s.ep_first + '-' + s.ep_last : V.totalAll || 0))}</b></div>
       <div class="stat"><small>${tr('shrs')}</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}${act}
-    ${showPlans ? `<h3 class="h3" id="plans">${tr('splan')}</h3><div id="planPills">${plansHtml()}</div>` : (a.admin && !FREE_BUILD ? adminPlansHtml() : '')}
+    ${ac !== 'premium' && !a.full && !a.admin ? '<div class="pad" style="margin-bottom:8px"><button class="btn block" data-vf="1" type="button">&#128275; Verify to unlock</button></div>' : ''}
+    ${showPlans ? `<h3 class="h3" id="plans">${ac === 'both' ? 'Or buy a premium plan to skip verification' : tr('splan')}</h3><div id="planPills">${plansHtml()}</div>` : (a.admin && ac !== 'free' ? adminPlansHtml() : '')}
     <h3 class="h3">${shownTopics().length ? tr('stopics') : tr('slisten')}</h3><div id="topicCards">${cards}</div>
     ${s.notes ? `<h3 class="h3">${tr('snotes')}</h3><div class="tnotes" data-tx="${esc(s.notes)}">${esc(tx(s.notes))}</div>` : ''}${showPlans ? `<div class="sbar" id="sbar">${sbarHtml()}</div>` : ''}`;
 }
 function renderTopicPage(){
   const el = $('#story'), s = V.story, a = V.access, full = a.full || a.admin; pickPlan();
   const t = topicCards().find(x => x.id === V.topic) || {name: 'Episodes', n: V.total, note: ''};
-  const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${FREE_BUILD || a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
+  const act = t.n ? `<div class="pad" style="margin-bottom:6px"><button class="btn block" id="startListen">${accOf(V.story) === 'free' || a.owned || a.admin ? 'Send first episode to chat' : 'Click for Demo (free episodes)'}</button></div>` : '<div class="msg">Episodes will be added soon.</div>';
   el.innerHTML = `<div class="top"><button class="btn ghost small" id="storyBack" aria-label="Back">Back</button><strong style="flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title)}</strong><button class="fab" id="storySearch" aria-label="Search episodes" style="flex:none">&#128269;</button></div>
-    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${esc(epRange(t.first, t.last, t.n))}${FREE_BUILD ? '' : ' | ' + esc(rangeOf(optsFor(V.topic)))}</div>${t.gaps ? `<div class="by" style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}. They will be added soon.</div>` : ''}${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
+    <div class="thead"><h2>${esc(t.name)}</h2><div class="by">${esc(epRange(t.first, t.last, t.n))}${accOf(V.story) === 'free' ? '' : ' | ' + esc(rangeOf(optsFor(V.topic)))}</div>${t.gaps ? `<div class="by" style="color:var(--warn)">&#9888; Missing episodes: ${esc(t.gaps)}. They will be added soon.</div>` : ''}${t.note ? `<div class="tnote" data-tx="${esc(t.note)}" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:rgba(var(--gold-rgb),.08);color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px">${esc(tx(t.note))}</div>` : ''}</div>
     ${ownedSummary(a)}${act}
-    ${FREE_BUILD ? '' : full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">Choose a plan</h3><div id="planPills">${plansHtml()}</div>
+    ${accOf(V.story) === 'free' ? '' : full ? (a.admin ? adminPlansHtml() : '') : `<h3 class="h3" id="plans">${accOf(V.story) === 'both' ? 'Or buy a premium plan to skip verification' : 'Choose a plan'}</h3><div id="planPills">${plansHtml()}</div>
       <h3 class="h3">How it works</h3>
       <div class="irow"><span class="ic">&#9889;</span><span><b>Instant delivery</b><small>${esc(HOW_IT_WORKS)}</small></span></div>
       <div class="irow"><span class="ic">&#128274;</span><span><b>Protected listening</b><small>Tap an episode and the audio bot opens and sends it to you. It stays in the chat for 48 hours. Forwarding and saving are switched off.</small></span></div>
       <div class="irow"><span class="ic">&#128172;</span><span><b>Questions before you buy?</b><small>Tap Buy now to open our bot. It answers your doubts first, then shows how to pay.</small></span></div>`}
-    <h3 class="h3">Episodes</h3>${FREE_BUILD ? '<div class="pad" style="margin-bottom:8px"><button class="btn block ghost" data-vf="1" type="button">&#128275; Unlock with free verification</button></div>' : ''}<div id="epBox"></div>${full || FREE_BUILD ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
+    <h3 class="h3">Episodes</h3>${accOf(V.story) !== 'premium' && !full ? '<div class="pad" style="margin-bottom:8px"><button class="btn block ghost" data-vf="1" type="button">&#128275; Verify to unlock</button></div>' : ''}<div id="epBox"></div>${full || accOf(V.story) === 'free' ? '' : `<div class="sbar" id="sbar">${sbarHtml()}</div>`}`;
   renderEps();
 }
 function freeLeft(ts){                                    // time left of a free window: "3d left", "5h left"
@@ -3449,15 +3462,27 @@ async function openStoryDetails(id){                         // tap on a story c
 /* ===================== Free tier: ad verification (Mini App steps) ===================== */
 const VF = {story: '', st: null, link: null, wait: 0, timer: null, done: {c: false, p: false}};
 const vfLeft = s => { s = Math.max(0, Math.ceil(s)); return s >= 3600 ? Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min' : s >= 60 ? Math.ceil(s / 60) + ' min' : s + ' s'; };
+function applyMode(t){                                           // the one place the admin's switches become the app's behaviour
+  t = {free: !!(t && t.free), premium: !!(t && t.premium)}; if (!t.free && !t.premium) t.premium = true;
+  const changed = t.free !== TIERS.free || t.premium !== TIERS.premium;
+  TIERS = t; FREE_BUILD = t.free && !t.premium; FREE_ON = t.free;
+  try{ localStorage.setItem('aj_mode', JSON.stringify(t)); }catch(e){}
+  document.documentElement.classList.toggle('free-build', FREE_BUILD);
+  applyBrand(); vfApplyTiers();
+  return changed;
+}
 function vfApplyTiers(){ document.body.classList.toggle('nopremium', FREE_BUILD || (!TIERS.premium && !S.admin)); if (S.tab === 'home' && S.home) renderHome(); }
 function vfShell(inner, title){
   $('#verify').innerHTML = `<div class="top"><button class="btn ghost small" id="vfBack" aria-label="Back">Back</button><strong>${esc(title || 'Free access')}</strong><span style="width:60px"></span></div><div class="vf-body">${inner}</div>`;
   $('#vfBack').onclick = () => { clearInterval(VF.timer); closeSheet('verify'); };
 }
 const vfErr = e => (e && e.data && e.data.message) || (e && e.message) || 'Something went wrong. Please try again.';
-async function openVerify(story){
-  VF.story = story || ''; openSheet('verify'); vfShell('<div class="sk hero"></div>');
-  try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); }catch(e){ return vfShell('<p class="note">' + esc(vfErr(e)) + '</p>'); }
+async function openVerify(story, topic){                          // 1 verification unlocks ONE topic of the story (a story without topics: the story itself); 4 in a row unlock everything
+  VF.story = story || ''; VF.topic = topic || ''; VF.topics = []; openSheet('verify'); vfShell('<div class="sk hero"></div>');
+  try{
+    const [st, sd] = await Promise.all([api('/api/vf/status?story=' + encodeURIComponent(VF.story)), VF.story ? api('/api/story/' + encodeURIComponent(VF.story) + '?limit=1').catch(() => null) : null]);
+    VF.st = st; VF.topics = ((sd && sd.story && sd.story.topics) || []).filter(t => t && t.id);
+  }catch(e){ return vfShell('<p class="note">' + esc(vfErr(e)) + '</p>'); }
   vfHome();
 }
 function vfHome(){
@@ -3466,15 +3491,19 @@ function vfHome(){
   if (s.ban) return vfShell(`<div class="vf-card"><b>&#9940; Access suspended</b><p>${s.ban.permanent ? 'Your access has been permanently suspended. For any concerns, please contact the administrator.' : 'Your access is suspended until ' + esc(new Date(s.ban.until * 1000).toLocaleString()) + '.'}</p></div>`);
   const sess = s.session, live = s.link, cd = s.cooldown;
   const resume = live ? `<div class="vf-card"><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small><button class="btn block" data-vfgo="resume" style="margin-top:10px" type="button">Continue</button>${live.state === 'opened' ? '<button class="btn block ghost" data-vfgo="swap" style="margin-top:8px" type="button">&#128260; Link not working? Get another link</button>' : ''}</div>` : '';
-  const one = !VF.story ? '' : (p.story || p.global) ? `<div class="vf-card"><b>&#9989; This story is unlocked</b><small>${p.story ? 'Active for ' + vfLeft(p.story - nowS) : 'Covered by your all-stories pass'}</small></div>`
+  const tcard = t => { const left = p.topics && p.topics[t.id] > nowS ? p.topics[t.id] - nowS : 0; return `<div class="vf-card"><b>${left ? '&#9989; ' : '&#128214; '}${esc(t.name)}</b><small>${left ? 'Unlocked for ' + vfLeft(left) : '1 verification &middot; ' + s.pass_hours + ' hours &middot; every episode of this topic'}</small>${left ? '' : cd['1'] > 0 ? `<p>Please try again in ${vfLeft(cd['1'])}.</p>` : `<button class="btn block" data-vfgo="1" data-vft="${esc(t.id)}" style="margin-top:10px" type="button">Start</button>`}</div>`; };
+  const tl = VF.topic ? VF.topics.filter(t => String(t.id) === String(VF.topic)) : VF.topics;
+  const one = !VF.story ? '' : p.global ? `<div class="vf-card"><b>&#9989; This story is unlocked</b><small>Covered by your all-stories pass</small></div>`
+    : tl.length ? (VF.topic ? '' : '<p class="note" style="margin:0 0 8px">1 verification unlocks 1 topic. Pick the topic you want.</p>') + tl.map(tcard).join('')
+    : p.story ? `<div class="vf-card"><b>&#9989; This story is unlocked</b><small>Active for ${vfLeft(p.story - nowS)}</small></div>`
     : `<div class="vf-card"><b>&#128214; Unlock this story</b><small>1 verification &middot; ${s.pass_hours} hours &middot; every episode of this story</small>${cd['1'] > 0 ? `<p>Please try again in ${vfLeft(cd['1'])}.</p>` : `<button class="btn block" data-vfgo="1" style="margin-top:10px" type="button">Start</button>`}</div>`;
   const four = p.global ? `<div class="vf-card"><b>&#127881; All stories are unlocked</b><small>Active for ${vfLeft(p.global - nowS)}</small></div>`
     : `<div class="vf-card"><b>&#127760; Unlock all stories</b><small>4 verifications in a row &middot; ${s.pass_hours} hours &middot; any story</small>${sess && sess.mode === 4 ? `<p>Verification ${sess.done} of ${sess.need} complete &middot; links used ${sess.links_used} of ${sess.links_max}</p>` : ''}${cd['4'] > 0 && !(sess && sess.mode === 4) ? `<p>Please try again in ${vfLeft(cd['4'])}.</p>` : `<button class="btn block" data-vfgo="4" style="margin-top:10px" type="button">${sess && sess.mode === 4 ? 'Next verification' : 'Start'}</button>`}</div>`;
   vfShell(`${resume}${one}${four}${s.tutorial && s.tutorial !== 'off' ? '<button class="btn block ghost" data-vftut="1" style="margin-bottom:12px" type="button">&#128250; Tutorial: how to verify</button>' : ''}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`);
-  $('#verify').onclick = e => { if (e.target.closest('[data-vftut]')) return vfTutorial(); const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; vfStart(+m); };
+  $('#verify').onclick = e => { if (e.target.closest('[data-vftut]')) return vfTutorial(); const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
 }
 async function vfStart(mode){
-  try{ const j = await api('/api/vf/start', {method: 'POST', retry: false, body: JSON.stringify({mode, story: mode === 1 ? VF.story : ''})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
+  try{ const j = await api('/api/vf/start', {method: 'POST', retry: false, body: JSON.stringify({mode, story: mode === 1 ? VF.story : '', topic: mode === 1 ? (VF.topic || '') : ''})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
   catch(e){ const d = e.data || {}, m = {cooldown: 'Please try again in ' + vfLeft(d.seconds || 0) + '.', busy: 'Another verification is already in progress. Please complete it first.', banned: 'Your access is currently suspended.', exhausted: 'Verification Not Complete. All available links have been used. Please try again after the cooldown.', already: 'You already have access.', disabled: 'Free access is not available right now.'}[d.error];
     toast(m || vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} }
 }
@@ -3508,9 +3537,12 @@ function vfCaptcha(box, stage, onOk){
   const site = VF.st.turnstile_site, send = async resp => { try{ await api('/api/vf/captcha', {method: 'POST', retry: false, body: JSON.stringify({token: VF.link.token, stage, response: resp || ''})}); box.innerHTML = '<div class="vf-chk">&#9989; Verified as human</div>'; onOk(); }catch(e){ toast(vfErr(e)); } };
   if (site){
     box.innerHTML = '<div id="vfTs"></div>';
-    const draw = () => window.turnstile && turnstile.render('#vfTs', {sitekey: site, callback: send});
+    let wid = null;
+    const why = code => { const c = String(code || ''); return /^110(100|110)/.test(c) ? 'The captcha site key is wrong. Tell the admin (Turnstile site key).' : /^110200/.test(c) ? 'This domain (' + location.hostname + ') is not allowed for the captcha. Tell the admin to add it in Cloudflare Turnstile > Hostnames.' : /^(110600|110620|300|600)/.test(c) ? 'The captcha could not finish. Check your internet / turn off VPN or ad-block, then retry.' : 'The captcha could not load. Check your internet and retry.'; };
+    const fail = code => { box.innerHTML = `<div class="vf-chk">&#9888;&#65039; ${esc(why(code))}<small style="display:block;margin-top:4px;opacity:.7">Code: ${esc(String(code || 'load'))}</small></div><button class="btn small" id="vfTsRetry" type="button" style="margin-top:8px">&#128260; Retry</button>`; $('#vfTsRetry').onclick = () => vfCaptcha(box, stage, onOk); return true; };
+    const draw = () => { try{ wid = turnstile.render('#vfTs', {sitekey: site, callback: send, 'error-callback': fail, 'timeout-callback': () => fail('timeout'), 'expired-callback': () => { try{ turnstile.reset(wid); }catch(e){} }, retry: 'auto', 'retry-interval': 4000, 'refresh-expired': 'auto'}); }catch(e){ fail('render'); } };
     if (window.turnstile) return draw();
-    const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = draw; document.head.appendChild(sc); return;
+    const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = draw; sc.onerror = () => fail('blocked'); document.head.appendChild(sc); return;
   }
   box.innerHTML = `<label class="vf-chk"><input type="checkbox"> I'm not a robot</label>`;
   box.querySelector('input').onchange = e => { if (e.target.checked){ e.target.disabled = true; setTimeout(() => send(''), 700); } };
@@ -3610,6 +3642,7 @@ function tiersRead(root){
   root.querySelectorAll('[data-k]').forEach(el => { c[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; });
   c.shorteners = [...root.querySelectorAll('[data-sh]')].map(row => { const g = f => row.querySelector(`[data-f="${f}"]`); return {name: g('name').value, on: g('on').checked, api: g('api').value, key: g('key').value, min_return: g('min_return').value, weight: g('weight').value}; });
 }
+const modeOf = c => c.tier_free && !c.tier_premium ? 'free' : c.tier_free && c.tier_premium ? 'both' : 'premium';
 function paintTiers(body){
   const c = TG.cfg, sw = (k, title, sub) => `<div class="tg-row"><div><b>${title}</b><small>${sub}</small></div><label class="tg-sw"><input type="checkbox" data-k="${k}" data-auto="1"${c[k] ? ' checked' : ''} aria-label="${title}"><i></i></label></div>`;
   const num = ([k, l]) => `<label>${esc(l)}<input type="number" data-k="${k}" value="${esc(c[k])}"></label>`, txt = ([k, l]) => `<div class="tg-one" style="margin-top:8px"><label>${esc(l)}<input type="text" data-k="${k}" value="${esc(c[k])}" autocomplete="off"></label></div>`;
@@ -3618,7 +3651,10 @@ function paintTiers(body){
     <div class="tg-grid" style="margin-top:8px"><label>API key<input type="text" data-f="key" value="${esc(s.key)}" autocomplete="off"></label><label>Minimum return time (sec)<input type="number" data-f="min_return" value="${esc(s.min_return)}"></label><label>Share (weight 1-10)<input type="number" data-f="weight" value="${esc(s.weight)}"></label></div></div>`;
   const bans = TG.bans.length ? TG.bans.map(x => `<div class="tg-ban"><div><b>${esc(x.first_name || x.uid)}</b>${x.username ? ' @' + esc(x.username) : ''}<small>${x.permanent ? 'Permanent' : 'Until ' + new Date(x.until * 1000).toLocaleString()} · ${esc(x.reason || '')}</small></div><button class="btn ghost small" data-tgunban="${x.uid}" type="button">Unban</button></div>`).join('') : '<small>No one is banned.</small>';
   body.innerHTML = `<div id="tgRoot">
-    <div class="tg-card">${sw('tier_free', 'Free tier', 'Members unlock stories by verifying an ad. The newest episodes of every story need no verification.')}<div style="height:12px"></div>${sw('tier_premium', 'Premium tier', 'Plans and prices. Switched off, members see no prices or buy buttons; nothing is deleted and earlier purchases keep working.')}</div>
+    <div class="tg-card"><b>Access mode</b><small>Only you (admin) can change this. It switches the whole app for every member at once. Nothing is deleted and earlier purchases keep working.</small>
+      <div class="seg" id="tgMode" style="margin-top:10px;flex-wrap:wrap;overflow:visible">${[['free', 'Free', '&#128275;'], ['premium', 'Premium', '&#128142;'], ['both', 'Free + Premium', '&#10024;']].map(([k, l, ic]) => `<button class="chip${modeOf(c) === k ? ' on' : ''}" data-mode="${k}" type="button">${ic} ${l}</button>`).join('')}</div>
+      <small id="tgModeTxt" style="display:block;margin-top:8px">${{free: 'Free: members unlock stories by verifying an ad. No prices, no cart, no buy buttons.', premium: 'Premium: plans, prices, cart and buying. No ad verification.', both: 'Free + Premium: members can buy a plan or unlock free by verifying an ad.'}[modeOf(c)]}</small></div>
+    
     <div class="tg-card"><b>Verification rules</b><div class="tg-grid" style="margin-top:10px">${TIER_NUMS.map(num).join('')}</div>
       <div class="tg-row" style="margin-top:12px"><div><b>Ban proven bypass automatically</b><small>Off: you decide on the log card (recommended).</small></div><label class="tg-sw"><input type="checkbox" data-k="auto_ban_confirmed"${c.auto_ban_confirmed ? ' checked' : ''}><i></i></label></div></div>
     <div class="tg-card"><b>Shorteners</b><small>Each verification uses one of these, picked by share. The address is never shown to members.</small><div id="tgShs">${c.shorteners.map(sh).join('')}</div><div class="actions" style="margin-top:10px"><button class="btn ghost small" id="tgAdd" type="button">＋ Add shortener</button></div></div>
@@ -3641,7 +3677,11 @@ function paintTiers(body){
   });
   root.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.id === 'tgSave'){ tiersRead(root); b.disabled = true; try{ const r = await api('/api/admin/vf/config', {method: 'POST', body: JSON.stringify(TG.cfg)}); TG.cfg = r.config; toast('Saved'); paintTiers(body); }catch(er){ toast(er.message || 'Could not save'); } b.disabled = false; }
+    if (b.dataset.mode){
+      const m = b.dataset.mode, v = {tier_free: m !== 'premium', tier_premium: m !== 'free'};
+      try{ const r = await api('/api/admin/vf/config', {method: 'POST', body: JSON.stringify(v)}); TG.cfg = r.config; applyMode({free: TG.cfg.tier_free, premium: TG.cfg.tier_premium}); toast({free: 'Free mode is ON', premium: 'Premium mode is ON', both: 'Free + Premium is ON'}[m]); paintTiers(body); }
+      catch(er){ toast(er.message || 'Could not save'); }
+    } else if (b.id === 'tgSave'){ tiersRead(root); b.disabled = true; try{ const r = await api('/api/admin/vf/config', {method: 'POST', body: JSON.stringify(TG.cfg)}); TG.cfg = r.config; toast('Saved'); paintTiers(body); }catch(er){ toast(er.message || 'Could not save'); } b.disabled = false; }
     else if (b.id === 'tgAdd'){ tiersRead(root); TG.cfg.shorteners.push({name: 'New shortener', on: false, api: 'https://', key: '', min_return: 30, weight: 1}); paintTiers(body); }
     else if (b.dataset.tgdel != null){ tiersRead(root); TG.cfg.shorteners.splice(+b.dataset.tgdel, 1); paintTiers(body); }
     else if (b.dataset.tgunban){ try{ await api('/api/admin/vf/unban', {method: 'POST', body: JSON.stringify({uid: +b.dataset.tgunban})}); TG.bans = TG.bans.filter(x => String(x.uid) !== b.dataset.tgunban); toast('Unbanned'); tiersRead(root); paintTiers(body); }catch(er){ toast(er.message || 'Could not unban'); } }
@@ -3919,6 +3959,7 @@ async function openEditor(id){
     <div class="two"><label class="field"><span>Main genre</span><input id="e_genre" value="${esc(hasSubField(s) ? (s.genre || '') : mainGenres(s).join(', '))}" placeholder="Romance, Drama"></label><label class="field"><span>Language</span><input id="e_lang" value="${esc(s.language || '')}" placeholder="Hindi"></label></div>
     <label class="field"><span>Sub genres</span><input id="e_sub" value="${esc(hasSubField(s) ? (s.sub_genre || '') : subGenres(s).join(', '))}" placeholder="Forced Marriage, Revenge and Retribution"><small class="note">Separate genres with a comma, "and" or "&amp;". Main genres are the filters members browse by; sub genres show on the story page.</small></label>
     <div class="two"><label class="field"><span>Status</span><input id="e_status" list="e_status_l" maxlength="30" placeholder="Ongoing"><datalist id="e_status_l"><option value="Ongoing"><option value="Completed"><option value="Upcoming"></datalist></label><label class="field"><span>Voice</span><input id="e_voice" value="${esc(s.voice || '')}" placeholder="Human"></label></div>
+    <label class="field"><span>Access type (used in Free + Premium mode)</span><select id="e_access"><option value="premium">Only Premium: buy with pay</option><option value="free">Only Free: unlock with verification</option><option value="both">Free + Premium: verify, or buy a plan to skip</option></select></label>
     <label class="field"><span>Episodes label (optional, e.g. 1101 To 1150)</span><input id="e_epstext" value="${esc(s.episodes_text || '')}"></label>
     <label class="field check"><input type="checkbox" id="e_pub" ${s.published === false ? '' : 'checked'}><span style="margin:0">Published (visible in the store)</span></label>
     <label class="field check"><input type="checkbox" id="e_feat" ${s.featured ? 'checked' : ''}><span style="margin:0">Feature on the home page</span></label>
@@ -3938,7 +3979,7 @@ async function openEditor(id){
     ${pairsHtml(s)}
     <p class="note">Plans for a single topic, topics and episodes are added separately: save the story, then tap Topics. Total eps can stay blank for an ongoing story.</p>
     <div class="actions"><button class="btn" id="saveStory">Save story</button><button class="btn ghost" id="edClose2">Cancel</button></div>`;
-  $('#e_status').value = s.status || 'Ongoing'; paintPhoto(); if (id) loadBanners();
+  $('#e_status').value = s.status || 'Ongoing'; $('#e_access').value = s.access || 'premium'; paintPhoto(); if (id) loadBanners();
   { const a = $('#sg_auto'); if (a){ const pk = s.pack; if (pk){ $('#sg_start').value = pk.start; $('#sg_size').value = pk.size; $('#sg_price').value = pk.price; a.checked = true; } } }
 }
 async function loadBanners(){
@@ -3978,7 +4019,7 @@ async function saveEditor(){
     const title = $('#e_title').value.trim();
     if (!title) return toast('Add a title first');
     const story = {id: E.id || 's' + Date.now(), title, author: $('#e_author').value.trim(), genre: splitGenres($('#e_genre').value).join(', '), sub_genre: splitGenres($('#e_sub').value).join(', '), language: $('#e_lang').value.trim(),
-      status: $('#e_status').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '', free_days: $('#e_fdays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_fdays').value) || 0)),
+      status: $('#e_status').value, access: $('#e_access').value, voice: $('#e_voice').value.trim(), episodes_text: $('#e_epstext').value.trim(), published: $('#e_pub').checked, featured: $('#e_feat').checked, upgrade_cut: $('#e_ucut').value === '' ? null : Number($('#e_ucut').value), update_days: $('#e_udays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_udays').value) || 0)), update_time: $('#e_utime').value || '', free_days: $('#e_fdays').value.trim() === '' ? null : Math.max(0, Math.min(365, parseInt($('#e_fdays').value) || 0)),
       platform: ($('#e_platform') ? $('#e_platform').value.trim() : (s.platform || '')),
       aliases: $('#e_aliases').value.split('\n').map(x => x.trim()).filter(Boolean),
       cover: E.photo || $('#e_cover').value.trim() || (isImg(E.cover) ? E.cover : ''), preview: $('#e_preview').value.trim(), notes: $('#e_notes').value.trim(), options: readPlans('#e_opts').concat(readPairs())};
@@ -4347,16 +4388,16 @@ document.addEventListener('click', async e => {
     try{ await api('/api/wishlist', {method:'POST', retry:false, body: JSON.stringify({story_id: id, on})}); toast(tr(on ? 'wishon' : 'wishoff')); }
     catch(err){ on ? S.wish.delete(id) : S.wish.add(id); b.innerHTML = on ? '&#9825;' : '&#9829;'; b.setAttribute('aria-pressed', !on); toast(errText(err)); } return; }
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? tr('smore') : tr('sless'); return; }
-  if (c('#startListen')) return once('start', () => playFirst(1, !FREE_BUILD && !(V.access && (V.access.owned || V.access.admin))));
+  if (c('#startListen')) return once('start', () => playFirst(1, accOf(V.story) !== 'free' && !(V.access && (V.access.owned || V.access.admin))));
   if (c('#openChatBtn')) return openChat();
   if ((m = c('[data-sendn]'))){ store.set('ajsendn', m.dataset.sendn); return renderEps(); }
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
   if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
   if ((m = c('[data-buy]'))) return once('buy', async () => { goBot(`buy_${V.id}_${m.dataset.buy}`); await sleep(1200); });
-  if ((m = c('[data-vf]'))) return openVerify(V.id);
+  if ((m = c('[data-vf]'))) return openVerify(V.id, V.topic || '');
   if ((m = c('#story [data-ep]'))){
     const ep = V.eps.find(v => String(v.id) === m.dataset.ep); if (!ep) return;
-    if (ep.locked){ if (FREE_BUILD) return openVerify(V.id); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
+    if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
     return playEpisode(ep, storyTag(V.story));
   }
   if ((m = c('[data-pg]'))){ const pages = Math.ceil(V.total / PAGE_SIZE), p = Math.min(pages, Math.max(1, V.page + (m.dataset.pg === 'next' ? 1 : -1))); return loadStoryPage(p); }
@@ -4640,14 +4681,14 @@ function splashInit(){
 }
 
 (function boot(){
-  if (FREE_BUILD) document.body.classList.add('nopremium');
+  applyBrand(); document.body.classList.toggle('nopremium', FREE_BUILD);
   splashInit(); updateCartBadge();
   if (new URLSearchParams(location.search).get('open') === 'library') S.tab = 'library';
   try{ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
   try{ indexedDB.deleteDatabase('ajfm-offline'); }catch(e){}      // frees the space of episodes saved by the old download feature
   api('/api/away').then(a => { S.away = a; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/terms').then(t => { if (t.user && !t.accepted) showTerms(); }).catch(() => {});
-  const meReady = api('/api/me', {timeout: 9000, retry: false}).then(m => { S.admin = FREE_BUILD ? false : !!m.admin; $('#adminBtn').hidden = !S.admin; if (m.tiers){ TIERS = m.tiers; vfApplyTiers(); } }).catch(() => {});      // which app this member sees: the admin's Free / Premium switches
+  const meReady = api('/api/me', {timeout: 9000, retry: false}).then(m => { S.admin = !!m.admin; $('#adminBtn').hidden = !S.admin; if (m.tiers && applyMode(m.tiers)) setTab(S.tab); }).catch(() => {});      // which app this member sees: the admin's Free / Premium switches
   applyTheme(); applyLang(); renderHeader();
   api('/api/reviews?limit=12').then(d => { S.reviews = d; if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
   api('/api/wishlist').then(d => { S.wish = new Set(d.ids); if (S.tab === 'home' && S.home) renderHome(); }).catch(() => {});
