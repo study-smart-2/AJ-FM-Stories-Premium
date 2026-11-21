@@ -22,7 +22,59 @@ try{var _m=JSON.parse(localStorage.getItem('aj_mode')||'null');if(_m&&_m.free&&!
 .nopremium .pr,.nopremium .atc,.nopremium .sbar,.nopremium [data-atc],.nopremium [data-tab="cart"]{display:none!important}
 .nopremium .tpr,.nopremium .tlist .tv,.nopremium .flash,.nopremium .cmb-own,.nopremium .cmb-sec{display:none!important}
 html.free-build .pstats{grid-template-columns:repeat(2,1fr)}
-.vf-body{padding:16px}.vf-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}.vf-card small{color:var(--muted);display:block}.vf-card p{margin:6px 0}
+.vf-body{padding:16px}
+/* verify pages: a listening pass with stamps */
+.vfx-hero{position:relative;border-radius:22px;padding:22px 20px 18px;margin-bottom:12px;border:1px solid rgba(var(--gold-rgb),.5);background:radial-gradient(120% 80% at 0% 0%,rgba(var(--gold-rgb),.32),transparent 62%),linear-gradient(165deg,var(--feat-a),var(--cv-b));overflow:hidden}
+.vfx-hero h2{font:700 30px/1.05 var(--serif);margin:0 0 8px;color:var(--gold-2)}
+.vfx-hero p{margin:0;color:var(--soft);font-size:14px;line-height:1.5}
+.vfx-st{display:flex;gap:10px;margin:18px 0 6px}
+.vfx-st i{flex:1;height:44px;border-radius:50%;max-width:44px;display:grid;place-items:center;border:1.5px solid var(--line);color:#1a1405;font:800 18px/1 var(--sans);font-style:normal}
+.vfx-st i.d{background:var(--gold);border-color:var(--gold)}
+.vfx-st i.n{border:2px dashed var(--gold)}
+.vfx-perf{position:relative;border-top:2px dashed rgba(var(--gold-rgb),.35);margin:16px -20px 16px}
+.vfx-perf:before,.vfx-perf:after{content:'';position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--ink);border:1px solid rgba(var(--gold-rgb),.5)}
+.vfx-perf:before{left:-11px}.vfx-perf:after{right:-11px}
+.vfx-go{min-height:50px;font-size:16px}
+.vfx-sub{margin:0 0 12px!important;font-weight:700;color:var(--gold-2)!important}
+.vfx-wait{color:var(--warn);font-size:13px;font-weight:700;margin:0}
+.vfx-hero.ok{border-color:rgba(var(--ok-rgb),.6);background:radial-gradient(120% 80% at 0% 0%,rgba(var(--ok-rgb),.28),transparent 62%),linear-gradient(165deg,var(--feat-a),var(--cv-b))}
+.vfx-hero.ok h2{color:var(--ok)}
+.vfx-badge{width:42px;height:42px;border-radius:50%;background:var(--ok);color:#06210f;display:grid;place-items:center;font-weight:800;font-size:22px;margin-bottom:12px}
+.vfx-sh{display:flex;gap:14px;align-items:center}
+.vfx-sh h2{font-size:26px}
+.vfx-cv{width:68px;height:90px;object-fit:cover;border-radius:10px;flex:none;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.vfx-top,.vfx-alt{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.vfx-top{padding:10px 0;border-top:1px solid var(--line)}.vfx-top:first-of-type{border-top:0}
+.vfx-top b,.vfx-alt b{display:block;font-size:15px}.vfx-top small,.vfx-alt small{color:var(--muted);font-size:12.5px}
+.vfx-tick{color:var(--ok);font-weight:800;font-size:20px}
+.vfx-alt{padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);margin-bottom:12px}
+.vfx-resume{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;border-radius:16px;border:1px solid var(--gold);background:var(--panel);margin-bottom:12px}
+.vfx-resume>div{flex:1;min-width:150px}.vfx-resume small{display:block;color:var(--muted)}
+.vfx-how{margin:4px 0 8px;padding:0 0 0 22px;color:var(--soft);font-size:13.5px;line-height:1.7}
+.vfx-how li::marker{color:var(--gold);font-weight:800}
+@keyframes vfxPop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes vfxPulse{50%{box-shadow:0 0 0 8px rgba(var(--gold-rgb),.16)}}
+@keyframes vfxSweep{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+@keyframes vfxSpark{0%{transform:rotate(var(--a)) translateY(0);opacity:1}100%{transform:rotate(var(--a)) translateY(-38px);opacity:0}}
+@keyframes vfxSpin{to{transform:rotate(360deg)}}
+.vfx-st i{transition:transform .2s}
+.vfx-st i.d{animation:vfxPop .5s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:calc(var(--k) * 150ms + 150ms)}
+.vfx-st i.n{animation:vfxPulse 1.9s ease-in-out infinite}
+.vfx-go{position:relative;overflow:hidden;transition:transform .15s}
+.vfx-go:after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);animation:vfxSweep 3.6s ease-in-out infinite;pointer-events:none}
+.vfx-go:active,.vfx-top .btn:active,.vfx-alt .btn:active{transform:scale(.96)}
+.vfx-hero .btn.busy:before,.vfx-top .btn.busy:before,.vfx-alt .btn.busy:before{content:'';display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:vfxSpin .7s linear infinite}
+.vfx-badge{position:relative;animation:vfxPop .55s cubic-bezier(.2,.9,.3,1.3) both}
+.vfx-sp{position:absolute;inset:0;pointer-events:none}
+.vfx-sp b{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--gold-2);animation:vfxSpark .9s ease-out .35s both}
+.vfx-how li{cursor:pointer;padding:6px 0}
+.vfx-how li b{font-weight:600;color:var(--text)}
+.vfx-how li small{display:block;max-height:0;overflow:hidden;opacity:0;color:var(--muted);transition:max-height .25s,opacity .25s,margin .25s}
+.vfx-how li.open small{max-height:60px;opacity:1;margin-top:3px}
+.vfx-top,.vfx-alt{transition:background .2s}
+@media (prefers-reduced-motion:reduce){.vfx-st i,.vfx-go:after,.vfx-badge,.vfx-sp b{animation:none!important}.vfx-how li small{transition:none}}
+
+.vf-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}.vf-card small{color:var(--muted);display:block}.vf-card p{margin:6px 0}
 .vf-track{position:relative;height:46px;border-radius:23px;background:var(--surf);border:1px solid var(--line);margin:8px 0;touch-action:none}
 .vf-notch{position:absolute;top:5px;width:36px;height:34px;transform:translateX(-50%);border:2px dashed var(--gold);border-radius:10px}
 .vf-handle{position:absolute;top:3px;width:40px;height:38px;transform:translateX(-50%);border-radius:12px;background:var(--gold);color:#1b1405;display:grid;place-items:center;font-weight:800;touch-action:none;cursor:grab}.vf-handle:after{content:'\27A4'}
@@ -2616,7 +2668,7 @@ function openChat(){
 const playEpisode = ep => sendEpisode(ep, false);      // other callers pass a story as the 2nd argument, so the demo flag lives in its own function
 async function sendEpisode(ep, demo){
   if (!ep) return;
-  if (ep.locked){ if (accOf(V.story) !== 'premium') return goBot('v_' + V.id); return toast('Locked. Choose a plan to unlock it.'); }
+  if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); return toast('Locked. Choose a plan to unlock it.'); }
   return once('send' + ep.id, async () => {
     try{
       const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN(), ...(demo ? {demo: true} : {})})});
@@ -3486,10 +3538,10 @@ function vfShell(inner, title){
 }
 const vfErr = e => (e && e.data && e.data.message) || (e && e.message) || 'Something went wrong. Please try again.';
 async function openVerify(story, topic){                          // 1 verification unlocks ONE topic of the story (a story without topics: the story itself); 4 in a row unlock everything
-  VF.story = story || ''; VF.topic = topic || ''; VF.topics = []; openSheet('verify'); vfShell('<div class="sk hero"></div>');
+  VF.story = story || ''; VF.topic = topic || ''; VF.topics = []; VF.info = null; openSheet('verify'); vfShell('<div class="sk hero"></div>');
   try{
     const [st, sd] = await Promise.all([api('/api/vf/status?story=' + encodeURIComponent(VF.story)), VF.story ? api('/api/story/' + encodeURIComponent(VF.story) + '?limit=1').catch(() => null) : null]);
-    VF.st = st; VF.topics = ((sd && sd.story && sd.story.topics) || []).filter(t => t && t.id);
+    VF.info = (sd && sd.story) || null; VF.st = st; VF.topics = ((sd && sd.story && sd.story.topics) || []).filter(t => t && t.id);
   }catch(e){ return vfShell('<p class="note">' + esc(vfErr(e)) + '</p>'); }
   vfHome();
 }
@@ -3497,18 +3549,41 @@ function vfHome(){
   const s = VF.st, p = s.pass, nowS = Date.now() / 1000;
   if (!s.free) return vfShell('<div class="vf-card"><p>Free access is not available right now.</p></div>');
   if (s.ban) return vfShell(`<div class="vf-card"><b>&#9940; Access suspended</b><p>${s.ban.permanent ? 'Your access has been permanently suspended. For any concerns, please contact the administrator.' : 'Your access is suspended until ' + esc(new Date(s.ban.until * 1000).toLocaleString()) + '.'}</p></div>`);
-  const sess = s.session, live = s.link, cd = s.cooldown;
-  const resume = live ? `<div class="vf-card"><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small><button class="btn block" data-vfgo="resume" style="margin-top:10px" type="button">Continue</button>${live.state === 'opened' && live.reopen ? '<button class="btn block" data-vfgo="reopen" style="margin-top:8px" type="button">&#128279; Reopen the same link</button>' : ''}${live.state === 'opened' ? '<button class="btn block ghost" data-vfgo="swap" style="margin-top:8px" type="button">&#128260; Link not working? Get another link</button>' : ''}</div>` : '';
-  const tcard = t => { const left = p.topics && p.topics[t.id] > nowS ? p.topics[t.id] - nowS : 0; return `<div class="vf-card"><b>${left ? '&#9989; ' : '&#128214; '}${esc(t.name)}</b><small>${left ? 'Unlocked for ' + vfLeft(left) : '1 verification &middot; ' + s.pass_hours + ' hours &middot; every episode of this topic'}</small>${left ? '' : cd['1'] > 0 ? `<p>Please try again in ${vfLeft(cd['1'])}.</p>` : `<button class="btn block" data-vfgo="1" data-vft="${esc(t.id)}" style="margin-top:10px" type="button">Start</button>`}</div>`; };
-  const tl = VF.topic ? VF.topics.filter(t => String(t.id) === String(VF.topic)) : VF.topics;
-  const one = !VF.story ? '' : p.global ? `<div class="vf-card"><b>&#9989; This story is unlocked</b><small>Covered by your all-stories pass</small></div>`
-    : tl.length ? (VF.topic ? '' : '<p class="note" style="margin:0 0 8px">1 verification unlocks 1 topic. Pick the topic you want.</p>') + tl.map(tcard).join('')
-    : p.story ? `<div class="vf-card"><b>&#9989; This story is unlocked</b><small>Active for ${vfLeft(p.story - nowS)}</small></div>`
-    : `<div class="vf-card"><b>&#128214; Unlock this story</b><small>1 verification &middot; ${s.pass_hours} hours &middot; every episode of this story</small>${cd['1'] > 0 ? `<p>Please try again in ${vfLeft(cd['1'])}.</p>` : `<button class="btn block" data-vfgo="1" style="margin-top:10px" type="button">Start</button>`}</div>`;
-  const four = p.global ? `<div class="vf-card"><b>&#127881; All stories are unlocked</b><small>Active for ${vfLeft(p.global - nowS)}</small></div>`
-    : `<div class="vf-card"><b>&#127760; Unlock all stories</b><small>4 verifications in a row &middot; ${s.pass_hours} hours &middot; any story</small>${sess && sess.mode === 4 ? `<p>Verification ${sess.done} of ${sess.need} complete &middot; links used ${sess.links_used} of ${sess.links_max}</p>` : ''}${cd['4'] > 0 && !(sess && sess.mode === 4) ? `<p>Please try again in ${vfLeft(cd['4'])}.</p>` : `<button class="btn block" data-vfgo="4" style="margin-top:10px" type="button">${sess && sess.mode === 4 ? 'Next verification' : 'Start'}</button>`}</div>`;
-  vfShell(`${resume}${one}${four}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
-  $('#verify').onclick = e => { const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
+  const lv = e => `<span data-vfx-t="${e}">${vfLeft(e - nowS)}</span>`;
+  const sess = s.session, live = s.link, cd = s.cooldown, info = VF.info, hrs = s.pass_hours, run = !!(sess && sess.mode === 4);
+  const stamps = (n, done) => `<div class="vfx-st" role="img" aria-label="${done} of ${n} verifications done">${Array.from({length: n}, (_, i) => `<i class="${i < done ? 'd' : i === done ? 'n' : ''}" style="--k:${i}">${i < done ? '&#10003;' : ''}</i>`).join('')}</div>`;
+  const wait = t => `<p class="vfx-wait">Next verification in ${lv(nowS + t)}</p>`;
+  const done = (title, sub) => `<div class="vfx-hero ok"><div class="vfx-badge">&#10003;<span class="vfx-sp">${[0, 1, 2, 3, 4, 5, 6, 7].map(k => `<b style="--a:${k * 45}deg"></b>`).join('')}</span></div><h2>${title}</h2><p>${sub}</p></div>`;
+  const resume = live ? `<div class="vfx-resume"><div><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small></div><button class="btn small" data-vfgo="resume" type="button">Continue</button>${live.state === 'opened' && live.reopen ? '<button class="btn ghost small" data-vfgo="reopen" type="button">Reopen the same link</button>' : ''}${live.state === 'opened' ? '<button class="btn ghost small" data-vfgo="swap" type="button">Link not working? Get another</button>' : ''}</div>` : '';
+  const allHero = p.global ? done('All stories are unlocked', `Active for ${lv(p.global)}`)
+    : `<div class="vfx-hero"><h2>Every story, unlocked</h2><p>Finish 4 quick verifications in a row and listen to any story for ${hrs} hours.</p>${stamps(4, run ? sess.done : 0)}<div class="vfx-perf"></div>${run ? `<p class="vfx-sub">${sess.done} of ${sess.need} done &middot; links used ${sess.links_used} of ${sess.links_max}</p>` : ''}${cd['4'] > 0 && !run ? wait(cd['4']) : `<button class="btn block vfx-go" data-vfgo="4" type="button">${run ? 'Next verification' : 'Start verifying'}</button>`}</div>`;
+  let body;
+  if (!VF.story) body = allHero;
+  else {
+    const cv = info && isImg(info.cover) ? `<img class="vfx-cv" src="${esc(info.cover)}" alt="" loading="lazy">` : '';
+    const name = esc((info && info.title) || 'This story'), tl = VF.topic ? VF.topics.filter(t => String(t.id) === String(VF.topic)) : VF.topics;
+    const head = sub => `<div class="vfx-sh">${cv}<div><h2>${name}</h2><p>${sub}</p></div></div>`;
+    const topicRow = t => { const left = p.topics && p.topics[t.id] > nowS ? p.topics[t.id] - nowS : 0; return `<div class="vfx-top"><div><b>${esc(t.name)}</b><small>${left ? 'Unlocked for ' + lv(nowS + left) : 'Every episode of this topic'}</small></div>${left ? '<span class="vfx-tick">&#10003;</span>' : cd['1'] > 0 ? `<span class="vfx-wait">${lv(nowS + cd['1'])}</span>` : `<button class="btn small" data-vfgo="1" data-vft="${esc(t.id)}" type="button">Verify</button>`}</div>`; };
+    const one = p.global ? done('This story is unlocked', 'Covered by your all-stories pass')
+      : tl.length ? `<div class="vfx-hero">${head(`1 verification unlocks 1 topic for ${hrs} hours. Pick one.`)}<div class="vfx-perf"></div>${tl.map(topicRow).join('')}</div>`
+      : p.story ? done('This story is unlocked', `Active for ${lv(p.story)}`)
+      : `<div class="vfx-hero">${head(`1 verification unlocks every episode for ${hrs} hours.`)}${stamps(1, 0)}<div class="vfx-perf"></div>${cd['1'] > 0 ? wait(cd['1']) : '<button class="btn block vfx-go" data-vfgo="1" type="button">Verify this story</button>'}</div>`;
+    const alt = p.global ? '' : `<div class="vfx-alt"><div><b>Want every story?</b><small>4 in a row &middot; ${hrs} hours &middot; any story</small></div>${cd['4'] > 0 && !run ? `<span class="vfx-wait">${lv(nowS + cd['4'])}</span>` : `<button class="btn ghost small" data-vfgo="4" type="button">${run ? 'Next' : 'Start'}</button>`}</div>`;
+    body = one + alt;
+  }
+  const how = `<ol class="vfx-how"><li data-vfx-step="1"><b>Open the link and finish the ad page</b><small>Wait for the timer on the page, then tap the final button.</small></li><li data-vfx-step="2"><b>Come back and solve the short puzzle</b><small>Slide the piece into place and answer the small sum.</small></li><li data-vfx-step="3"><b>Send the code you get to the bot</b><small>Paste the code in the bot chat within a few minutes.</small></li></ol>`;
+  vfShell(`${resume}${body}${how}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
+  vfxTick();
+  $('#verify').onclick = e => { const stp = e.target.closest('[data-vfx-step]'); if (stp){ stp.classList.toggle('open'); return; } const b = e.target.closest('[data-vfgo]'); if (!b) return; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }catch(x){} b.classList.add('busy'); const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
+}
+function vfxTick(){                                              // live countdowns on the verify pages; when one reaches zero the page refreshes itself
+  clearInterval(VF.tick);
+  VF.tick = setInterval(() => {
+    const els = document.querySelectorAll('[data-vfx-t]'); if (!els.length || !$('#verify').classList.contains('open')){ clearInterval(VF.tick); return; }
+    const n = Date.now() / 1000; let over = false;
+    els.forEach(el => { const r = +el.dataset.vfxT - n; if (r <= 0) over = true; else el.textContent = vfLeft(r); });
+    if (over){ clearInterval(VF.tick); openVerify(VF.story, VF.topic); }
+  }, 1000);
 }
 async function vfStart(mode){
   try{ const j = await api('/api/vf/start', {method: 'POST', retry: false, body: JSON.stringify({mode, story: mode === 1 ? VF.story : '', topic: mode === 1 ? (VF.topic || '') : ''})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
@@ -4408,10 +4483,10 @@ document.addEventListener('click', async e => {
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
   if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
   if ((m = c('[data-buy]'))) return once('buy', async () => { goBot(`buy_${V.id}_${m.dataset.buy}`); await sleep(1200); });
-  if ((m = c('[data-vf]'))) return once('vf', async () => { goBot('v_' + V.id); await sleep(1200); });
+  if ((m = c('[data-vf]'))) return openVerify(V.id, V.topic || '');
   if ((m = c('#story [data-ep]'))){
     const ep = V.eps.find(v => String(v.id) === m.dataset.ep); if (!ep) return;
-    if (ep.locked){ if (accOf(V.story) !== 'premium') return goBot('v_' + V.id); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
+    if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); toast('Locked. Choose a plan to unlock it.'); const p = $('#plans'); if (p) p.scrollIntoView({behavior: 'smooth'}); return; }
     return playEpisode(ep, storyTag(V.story));
   }
   if ((m = c('[data-pg]'))){ const pages = Math.ceil(V.total / PAGE_SIZE), p = Math.min(pages, Math.max(1, V.page + (m.dataset.pg === 'next' ? 1 : -1))); return loadStoryPage(p); }
