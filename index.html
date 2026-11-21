@@ -1183,8 +1183,8 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 <script>
 /* ============ SETTINGS: edit these ============ */
 const API_URL      = "https://aj-bot-2.onrender.com";   // your bot server address
-const AUDIO_BOT_USERNAME = "AJFMAudioExpressBot";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
-const BOT_USERNAME = "AjFMStoriesPremium_bot";      // your bot, without @
+const AUDIO_BOT_USERNAME = "";      // if a different bot sends the audio, put its username here (without @); empty = the same bot as the store
+const BOT_USERNAME = "AJ_FM_Stories_Premium_Robot";      // your bot, without @
 const CURRENCY     = "₹";
 /* Access mode, set by the admin (Admin > Access Tiers) and sent by /api/me:  Free only | Premium only | Free + Premium.
    FREE_BUILD = free only (no prices, no cart, no Buy now).  FREE_ON = free verification unlock is available (Free or Free + Premium). */
@@ -1194,11 +1194,11 @@ let FREE_BUILD = TIERS.free && !TIERS.premium, FREE_ON = !!TIERS.free;
 /* Per-story access type. Free mode: every story is 'free'. Premium mode: every story is 'premium'. Free + Premium mode: the story's own setting (admin sets it per story):
      premium = only premium (buy with pay) | free = only free (verify to unlock) | both = free story that also offers a premium plan to skip verification */
 const accOf = s => !FREE_ON ? 'premium' : FREE_BUILD ? 'free' : (s && (s.access === 'free' || s.access === 'both') ? s.access : 'premium');
-const MINIAPP_SHORT = "ajfm";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
+const MINIAPP_SHORT = "store";   // short name of your Mini App from BotFather (/newapp). With it, shared links open the Mini App directly. Leave empty to share a bot link instead.
 const PROMO_TITLE  = "New stories every week";
 const PROMO_TEXT   = "Rent or buy a story and get the episodes in your bot chat.";
 const HOW_IT_WORKS = "Pick a plan, pay, and send the payment screenshot to our bot. Once it is confirmed, your episodes unlock here and you can send them to your chat.";
-const PAGE_SIZE    = 100;
+const PAGE_SIZE    = 50;
 /* ============================================== */
 
 const tg = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
@@ -2560,10 +2560,15 @@ async function loadLibrary(){
   const sig = fresh('library'), seg = L.seg;
   try{
     if (seg === 'listening'){
-      const [c, hd, vs] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []})), api('/api/vf/status', {signal: sig}).catch(() => ({}))]); if (L.seg !== seg) return;
+      const [c, hd, vs, cat] = await Promise.all([api('/api/continue', {signal: sig}), api('/api/history?limit=20', {signal: sig}).catch(() => ({items: []})), api('/api/vf/status', {signal: sig}).catch(() => ({})), api('/api/catalog?limit=500&sort=updated', {signal: sig}).catch(() => ({stories: []}))]); if (L.seg !== seg) return;
       const gp = vs.pass && vs.pass.global, on = gp && gp > Date.now() / 1000;
+      const catBy = new Map((cat.stories || []).map(x => [x.id, x]));
+      const unlocked = ((vs.pass && vs.pass.stories) || []).filter(p => p.expires > Date.now() / 1000 && catBy.has(p.story_id));      // every story the member unlocked with a verification
+      const unlockedHtml = unlocked.length ? `<h3 class=\"lsub\">Unlocked stories</h3>` + unlocked.map(p => { const st = catBy.get(p.story_id); return lrow({sid: st.id, title: st.title, cover: st.cover,
+          lines: ['&#128275; Unlocked | ' + esc(tr('lleft', {t: leftText(p.expires)})) + ' | until ' + esc(dateStr(p.expires))],
+          actions: `<button class=\"lbtn\" data-story=\"${esc(st.id)}\">${tr('lopen')}</button>`}); }).join('') : '';
       const accessCard = `<div class="mrow"><h4>\uD83D\uDD13 My Access</h4><div style="margin:6px 0"><span class="tag ${on ? 'live' : 'warn'}">${on ? 'Active' : 'No active pass'}</span></div><div class="by">${on ? 'All stories unlocked | ' + esc(tr('lleft', {t: leftText(gp)})) + ' | until ' + esc(dateStr(gp)) : 'Open any story and tap Unlock with free verification to get free access' + (vs.pass_hours ? ' for ' + vs.pass_hours + ' hours.' : '.')}</div>${vs.latest_n ? `<div class="by">The newest ${vs.latest_n} episodes of every story are always free.</div>` : ''}</div>`;
-      body.innerHTML = accessCard + (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
+      body.innerHTML = accessCard + unlockedHtml + (c.items.length ? c.items.map(i => (CONT[i.episode.id] = i, lrow({sid: i.story.id, title: i.story.title, cover: i.story.cover, attrs: `data-cont="${i.episode.id}" data-story="${esc(i.story.id)}"`,
           lines: [`Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}`], bar: i.episode.duration ? Math.min(100, Math.round(i.pos / i.episode.duration * 100)) : 0,
           actions: `<button class="lbtn" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}">${tr('lres')}</button><button class="lbtn rm" data-lcx="${esc(i.story.id)}">${tr('lrem')}</button>`}))).join('') : libEmpty('lel')) +
         (hd.items.length ? `<h3 class="lsub">${tr('lhead')}</h3>` + hd.items.map(h => (HIST[h.episode_id] = h, `<div class="eprow"><button class="ep" data-hist="${h.episode_id}" data-story="${esc(h.story_id)}" data-pos="${h.pos}" ${h.available ? '' : 'disabled'}>
@@ -3490,7 +3495,7 @@ function vfHome(){
   if (!s.free) return vfShell('<div class="vf-card"><p>Free access is not available right now.</p></div>');
   if (s.ban) return vfShell(`<div class="vf-card"><b>&#9940; Access suspended</b><p>${s.ban.permanent ? 'Your access has been permanently suspended. For any concerns, please contact the administrator.' : 'Your access is suspended until ' + esc(new Date(s.ban.until * 1000).toLocaleString()) + '.'}</p></div>`);
   const sess = s.session, live = s.link, cd = s.cooldown;
-  const resume = live ? `<div class="vf-card"><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small><button class="btn block" data-vfgo="resume" style="margin-top:10px" type="button">Continue</button>${live.state === 'opened' ? '<button class="btn block ghost" data-vfgo="swap" style="margin-top:8px" type="button">&#128260; Link not working? Get another link</button>' : ''}</div>` : '';
+  const resume = live ? `<div class="vf-card"><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small><button class="btn block" data-vfgo="resume" style="margin-top:10px" type="button">Continue</button>${live.state === 'opened' && live.reopen ? '<button class="btn block" data-vfgo="reopen" style="margin-top:8px" type="button">&#128279; Reopen the same link</button>' : ''}${live.state === 'opened' ? '<button class="btn block ghost" data-vfgo="swap" style="margin-top:8px" type="button">&#128260; Link not working? Get another link</button>' : ''}</div>` : '';
   const tcard = t => { const left = p.topics && p.topics[t.id] > nowS ? p.topics[t.id] - nowS : 0; return `<div class="vf-card"><b>${left ? '&#9989; ' : '&#128214; '}${esc(t.name)}</b><small>${left ? 'Unlocked for ' + vfLeft(left) : '1 verification &middot; ' + s.pass_hours + ' hours &middot; every episode of this topic'}</small>${left ? '' : cd['1'] > 0 ? `<p>Please try again in ${vfLeft(cd['1'])}.</p>` : `<button class="btn block" data-vfgo="1" data-vft="${esc(t.id)}" style="margin-top:10px" type="button">Start</button>`}</div>`; };
   const tl = VF.topic ? VF.topics.filter(t => String(t.id) === String(VF.topic)) : VF.topics;
   const one = !VF.story ? '' : p.global ? `<div class="vf-card"><b>&#9989; This story is unlocked</b><small>Covered by your all-stories pass</small></div>`
@@ -3500,7 +3505,7 @@ function vfHome(){
   const four = p.global ? `<div class="vf-card"><b>&#127881; All stories are unlocked</b><small>Active for ${vfLeft(p.global - nowS)}</small></div>`
     : `<div class="vf-card"><b>&#127760; Unlock all stories</b><small>4 verifications in a row &middot; ${s.pass_hours} hours &middot; any story</small>${sess && sess.mode === 4 ? `<p>Verification ${sess.done} of ${sess.need} complete &middot; links used ${sess.links_used} of ${sess.links_max}</p>` : ''}${cd['4'] > 0 && !(sess && sess.mode === 4) ? `<p>Please try again in ${vfLeft(cd['4'])}.</p>` : `<button class="btn block" data-vfgo="4" style="margin-top:10px" type="button">${sess && sess.mode === 4 ? 'Next verification' : 'Start'}</button>`}</div>`;
   vfShell(`${resume}${one}${four}${s.tutorial && s.tutorial !== 'off' ? '<button class="btn block ghost" data-vftut="1" style="margin-bottom:12px" type="button">&#128250; Tutorial: how to verify</button>' : ''}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`);
-  $('#verify').onclick = e => { if (e.target.closest('[data-vftut]')) return vfTutorial(); const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
+  $('#verify').onclick = e => { if (e.target.closest('[data-vftut]')) return vfTutorial(); const b = e.target.closest('[data-vfgo]'); if (!b) return; const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
 }
 async function vfStart(mode){
   try{ const j = await api('/api/vf/start', {method: 'POST', retry: false, body: JSON.stringify({mode, story: mode === 1 ? VF.story : '', topic: mode === 1 ? (VF.topic || '') : ''})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
@@ -3509,9 +3514,15 @@ async function vfStart(mode){
 }
 function vfWaiting(){
   const s = VF.st.session || {}, left = Math.max(0, (s.links_max || 2) - (s.links_used || 0));
-  vfShell(`<div class="vf-card"><b>&#8987; Waiting for the ad</b><p>Complete the ad in your browser. You will return here automatically.</p></div>
-    <div class="vf-card"><b>Link not working?</b><small>Get another link from a different shortener. This link is closed and counts as used. Links left after this: ${left}.</small><button class="btn block ghost" id="vfSwap" style="margin-top:10px" type="button">&#128260; Get another link</button></div>`);
-  $('#vfSwap').onclick = vfSwap;
+  vfShell(`<div class="vf-card"><b>&#8987; Waiting for the ad</b><p>Complete the ad in your browser. You will return here automatically.</p><button class="btn block" id="vfReopen" style="margin-top:10px" type="button">&#128279; Reopen the same link</button></div>
+    <div class="vf-card"><b>Link not working?</b><small>Get a fresh link. This link is closed and counts as used. Links left after this: ${left}.</small><button class="btn block ghost" id="vfSwap" style="margin-top:10px" type="button">&#128260; Get another link</button></div>`);
+  $('#vfSwap').onclick = vfSwap; $('#vfReopen').onclick = vfReopen;
+}
+async function vfReopen(){                                    // came back without finishing: open the SAME ad link again (no new link is used)
+  const tok = VF.link && VF.link.token || (VF.st && VF.st.link && VF.st.link.token); if (!tok) return;
+  try{ const r = await api('/api/vf/reopen', {method: 'POST', retry: false, body: JSON.stringify({token: tok})});
+    if (tg && tg.openLink) tg.openLink(r.url); else window.open(r.url, '_blank'); }
+  catch(e){ toast(vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} }
 }
 async function vfSwap(){
   const tok = VF.link && VF.link.token || (VF.st.link && VF.st.link.token); if (!tok) return;
@@ -3596,7 +3607,7 @@ function vfCode(code){
   const s = VF.st || {}, bot = String(AUDIO_BOT_USERNAME || s.bot || BOT_USERNAME || '').replace(/^@/, ''), tries = s.tries_max || 5, days = s.ban_days || 7;
   vfShell(`<div class="vf-card"><b>&#128273; Your code</b><div class="vf-code" id="vfCodeBox">${esc(code)}</div>
     <button class="btn block" id="vfCopy" type="button">Copy code</button>
-    <p>Send this code to the bot within ${s.code_min || 10} minutes to complete the verification.</p>${bot ? `<button class="btn block ghost" id="vfBot" type="button">Open the bot</button>` : ''}</div>`, 'Verification code');
+    <p>Step 1: paste this code in the bot chat within ${s.code_min || 10} minutes. Step 2: the bot then asks for your answer, write the answer of the sum you just solved.</p>${bot ? `<button class="btn block ghost" id="vfBot" type="button">Open the bot</button>` : ''}</div>`, 'Verification code');
   $('#vfCopy').onclick = async () => { try{ await navigator.clipboard.writeText(code); toast('Copied'); }catch(e){ const r = document.createRange(); r.selectNodeContents($('#vfCodeBox')); const se = getSelection(); se.removeAllRanges(); se.addRange(r); toast('Select and copy the code'); } };
   if (bot) $('#vfBot').onclick = () => { const u = 'https://t.me/' + bot; if (tg && tg.openTelegramLink){ tg.openTelegramLink(u); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(u, '_blank'); };
   const pop = document.createElement('div'); pop.className = 'vf-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true');
@@ -3640,7 +3651,7 @@ async function tiersAdmin(body, sig, tab){
 function tiersRead(root){
   const c = TG.cfg;
   root.querySelectorAll('[data-k]').forEach(el => { c[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; });
-  c.shorteners = [...root.querySelectorAll('[data-sh]')].map(row => { const g = f => row.querySelector(`[data-f="${f}"]`); return {name: g('name').value, on: g('on').checked, api: g('api').value, key: g('key').value, min_return: g('min_return').value, weight: g('weight').value}; });
+  c.shorteners = [...root.querySelectorAll('[data-sh]')].map(row => { const g = f => row.querySelector(`[data-f="${f}"]`); return {name: g('name').value, on: g('on').checked, api: g('api').value, key: g('key').value, min_return: g('min_return').value, weight: g('weight').value, tutorial_link: g('tutorial_link') ? g('tutorial_link').value : ''}; });
 }
 const modeOf = c => c.tier_free && !c.tier_premium ? 'free' : c.tier_free && c.tier_premium ? 'both' : 'premium';
 function paintTiers(body){
@@ -3648,7 +3659,7 @@ function paintTiers(body){
   const num = ([k, l]) => `<label>${esc(l)}<input type="number" data-k="${k}" value="${esc(c[k])}"></label>`, txt = ([k, l]) => `<div class="tg-one" style="margin-top:8px"><label>${esc(l)}<input type="text" data-k="${k}" value="${esc(c[k])}" autocomplete="off"></label></div>`;
   const sh = (s, i) => `<div class="tg-sh" data-sh="${i}"><div class="tg-row"><b>${esc(s.name || 'Shortener')}</b><div style="display:flex;gap:10px;align-items:center"><label class="tg-sw"><input type="checkbox" data-f="on"${s.on ? ' checked' : ''} aria-label="On"><i></i></label><button class="btn ghost small" data-tgdel="${i}" type="button">✕</button></div></div>
     <div class="tg-one" style="margin-top:8px"><label>Name<input type="text" data-f="name" value="${esc(s.name)}"></label></div><div class="tg-one" style="margin-top:8px"><label>API address (use {key} and {url})<input type="text" data-f="api" value="${esc(s.api)}" autocomplete="off"></label></div>
-    <div class="tg-grid" style="margin-top:8px"><label>API key<input type="text" data-f="key" value="${esc(s.key)}" autocomplete="off"></label><label>Minimum return time (sec)<input type="number" data-f="min_return" value="${esc(s.min_return)}"></label><label>Share (weight 1-10)<input type="number" data-f="weight" value="${esc(s.weight)}"></label></div></div>`;
+    <div class="tg-grid" style="margin-top:8px"><label>API key<input type="text" data-f="key" value="${esc(s.key)}" autocomplete="off"></label><label>Minimum return time (sec)<input type="number" data-f="min_return" value="${esc(s.min_return)}"></label><label>Share (weight 1-10)<input type="number" data-f="weight" value="${esc(s.weight)}"></label></div><div class="tg-one" style="margin-top:8px"><label>Tutorial of this shortener (https://t.me/channel/12)<input type="text" data-f="tutorial_link" value="${esc(s.tutorial_link || '')}" autocomplete="off" placeholder="Each shortener has its own tutorial"></label></div></div>`;
   const bans = TG.bans.length ? TG.bans.map(x => `<div class="tg-ban"><div><b>${esc(x.first_name || x.uid)}</b>${x.username ? ' @' + esc(x.username) : ''}<small>${x.permanent ? 'Permanent' : 'Until ' + new Date(x.until * 1000).toLocaleString()} · ${esc(x.reason || '')}</small></div><button class="btn ghost small" data-tgunban="${x.uid}" type="button">Unban</button></div>`).join('') : '<small>No one is banned.</small>';
   body.innerHTML = `<div id="tgRoot">
     <div class="tg-card"><b>Access mode</b><small>Only you (admin) can change this. It switches the whole app for every member at once. Nothing is deleted and earlier purchases keep working.</small>
@@ -3660,10 +3671,10 @@ function paintTiers(body){
     <div class="tg-card"><b>Shorteners</b><small>Each verification uses one of these, picked by share. The address is never shown to members.</small><div id="tgShs">${c.shorteners.map(sh).join('')}</div><div class="actions" style="margin-top:10px"><button class="btn ghost small" id="tgAdd" type="button">＋ Add shortener</button></div></div>
     <div class="tg-card"><b>Tutorial video</b><small>A button in the verification screen and the /tutorial command. "Open link" opens the channel post; "Send copy" makes the bot copy the video into the member's chat (the bot must be able to read that channel).</small>
       <div class="tg-one" style="margin-top:8px"><label>How to show it<select data-k="tutorial_mode" style="width:100%;margin-top:4px;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--text)"><option value="off"${c.tutorial_mode === 'off' ? ' selected' : ''}>Off</option><option value="link"${c.tutorial_mode === 'link' ? ' selected' : ''}>Open link</option><option value="copy"${c.tutorial_mode === 'copy' ? ' selected' : ''}>Send copy</option></select></label></div>
-      <div class="tg-one" style="margin-top:8px"><label>Channel post link (https://t.me/channel/12 or https://t.me/c/123456789/12)<input type="text" data-k="tutorial_link" value="${esc(c.tutorial_link)}" autocomplete="off"></label></div></div>
+      <div class="tg-one" style="margin-top:8px"><label>Default tutorial, used when a shortener has none of its own (https://t.me/channel/12 or https://t.me/c/123456789/12)<input type="text" data-k="tutorial_link" value="${esc(c.tutorial_link)}" autocomplete="off"></label></div></div>
     <div class="tg-card"><b>AJ Group Manager</b><small>Story search works in this one group (/search name). Add the Group Manager bot to the group, then put the group's ID here. 0 = off.</small>
       <div class="tg-one" style="margin-top:8px"><label>Group ID (-100...)<input type="text" data-k="group_chat" value="${esc(c.group_chat)}" autocomplete="off"></label></div>
-      <div class="tg-one" style="margin-top:8px"><label>Remove the answer after (seconds, 0 = keep)<input type="number" data-k="group_delete_sec" value="${esc(c.group_delete_sec)}"></label></div>
+      <div class="tg-one" style="margin-top:8px"><label>Remove the answer after (seconds, 0 = keep, max 169200 = 47 hours)<input type="number" min="0" max="169200" step="60" data-k="group_delete_sec" value="${esc(c.group_delete_sec)}"></label><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${[['3 min', 180], ['1 h', 3600], ['6 h', 21600], ['12 h', 43200], ['24 h', 86400], ['47 h', 169200]].map(([t, v]) => `<button class="btn ghost small" type="button" data-gdel="${v}">${t}</button>`).join('')}</div><small class="note">Telegram lets the bot delete a member's message only for 48 hours, so 47 hours is the longest.</small></div>
       <div class="tg-row" style="margin-top:12px"><div><b>Search by typing</b><small>Typing a story name is enough. The bot answers only when something matches. Needs the bot's privacy mode switched off.</small></div><label class="tg-sw"><input type="checkbox" data-k="group_plain"${c.group_plain ? ' checked' : ''}><i></i></label></div></div>
     <div class="tg-card"><b>Links and channels</b>${TIER_TXT.map(txt).join('')}</div>
     <div class="actions" style="padding:0 16px 12px"><button class="btn block" id="tgSave" type="button">Save settings</button></div>
@@ -3682,7 +3693,8 @@ function paintTiers(body){
       try{ const r = await api('/api/admin/vf/config', {method: 'POST', body: JSON.stringify(v)}); TG.cfg = r.config; applyMode({free: TG.cfg.tier_free, premium: TG.cfg.tier_premium}); toast({free: 'Free mode is ON', premium: 'Premium mode is ON', both: 'Free + Premium is ON'}[m]); paintTiers(body); }
       catch(er){ toast(er.message || 'Could not save'); }
     } else if (b.id === 'tgSave'){ tiersRead(root); b.disabled = true; try{ const r = await api('/api/admin/vf/config', {method: 'POST', body: JSON.stringify(TG.cfg)}); TG.cfg = r.config; toast('Saved'); paintTiers(body); }catch(er){ toast(er.message || 'Could not save'); } b.disabled = false; }
-    else if (b.id === 'tgAdd'){ tiersRead(root); TG.cfg.shorteners.push({name: 'New shortener', on: false, api: 'https://', key: '', min_return: 30, weight: 1}); paintTiers(body); }
+    else if (b.id === 'tgAdd'){ tiersRead(root); TG.cfg.shorteners.push({name: 'New shortener', on: false, api: 'https://', key: '', min_return: 30, weight: 1, tutorial_link: ''}); paintTiers(body); }
+    else if (b.dataset.gdel){ const i = root.querySelector('[data-k="group_delete_sec"]'); if (i) i.value = b.dataset.gdel; }
     else if (b.dataset.tgdel != null){ tiersRead(root); TG.cfg.shorteners.splice(+b.dataset.tgdel, 1); paintTiers(body); }
     else if (b.dataset.tgunban){ try{ await api('/api/admin/vf/unban', {method: 'POST', body: JSON.stringify({uid: +b.dataset.tgunban})}); TG.bans = TG.bans.filter(x => String(x.uid) !== b.dataset.tgunban); toast('Unbanned'); tiersRead(root); paintTiers(body); }catch(er){ toast(er.message || 'Could not unban'); } }
   });
