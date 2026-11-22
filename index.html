@@ -42,7 +42,80 @@ html.free-build .pstats{grid-template-columns:repeat(2,1fr)}
 .vfx-badge{width:42px;height:42px;border-radius:50%;background:var(--ok);color:#06210f;display:grid;place-items:center;font-weight:800;font-size:22px;margin-bottom:12px}
 .vfx-sh{display:flex;gap:14px;align-items:center}
 .vfx-sh h2{font-size:26px}
-.vfx-cv{width:68px;height:90px;object-fit:cover;border-radius:10px;flex:none;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.vfx-cv{width:auto;height:auto;max-width:96px;max-height:128px;min-width:44px;object-fit:contain;border-radius:10px;flex:none;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+button.vfx-sh,button.vfx-tn{appearance:none;-webkit-appearance:none;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%;border-radius:12px}
+button.vfx-tn{width:auto;flex:1;min-width:0;padding:4px 0}
+button.vfx-sh:active,button.vfx-tn:active{opacity:.75}
+.vfx-sh>div{min-width:0}
+.vfx-tn b{text-decoration:underline;text-decoration-color:rgba(var(--gold-rgb),.45);text-underline-offset:3px}
+.vfx-good{margin:12px 0 0!important;padding:9px 12px;border-radius:12px;font-size:13px!important;line-height:1.4;font-weight:600;color:var(--ok)!important;background:rgba(var(--ok-rgb),.12);border:1px solid rgba(var(--ok-rgb),.35)}
+.vfx-resume .vfx-good{flex-basis:100%;margin:2px 0 0!important}
+.vfx-alt{flex-wrap:wrap}.vfx-alt .vfx-good{flex-basis:100%;margin:2px 0 0!important}
+/* verification steps: stepper, human tile, slider, sum + keypad, ticket */
+.vf-steps{display:flex;margin:2px 2px 14px}
+.vf-steps .s{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--muted);position:relative;text-align:center}
+.vf-steps .s i{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--panel);font:800 13px/1 var(--sans);font-style:normal;position:relative;z-index:1;transition:background .3s,border-color .3s}
+.vf-steps .s:not(:last-child):after{content:'';position:absolute;top:14px;left:calc(50% + 19px);right:calc(-50% + 19px);height:2px;background:var(--line);transition:background .3s}
+.vf-steps .s.on{color:var(--text)}.vf-steps .s.on:after{background:var(--ok)}
+.vf-steps .s.on i{background:var(--ok);border-color:var(--ok);color:#06210f;font-size:0;animation:vfxPop .4s}
+.vf-steps .s.on i:before{content:'\2713';font-size:15px}
+.vf-card h3{margin:0 0 2px;font-size:15px}
+.vf-human{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--surf);color:var(--text);text-align:left;font:inherit;cursor:pointer}
+.vf-human .bx{width:30px;height:30px;border-radius:9px;border:2px solid var(--gold);flex:none;transition:border-radius .25s}
+.vf-human b{display:block}.vf-human small{color:var(--muted)}
+.vf-human.busy .bx{border-radius:50%;border-color:var(--gold) transparent var(--gold) var(--gold);animation:vfxSpin .7s linear infinite}
+.vf-chk.vf-done{border-color:rgba(var(--ok-rgb),.5);background:rgba(var(--ok-rgb),.1);font-weight:700}
+.vf-tk{width:26px;height:26px;border-radius:50%;background:var(--ok);color:#06210f;display:grid;place-items:center;font-weight:800;animation:vfxPop .4s}
+.vf-track{overflow:hidden}.vf-notch,.vf-handle{z-index:2}
+.vf-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(var(--gold-rgb),.04),rgba(var(--gold-rgb),.3));border-radius:23px}
+.vf-lbl{position:absolute;inset:0;display:grid;place-items:center;font-size:12.5px;color:var(--muted);pointer-events:none;padding:0 52px;text-align:center}
+.vf-handle{box-shadow:0 4px 12px rgba(0,0,0,.35);animation:vfxPulse 1.8s infinite}
+.vf-drag .vf-handle{animation:none;transform:translateX(-50%) scale(1.1)}
+.vf-snap .vf-handle,.vf-snap .vf-fill{transition:left .25s,width .25s}
+.vf-shake{animation:vfShake .35s}
+.vf-ok .vf-fill{width:100%!important;background:rgba(var(--ok-rgb),.22)}.vf-ok .vf-handle{background:var(--ok);animation:none}.vf-ok .vf-handle:after{content:'\2713'}.vf-ok .vf-lbl{color:var(--ok);font-weight:700}
+.vf-sum{width:170px;margin:8px auto 2px;font:800 40px/1.25 ui-monospace,Menlo,monospace;color:var(--text)}
+.vf-sum .r{display:flex;justify-content:flex-end;position:relative;padding-right:2px}
+.vf-sum .r i{position:absolute;left:0;font-style:normal;color:var(--gold)}
+.vf-sum .r span{letter-spacing:.14em}
+.vf-line{height:4px;border-radius:2px;background:var(--gold);margin:4px 0}
+.vf-ans span{min-width:1.6ch;text-align:right;color:var(--gold-2)}.vf-ans span:not(.has){opacity:.4;animation:vfBlink 1s steps(2) infinite}
+.vf-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.vf-keys button{min-height:48px;border-radius:14px;border:1px solid var(--line);background:var(--surf);color:var(--text);font:700 20px var(--sans)}
+.vf-keys button:active{transform:scale(.94);background:rgba(var(--gold-rgb),.2)}
+.vf-dir{display:flex;gap:8px;margin:12px 0 0}
+.vf-dir button{flex:1;padding:9px 6px;border-radius:12px;border:1px solid var(--line);background:var(--surf);color:var(--text);font:700 13px/1.25 var(--sans)}
+.vf-dir button small{display:block;margin-top:2px;font-weight:600;font-size:11px;color:var(--muted)}
+.vf-dir button.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.14);box-shadow:inset 0 0 0 1px var(--gold)}
+.vf-lang{min-width:58px;padding-inline:10px}
+.vf-pz{position:relative;height:120px;border-radius:16px;overflow:hidden;margin-bottom:10px;border:1px solid var(--line);background-size:100% 100%;background-color:var(--surf)}
+.vf-gap,.vf-pc{position:absolute;top:34px;border-radius:12px}
+.vf-gap{background:rgba(0,0,0,.5);box-shadow:inset 0 0 0 2px rgba(255,255,255,.75),inset 0 4px 10px rgba(0,0,0,.55)}
+.vf-pc{z-index:2;box-shadow:0 0 0 2px #fff,0 8px 16px rgba(0,0,0,.45);cursor:grab;touch-action:none;background-repeat:no-repeat}
+.vf-snap .vf-pc{transition:left .25s}
+.vf-drag .vf-pc{transform:scale(1.06)}
+.vf-ok .vf-pc{box-shadow:0 0 0 2px var(--ok),0 0 18px rgba(var(--ok-rgb),.7)}.vf-ok .vf-gap{opacity:0}
+.vf-yans{margin:10px 0 14px;padding:12px;border-radius:16px;border:2px dashed var(--gold);background:rgba(var(--gold-rgb),.1);text-align:center}
+.vf-yans small{display:block;color:var(--muted);font-weight:700;font-size:12.5px}
+.vf-yans b{display:block;font:800 64px/1.1 ui-monospace,Menlo,monospace;color:var(--gold-2);letter-spacing:.06em}
+.vf-orb{width:84px;height:84px;margin:6px auto 12px;border-radius:50%;display:grid;place-items:center;font-size:36px;background:radial-gradient(circle,rgba(var(--gold-rgb),.3),rgba(var(--gold-rgb),.06));animation:vfxPulse 1.6s infinite}
+.vf-orb span{display:inline-block;animation:vfxSpin 3s linear infinite}
+.vf-ticket{position:relative;overflow:hidden;text-align:center}
+.vf-tbadge{width:54px;height:54px;margin:2px auto 8px;border-radius:50%;background:var(--ok);color:#06210f;display:grid;place-items:center;font:800 28px/1 var(--sans);animation:vfxPop .5s}
+.vf-next{text-align:left;margin:12px 0 0;display:grid;gap:8px}
+.vf-next div{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surf);border:1px solid var(--line);font-size:13.5px;line-height:1.4}
+.vf-next em{flex:none;width:22px;height:22px;border-radius:50%;background:var(--gold);color:#1a1405;display:grid;place-items:center;font:800 12px/1 var(--sans);font-style:normal}
+.vfx-q{margin:14px 0 0;padding:2px 0 2px 14px;border-left:3px solid var(--gold);cursor:pointer;transition:opacity .25s}
+.vfx-q p{margin:0!important;font:italic 600 14.5px/1.5 var(--serif);color:var(--text)!important}
+.vfx-q small{display:block;margin-top:4px;font-size:11px;color:var(--muted);letter-spacing:.02em}
+.vfx-q.sw{opacity:0}
+.vf-conf{position:absolute;left:50%;top:44px;pointer-events:none}
+.vf-conf b{position:absolute;width:8px;height:12px;border-radius:2px;opacity:0;animation:vfConf 1.8s var(--d) ease-out forwards}
+.vfx-go[disabled],#vfGo[disabled],#vfFin[disabled]{background-image:linear-gradient(90deg,rgba(var(--gold-rgb),.9) var(--p,0%),transparent var(--p,0%))}
+@keyframes vfShake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes vfBlink{50%{opacity:.1}}
+@keyframes vfConf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--x),250px) rotate(var(--r))}}
+@media (prefers-reduced-motion:reduce){.vf-handle,.vf-orb,.vf-orb span,.vf-tbadge,.vf-tk{animation:none!important}.vf-conf{display:none}}
 .vfx-top,.vfx-alt{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .vfx-top{padding:10px 0;border-top:1px solid var(--line)}.vfx-top:first-of-type{border-top:0}
 .vfx-top b,.vfx-alt b{display:block;font-size:15px}.vfx-top small,.vfx-alt small{color:var(--muted);font-size:12.5px}
@@ -3521,6 +3594,10 @@ async function openStoryDetails(id){                         // tap on a story c
 
 /* ===================== Free tier: ad verification (Mini App steps) ===================== */
 const VF = {story: '', st: null, link: null, wait: 0, timer: null, done: {c: false, p: false}};
+const VF_QUOTES = ['Ek kahani sunne wala kabhi akela nahi hota.', 'Aaj ka ek chhota step, kal ki poori kahani.', 'Kuch kahaniyan intezaar ke baad aur bhi meethi lagti hain.', 'Awaaz wahan le jaati hai, jahan aankhein nahi pahunchti.',
+  'Sabr rakho, agla episode bas ek verification door hai.', 'Every great story starts with one small step.', 'Close your eyes, press play, and let the story begin.', 'The best journeys are told, not shown.',
+  'Good things come to those who finish the ad.', 'A story heard is a story lived.', 'Thoda sa sabr, bahut saari kahaniyan.', 'Listen well, and the story will find you.'];
+const vfQuote = () => { const i = VF.qi != null ? VF.qi : (VF.qi = Math.floor(Math.random() * VF_QUOTES.length)); return `<figure class="vfx-q" data-vfq="1" style="margin-inline:0" role="button" aria-label="Show another quote"><p>&ldquo;${esc(VF_QUOTES[i])}&rdquo;</p><small>${esc(vt('Tap for another'))} &#8635;</small></figure>`; };
 const vfLeft = s => { s = Math.max(0, Math.ceil(s)); return s >= 3600 ? Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min' : s >= 60 ? Math.ceil(s / 60) + ' min' : s + ' s'; };
 function applyMode(t){                                           // the one place the admin's switches become the app's behaviour
   t = {free: !!(t && t.free), premium: !!(t && t.premium)}; if (!t.free && !t.premium) t.premium = true;
@@ -3532,13 +3609,111 @@ function applyMode(t){                                           // the one plac
   return changed;
 }
 function vfApplyTiers(){ document.body.classList.toggle('nopremium', FREE_BUILD || (!TIERS.premium && !S.admin)); if (S.tab === 'home' && S.home) renderHome(); }
+const VF_I18N = {
+hi: {
+'Free access is not available right now.': 'फ्री एक्सेस अभी उपलब्ध नहीं है।', 'Access suspended': 'एक्सेस निलंबित',
+'Your access has been permanently suspended. For any concerns, please contact the administrator.': 'आपका एक्सेस स्थायी रूप से निलंबित कर दिया गया है। किसी भी समस्या के लिए कृपया एडमिन से संपर्क करें।',
+'Your access is suspended until {d}.': 'आपका एक्सेस {d} तक निलंबित है।', 'Next verification in {t}': 'अगला वेरिफिकेशन {t} में',
+'Verification in progress': 'वेरिफिकेशन जारी है', 'Link {i} ({r})': 'लिंक {i} ({r})', 'required': 'ज़रूरी', 'spare': 'अतिरिक्त',
+'Continue': 'जारी रखें', 'Reset': 'रीसेट', 'Reopen the same link': 'वही लिंक दोबारा खोलें', 'Link not working? Get another': 'लिंक नहीं चल रहा? दूसरा लें',
+'Good news! {n} of your single-story verifications already count towards Verify all stories. Only {m} more to go.': 'खुशखबरी! आपके {n} सिंगल-स्टोरी वेरिफिकेशन पहले से "सभी स्टोरीज़ वेरिफाई" में गिने जा रहे हैं। बस {m} और बाकी।',
+'Good news! Every single-story verification you complete also counts towards Verify all stories.': 'खुशखबरी! आप जो भी सिंगल-स्टोरी वेरिफिकेशन पूरा करेंगे, वह "सभी स्टोरीज़ वेरिफाई" में भी गिना जाएगा।',
+'Good news! This verification also counts towards Verify all stories.': 'खुशखबरी! यह वेरिफिकेशन "सभी स्टोरीज़ वेरिफाई" में भी गिना जाएगा।',
+'Good news! {n} of your earlier verifications already count.': 'खुशखबरी! आपके पिछले {n} वेरिफिकेशन पहले से गिने जा चुके हैं।', 'Good news! Each verification you finish counts.': 'खुशखबरी! आप जो भी वेरिफिकेशन पूरा करेंगे, वह गिना जाएगा।',
+'All stories are unlocked': 'सभी स्टोरीज़ अनलॉक हैं', 'Active for {t}': '{t} तक एक्टिव', 'Every story, unlocked': 'हर स्टोरी, अनलॉक',
+'Finish 4 quick verifications in a row and listen to any story for {h} hours.': 'लगातार 4 छोटे वेरिफिकेशन पूरे करें और {h} घंटे तक कोई भी स्टोरी सुनें।',
+'{a} of {b} done · links used {c} of {d}': '{a}/{b} पूरे · {c}/{d} लिंक इस्तेमाल', '{n} of 4 already counted': '{n}/4 पहले से गिने गए',
+'Next verification': 'अगला वेरिफिकेशन', 'Start verifying': 'वेरिफाई शुरू करें', 'This story': 'यह स्टोरी',
+'1 verification unlocks 1 topic for {h} hours. Pick one.': '1 वेरिफिकेशन से 1 टॉपिक {h} घंटे के लिए अनलॉक होता है। एक चुनें।',
+'1 verification unlocks every episode for {h} hours.': '1 वेरिफिकेशन से सभी एपिसोड {h} घंटे के लिए अनलॉक होते हैं।',
+'Unlocked for {t}': '{t} के लिए अनलॉक', 'Every episode of this topic': 'इस टॉपिक का हर एपिसोड', 'Verify': 'वेरिफाई', 'This story is unlocked': 'यह स्टोरी अनलॉक है',
+'Covered by your all-stories pass': 'आपके ऑल-स्टोरीज़ पास में शामिल', 'Verify this story': 'यह स्टोरी वेरिफाई करें', 'Verify all stories': 'सभी स्टोरीज़ वेरिफाई करें', 'Want every story?': 'हर स्टोरी चाहिए?',
+'4 in a row · {h} hours · any story': 'लगातार 4 · {h} घंटे · कोई भी स्टोरी', 'Next': 'आगे', 'Start': 'शुरू',
+'Open the link and finish the ad page': 'लिंक खोलें और ऐड पेज पूरा करें', 'Wait for the timer on the page, then tap the final button.': 'पेज पर टाइमर पूरा होने तक रुकें, फिर आख़िरी बटन दबाएँ।',
+'Come back and solve the short puzzle': 'वापस आएँ और छोटा पज़ल हल करें', 'Slide the piece into place and answer the small sum.': 'पीस को सही जगह स्लाइड करें और छोटा सवाल हल करें।',
+'Send the code and your answer to the Audio Express bot': 'कोड और अपना उत्तर Audio Express बॉट को भेजें', 'Paste the code there within a few minutes, then write the answer of the sum you solved here.': 'कुछ ही मिनटों में कोड वहाँ पेस्ट करें, फिर यहाँ हल किए सवाल का उत्तर लिखें।',
+'The newest {n} episodes of every story are always free.': 'हर स्टोरी के सबसे नए {n} एपिसोड हमेशा फ्री हैं।', 'Tap for another': 'दूसरा देखने के लिए टैप करें',
+'Free access': 'फ्री एक्सेस', 'Step 1': 'चरण 1', 'Last step': 'आख़िरी चरण', 'Verification code': 'वेरिफिकेशन कोड', 'Back': 'वापस',
+'Reset this verification?': 'यह वेरिफिकेशन रीसेट करें?', ' The link you opened counts as used, so a short wait applies before you can start again.': ' आपका खोला हुआ लिंक इस्तेमाल माना जाएगा, इसलिए दोबारा शुरू करने से पहले थोड़ा इंतज़ार करना होगा।',
+' Your progress in this run will be lost.': ' इस बार की आपकी प्रगति खो जाएगी।', 'Verification reset.': 'वेरिफिकेशन रीसेट हो गया।',
+'Get another link? This link will be closed and counts as used.': 'दूसरा लिंक लें? यह लिंक बंद हो जाएगा और इस्तेमाल माना जाएगा।', 'This is your last link. Closing it ends this verification and starts the cooldown. Continue?': 'यह आपका आख़िरी लिंक है। इसे बंद करने से यह वेरिफिकेशन खत्म होगा और कूलडाउन शुरू होगा। जारी रखें?',
+'Verification': 'वेरिफिकेशन', '{n} of {m}': '{n}/{m}', 'Link {i} of {j} · Required': 'लिंक {i}/{j} · ज़रूरी', 'Link {i} of {j} · Spare': 'लिंक {i}/{j} · अतिरिक्त',
+'Human check': 'इंसान जाँच', 'Puzzle': 'पज़ल', 'Ready': 'तैयार', 'Sum': 'सवाल', '1. Prove you are human': '1. साबित करें कि आप इंसान हैं', '2. Solve the puzzle': '2. पज़ल हल करें', '3. Solve the sum': '3. सवाल हल करें',
+'Complete the steps above': 'ऊपर के चरण पूरे करें', 'Continue to the ad': 'ऐड पर जाएँ', 'Please wait {s} s': 'कृपया {s} सेकंड रुकें', 'Type your answer above': 'ऊपर अपना उत्तर लिखें',
+'The ad opens in your browser. When it finishes, you will return here for the last step.': 'ऐड आपके ब्राउज़र में खुलेगा। पूरा होने पर आप आख़िरी चरण के लिए यहीं लौटेंगे।',
+"I'm not a robot": 'मैं रोबोट नहीं हूँ', 'Tap once to confirm': 'पुष्टि के लिए एक बार टैप करें', 'Verified as human': 'इंसान के रूप में सत्यापित',
+'Slide the piece into the gap': 'पीस को खाली जगह में स्लाइड करें', 'Puzzle solved ✓': 'पज़ल हल हुआ ✓', 'Not quite. Try again.': 'सही नहीं। फिर कोशिश करें।',
+'Waiting for the ad': 'ऐड का इंतज़ार', 'Finish the ad page in your browser. You will come back here automatically.': 'अपने ब्राउज़र में ऐड पेज पूरा करें। आप अपने आप यहीं लौट आएँगे।',
+'Link not working?': 'लिंक नहीं चल रहा?', 'Get a fresh link. This link is closed and counts as used. Links left after this: {n}.': 'नया लिंक लें। यह लिंक बंद हो जाएगा और इस्तेमाल माना जाएगा। इसके बाद बचे लिंक: {n}।', 'Get another link': 'दूसरा लिंक लें',
+'Final step': 'आख़िरी चरण', 'Three quick things, then you get your code.': 'तीन छोटे काम, फिर आपको कोड मिलेगा।', 'Remember your answer. You will send it to the bot.': 'अपना उत्तर याद रखें। इसे आप बॉट को भेजेंगे।',
+'Write from last': 'आख़िर से लिखें', '42: type 2 → 4': '42: 2 → 4 दबाएँ', 'Write from first': 'शुरू से लिखें', '52: type 5 → 2': '52: 5 → 2 दबाएँ', 'Get my code': 'मेरा कोड पाएँ',
+'That answer is incorrect. Attempts remaining: {n}': 'यह उत्तर गलत है। बचे प्रयास: {n}',
+'Verification complete': 'वेरिफिकेशन पूरा हुआ', 'Here is your code': 'यह रहा आपका कोड', 'Copy code': 'कोड कॉपी करें', 'Copied ✓': 'कॉपी हुआ ✓', 'Copied': 'कॉपी हो गया', 'Select and copy the code': 'कोड चुनकर कॉपी करें',
+'Paste this code in the Audio Express bot within {m} minutes.': '{m} मिनट के अंदर यह कोड Audio Express बॉट में पेस्ट करें।', 'Then write there the answer of the sum you solved here.': 'फिर वहाँ यहाँ हल किए सवाल का उत्तर लिखें।',
+'After {t} wrong tries you may be banned for {d} days.': '{t} बार गलत होने पर आपको {d} दिन के लिए प्रतिबंधित किया जा सकता है।', 'Warning: after {t} tries you have to do the complete verification process again.': 'चेतावनी: {t} बार गलत होने पर पूरी वेरिफिकेशन प्रक्रिया दोबारा करनी होगी।',
+'Copy code & open Audio Express': 'कोड कॉपी करें और Audio Express खोलें', 'Your answer': 'आपका उत्तर', 'Send this answer to the bot with the code.': 'यह उत्तर कोड के साथ बॉट को भेजें।'
+},
+hing: {
+'Free access is not available right now.': 'Free access abhi available nahi hai.', 'Access suspended': 'Access suspend hai',
+'Your access has been permanently suspended. For any concerns, please contact the administrator.': 'Aapka access permanently suspend kar diya gaya hai. Kisi bhi problem ke liye admin se contact karein.',
+'Your access is suspended until {d}.': 'Aapka access {d} tak suspend hai.', 'Next verification in {t}': 'Agli verification {t} baad',
+'Verification in progress': 'Verification chal rahi hai', 'Link {i} ({r})': 'Link {i} ({r})', 'required': 'zaroori', 'spare': 'extra',
+'Continue': 'Continue karein', 'Reset': 'Reset', 'Reopen the same link': 'Wahi link dobara kholein', 'Link not working? Get another': 'Link nahi chal raha? Doosra lein',
+'Good news! {n} of your single-story verifications already count towards Verify all stories. Only {m} more to go.': 'Khushkhabri! Aapki {n} single-story verification pehle se Verify all stories me count ho rahi hain. Bas {m} aur baaki.',
+'Good news! Every single-story verification you complete also counts towards Verify all stories.': 'Khushkhabri! Aap jo bhi single-story verification poori karenge, wo Verify all stories me bhi count hogi.',
+'Good news! This verification also counts towards Verify all stories.': 'Khushkhabri! Ye verification Verify all stories me bhi count hogi.',
+'Good news! {n} of your earlier verifications already count.': 'Khushkhabri! Aapki pichli {n} verification pehle se count ho chuki hain.', 'Good news! Each verification you finish counts.': 'Khushkhabri! Aap jo bhi verification poori karenge, wo count hogi.',
+'All stories are unlocked': 'Saari stories unlock hain', 'Active for {t}': '{t} tak active', 'Every story, unlocked': 'Har story, unlock',
+'Finish 4 quick verifications in a row and listen to any story for {h} hours.': 'Lagatar 4 chhoti verification poori karein aur {h} ghante tak koi bhi story sunein.',
+'{a} of {b} done · links used {c} of {d}': '{a}/{b} poore · {c}/{d} link use hue', '{n} of 4 already counted': '{n}/4 pehle se count',
+'Next verification': 'Agli verification', 'Start verifying': 'Verify shuru karein', 'This story': 'Ye story',
+'1 verification unlocks 1 topic for {h} hours. Pick one.': '1 verification se 1 topic {h} ghante ke liye unlock hota hai. Ek chunein.',
+'1 verification unlocks every episode for {h} hours.': '1 verification se saare episodes {h} ghante ke liye unlock hote hain.',
+'Unlocked for {t}': '{t} ke liye unlock', 'Every episode of this topic': 'Is topic ka har episode', 'Verify': 'Verify', 'This story is unlocked': 'Ye story unlock hai',
+'Covered by your all-stories pass': 'Aapke all-stories pass me shamil', 'Verify this story': 'Is story ko verify karein', 'Verify all stories': 'Saari stories verify karein', 'Want every story?': 'Har story chahiye?',
+'4 in a row · {h} hours · any story': 'Lagatar 4 · {h} ghante · koi bhi story', 'Next': 'Next', 'Start': 'Start',
+'Open the link and finish the ad page': 'Link kholein aur ad page poora karein', 'Wait for the timer on the page, then tap the final button.': 'Page par timer khatam hone tak ruken, phir last button dabayein.',
+'Come back and solve the short puzzle': 'Wapas aayein aur chhota puzzle solve karein', 'Slide the piece into place and answer the small sum.': 'Piece ko sahi jagah slide karein aur chhota sum solve karein.',
+'Send the code and your answer to the Audio Express bot': 'Code aur apna answer Audio Express bot ko bhejein', 'Paste the code there within a few minutes, then write the answer of the sum you solved here.': 'Kuch hi minutes me code wahan paste karein, phir yahan solve kiye sum ka answer likhein.',
+'The newest {n} episodes of every story are always free.': 'Har story ke sabse naye {n} episodes hamesha free hain.', 'Tap for another': 'Doosra dekhne ke liye tap karein',
+'Free access': 'Free access', 'Step 1': 'Step 1', 'Last step': 'Last step', 'Verification code': 'Verification code', 'Back': 'Back',
+'Reset this verification?': 'Ye verification reset karein?', ' The link you opened counts as used, so a short wait applies before you can start again.': ' Aapka khola hua link use mana jayega, isliye dobara shuru karne se pehle thoda wait karna hoga.',
+' Your progress in this run will be lost.': ' Is baar ki aapki progress kho jayegi.', 'Verification reset.': 'Verification reset ho gayi.',
+'Get another link? This link will be closed and counts as used.': 'Doosra link lein? Ye link band ho jayega aur use mana jayega.', 'This is your last link. Closing it ends this verification and starts the cooldown. Continue?': 'Ye aapka last link hai. Ise band karne se ye verification khatam hogi aur cooldown shuru hoga. Continue karein?',
+'Verification': 'Verification', '{n} of {m}': '{n}/{m}', 'Link {i} of {j} · Required': 'Link {i}/{j} · Zaroori', 'Link {i} of {j} · Spare': 'Link {i}/{j} · Extra',
+'Human check': 'Human check', 'Puzzle': 'Puzzle', 'Ready': 'Ready', 'Sum': 'Sum', '1. Prove you are human': '1. Prove karein ki aap insaan hain', '2. Solve the puzzle': '2. Puzzle solve karein', '3. Solve the sum': '3. Sum solve karein',
+'Complete the steps above': 'Upar ke steps poore karein', 'Continue to the ad': 'Ad par jaayein', 'Please wait {s} s': 'Please {s} second ruken', 'Type your answer above': 'Upar apna answer likhein',
+'The ad opens in your browser. When it finishes, you will return here for the last step.': 'Ad aapke browser me khulega. Poora hone par aap last step ke liye yahin wapas aayenge.',
+"I'm not a robot": 'Main robot nahi hoon', 'Tap once to confirm': 'Confirm karne ke liye ek baar tap karein', 'Verified as human': 'Human verify ho gaya',
+'Slide the piece into the gap': 'Piece ko khaali jagah me slide karein', 'Puzzle solved ✓': 'Puzzle solve ho gaya ✓', 'Not quite. Try again.': 'Sahi nahi. Phir try karein.',
+'Waiting for the ad': 'Ad ka intezaar', 'Finish the ad page in your browser. You will come back here automatically.': 'Apne browser me ad page poora karein. Aap apne aap yahin wapas aa jayenge.',
+'Link not working?': 'Link nahi chal raha?', 'Get a fresh link. This link is closed and counts as used. Links left after this: {n}.': 'Naya link lein. Ye link band ho jayega aur use mana jayega. Iske baad bache link: {n}.', 'Get another link': 'Doosra link lein',
+'Final step': 'Final step', 'Three quick things, then you get your code.': 'Teen chhote kaam, phir aapko code milega.', 'Remember your answer. You will send it to the bot.': 'Apna answer yaad rakhein. Ise aap bot ko bhejenge.',
+'Write from last': 'Last se likhein', '42: type 2 → 4': '42: 2 → 4 dabayein', 'Write from first': 'First se likhein', '52: type 5 → 2': '52: 5 → 2 dabayein', 'Get my code': 'Mera code lein',
+'That answer is incorrect. Attempts remaining: {n}': 'Ye answer galat hai. Bache attempts: {n}',
+'Verification complete': 'Verification poori hui', 'Here is your code': 'Ye raha aapka code', 'Copy code': 'Code copy karein', 'Copied ✓': 'Copy ho gaya ✓', 'Copied': 'Copy ho gaya', 'Select and copy the code': 'Code select karke copy karein',
+'Paste this code in the Audio Express bot within {m} minutes.': '{m} minute ke andar ye code Audio Express bot me paste karein.', 'Then write there the answer of the sum you solved here.': 'Phir wahan yahan solve kiye sum ka answer likhein.',
+'After {t} wrong tries you may be banned for {d} days.': '{t} baar galat hone par aapko {d} din ke liye ban kiya ja sakta hai.', 'Warning: after {t} tries you have to do the complete verification process again.': 'Warning: {t} baar galat hone par poori verification process dobara karni hogi.',
+'Copy code & open Audio Express': 'Code copy karke Audio Express kholein', 'Your answer': 'Aapka answer', 'Send this answer to the bot with the code.': 'Ye answer code ke saath bot ko bhejein.'
+}};
+const vl = () => VF.lang || LANG;                                    // the verify pages start in the language chosen in the app; the globe button changes it for these pages
+const vt = (k, v) => { const d = VF_I18N[vl()]; let t = (d && d[k]) || k; if (v) for (const x in v) t = t.split('{' + x + '}').join(v[x]); return t; };
+const vts = (k, v) => `<span data-vt="${esc(k)}"${v ? ` data-vv="${esc(JSON.stringify(v))}"` : ''}>${esc(vt(k, v))}</span>`;
+function vfLangApply(){
+  const b = $('#vfLang'); if (b) b.innerHTML = '&#127760; ' + esc(LANG_LABEL[vl()] || 'EN');
+  if (VF.page === 'home' && VF.st) return vfHome();
+  document.querySelectorAll('#verify [data-vt]').forEach(el => { let v = null; try{ v = el.dataset.vv ? JSON.parse(el.dataset.vv) : null; }catch(e){} el.textContent = vt(el.dataset.vt, v); });
+  if (VF.paint) VF.paint();
+}
+function vfLangNext(){ VF.lang = LANGS[(LANGS.indexOf(vl()) + 1) % LANGS.length]; vfLangApply(); }
 function vfShell(inner, title){
-  $('#verify').innerHTML = `<div class="top"><button class="btn ghost small" id="vfBack" aria-label="Back">Back</button><strong>${esc(title || 'Free access')}</strong><span style="width:60px"></span></div><div class="vf-body">${inner}</div>`;
+  $('#verify').innerHTML = `<div class="top"><button class="btn ghost small" id="vfBack" type="button">${vts('Back')}</button><strong>${vts(title || 'Free access')}</strong><button class="btn ghost small vf-lang" id="vfLang" type="button" aria-label="Language">&#127760; ${esc(LANG_LABEL[vl()] || 'EN')}</button></div><div class="vf-body">${inner}</div>`;
   $('#vfBack').onclick = () => { clearInterval(VF.timer); closeSheet('verify'); };
+  $('#vfLang').onclick = vfLangNext;
 }
 const vfErr = e => (e && e.data && e.data.message) || (e && e.message) || 'Something went wrong. Please try again.';
 async function openVerify(story, topic){                          // 1 verification unlocks ONE topic of the story (a story without topics: the story itself); 4 in a row unlock everything
-  VF.story = story || ''; VF.topic = topic || ''; VF.topics = []; VF.info = null; openSheet('verify'); vfShell('<div class="sk hero"></div>');
+  VF.story = story || ''; VF.topic = topic || ''; VF.qi = null; VF.page = 'load'; VF.topics = []; VF.info = null; openSheet('verify'); vfShell('<div class="sk hero"></div>');
   try{
     const [st, sd] = await Promise.all([api('/api/vf/status?story=' + encodeURIComponent(VF.story)), VF.story ? api('/api/story/' + encodeURIComponent(VF.story) + '?limit=1').catch(() => null) : null]);
     VF.info = (sd && sd.story) || null; VF.st = st; VF.topics = ((sd && sd.story && sd.story.topics) || []).filter(t => t && t.id);
@@ -3546,35 +3721,57 @@ async function openVerify(story, topic){                          // 1 verificat
   vfHome();
 }
 function vfHome(){
+  VF.page = 'home';
   const s = VF.st, p = s.pass, nowS = Date.now() / 1000;
-  if (!s.free) return vfShell('<div class="vf-card"><p>Free access is not available right now.</p></div>');
-  if (s.ban) return vfShell(`<div class="vf-card"><b>&#9940; Access suspended</b><p>${s.ban.permanent ? 'Your access has been permanently suspended. For any concerns, please contact the administrator.' : 'Your access is suspended until ' + esc(new Date(s.ban.until * 1000).toLocaleString()) + '.'}</p></div>`);
+  if (!s.free) return vfShell(`<div class="vf-card"><p>${vts('Free access is not available right now.')}</p></div>`);
+  if (s.ban) return vfShell(`<div class="vf-card"><b>&#9940; ${vts('Access suspended')}</b><p>${s.ban.permanent ? vts('Your access has been permanently suspended. For any concerns, please contact the administrator.') : vts('Your access is suspended until {d}.', {d: new Date(s.ban.until * 1000).toLocaleString()})}</p></div>`);
   const lv = e => `<span data-vfx-t="${e}">${vfLeft(e - nowS)}</span>`;
-  const sess = s.session, live = s.link, cd = s.cooldown, info = VF.info, hrs = s.pass_hours, run = !!(sess && sess.mode === 4);
-  const stamps = (n, done) => `<div class="vfx-st" role="img" aria-label="${done} of ${n} verifications done">${Array.from({length: n}, (_, i) => `<i class="${i < done ? 'd' : i === done ? 'n' : ''}" style="--k:${i}">${i < done ? '&#10003;' : ''}</i>`).join('')}</div>`;
-  const wait = t => `<p class="vfx-wait">Next verification in ${lv(nowS + t)}</p>`;
+  const sess = s.session, live = s.link, cd = s.cooldown, info = VF.info, hrs = s.pass_hours, run = !!(sess && sess.mode === 4), cr = (!run && !live && s.credit) || 0;
+  const good = () => `<p class="vfx-good">&#127881; ${cr > 0 ? esc(vt('Good news! {n} of your single-story verifications already count towards Verify all stories. Only {m} more to go.', {n: cr, m: 4 - cr})) : esc(vt('Good news! Every single-story verification you complete also counts towards Verify all stories.'))}</p>`;
+  const stamps = (n, done) => `<div class="vfx-st" role="img" aria-label="${done} / ${n}">${Array.from({length: n}, (_, i) => `<i class="${i < done ? 'd' : i === done ? 'n' : ''}" style="--k:${i}">${i < done ? '&#10003;' : ''}</i>`).join('')}</div>`;
+  const wait = t => `<p class="vfx-wait">${vt('Next verification in {t}', {t: lv(nowS + t)})}</p>`;
   const done = (title, sub) => `<div class="vfx-hero ok"><div class="vfx-badge">&#10003;<span class="vfx-sp">${[0, 1, 2, 3, 4, 5, 6, 7].map(k => `<b style="--a:${k * 45}deg"></b>`).join('')}</span></div><h2>${title}</h2><p>${sub}</p></div>`;
-  const resume = live ? `<div class="vfx-resume"><div><b>Verification in progress</b><small>Link ${live.idx} (${live.role === 'required' ? 'required' : 'spare'})</small></div><button class="btn small" data-vfgo="resume" type="button">Continue</button>${live.state === 'opened' && live.reopen ? '<button class="btn ghost small" data-vfgo="reopen" type="button">Reopen the same link</button>' : ''}${live.state === 'opened' ? '<button class="btn ghost small" data-vfgo="swap" type="button">Link not working? Get another</button>' : ''}</div>` : '';
-  const allHero = p.global ? done('All stories are unlocked', `Active for ${lv(p.global)}`)
-    : `<div class="vfx-hero"><h2>Every story, unlocked</h2><p>Finish 4 quick verifications in a row and listen to any story for ${hrs} hours.</p>${stamps(4, run ? sess.done : 0)}<div class="vfx-perf"></div>${run ? `<p class="vfx-sub">${sess.done} of ${sess.need} done &middot; links used ${sess.links_used} of ${sess.links_max}</p>` : ''}${cd['4'] > 0 && !run ? wait(cd['4']) : `<button class="btn block vfx-go" data-vfgo="4" type="button">${run ? 'Next verification' : 'Start verifying'}</button>`}</div>`;
+  const resume = live ? `<div class="vfx-resume"><div><b>${esc(vt('Verification in progress'))}</b><small>${esc(vt('Link {i} ({r})', {i: live.idx, r: vt(live.role === 'required' ? 'required' : 'spare')}))}</small></div><button class="btn small" data-vfgo="resume" type="button">${esc(vt('Continue'))}</button><button class="btn ghost small" data-vfgo="reset" type="button">${esc(vt('Reset'))}</button>${live.state === 'opened' && live.reopen ? `<button class="btn ghost small" data-vfgo="reopen" type="button">${esc(vt('Reopen the same link'))}</button>` : ''}${live.state === 'opened' ? `<button class="btn ghost small" data-vfgo="swap" type="button">${esc(vt('Link not working? Get another'))}</button>` : ''}${good()}</div>` : '';
+  const allHero = p.global ? done(esc(vt('All stories are unlocked')), vt('Active for {t}', {t: lv(p.global)}))
+    : `<div class="vfx-hero"><h2>${esc(vt('Every story, unlocked'))}</h2><p>${esc(vt('Finish 4 quick verifications in a row and listen to any story for {h} hours.', {h: hrs}))}</p>${stamps(4, run ? sess.done : cr)}<div class="vfx-perf"></div>${run ? `<p class="vfx-sub">${esc(vt('{a} of {b} done · links used {c} of {d}', {a: sess.done, b: sess.need, c: sess.links_used, d: sess.links_max}))}</p>` : cr ? `<p class="vfx-sub">${esc(vt('{n} of 4 already counted', {n: cr}))}</p>` : ''}${cd['4'] > 0 && !run ? wait(cd['4']) : `<button class="btn block vfx-go" data-vfgo="4" type="button">${esc(vt(run ? 'Next verification' : 'Start verifying'))}</button>`}${good()}${vfQuote()}</div>`;
   let body;
   if (!VF.story) body = allHero;
   else {
-    const cv = info && isImg(info.cover) ? `<img class="vfx-cv" src="${esc(info.cover)}" alt="" loading="lazy">` : '';
-    const name = esc((info && info.title) || 'This story'), tl = VF.topic ? VF.topics.filter(t => String(t.id) === String(VF.topic)) : VF.topics;
-    const head = sub => `<div class="vfx-sh">${cv}<div><h2>${name}</h2><p>${sub}</p></div></div>`;
-    const topicRow = t => { const left = p.topics && p.topics[t.id] > nowS ? p.topics[t.id] - nowS : 0; return `<div class="vfx-top"><div><b>${esc(t.name)}</b><small>${left ? 'Unlocked for ' + lv(nowS + left) : 'Every episode of this topic'}</small></div>${left ? '<span class="vfx-tick">&#10003;</span>' : cd['1'] > 0 ? `<span class="vfx-wait">${lv(nowS + cd['1'])}</span>` : `<button class="btn small" data-vfgo="1" data-vft="${esc(t.id)}" type="button">Verify</button>`}</div>`; };
-    const one = p.global ? done('This story is unlocked', 'Covered by your all-stories pass')
-      : tl.length ? `<div class="vfx-hero">${head(`1 verification unlocks 1 topic for ${hrs} hours. Pick one.`)}<div class="vfx-perf"></div>${tl.map(topicRow).join('')}</div>`
-      : p.story ? done('This story is unlocked', `Active for ${lv(p.story)}`)
-      : `<div class="vfx-hero">${head(`1 verification unlocks every episode for ${hrs} hours.`)}${stamps(1, 0)}<div class="vfx-perf"></div>${cd['1'] > 0 ? wait(cd['1']) : '<button class="btn block vfx-go" data-vfgo="1" type="button">Verify this story</button>'}</div>`;
-    const alt = p.global ? '' : `<div class="vfx-alt"><div><b>Want every story?</b><small>4 in a row &middot; ${hrs} hours &middot; any story</small></div>${cd['4'] > 0 && !run ? `<span class="vfx-wait">${lv(nowS + cd['4'])}</span>` : `<button class="btn ghost small" data-vfgo="4" type="button">${run ? 'Next' : 'Start'}</button>`}</div>`;
+    const cv = info && isImg(info.cover) ? `<img class="vfx-cv" src="${esc(big(info.cover))}" alt="" decoding="async" onerror="this.onerror=null;this.src='${esc(info.cover)}'">` : '';
+    const name = esc((info && info.title) || vt('This story')), tl = VF.topic ? VF.topics.filter(t => String(t.id) === String(VF.topic)) : VF.topics;
+    const head = sub => `<button class="vfx-sh" data-vfopen="story" type="button" aria-label="${name}">${cv}<div><h2>${name}</h2><p>${esc(sub)}</p></div></button>`;
+    const topicRow = t => { const left = p.topics && p.topics[t.id] > nowS ? p.topics[t.id] - nowS : 0; return `<div class="vfx-top"><button class="vfx-tn" data-vfopen="topic" data-vfot="${esc(t.id)}" type="button" aria-label="${esc(t.name)}"><b>${esc(t.name)}</b><small>${left ? vt('Unlocked for {t}', {t: lv(nowS + left)}) : esc(vt('Every episode of this topic'))}</small></button>${left ? '<span class="vfx-tick">&#10003;</span>' : cd['1'] > 0 ? `<span class="vfx-wait">${lv(nowS + cd['1'])}</span>` : `<button class="btn small" data-vfgo="1" data-vft="${esc(t.id)}" type="button">${esc(vt('Verify'))}</button>`}</div>`; };
+    const one = p.global ? done(esc(vt('This story is unlocked')), esc(vt('Covered by your all-stories pass')))
+      : tl.length ? `<div class="vfx-hero">${head(vt('1 verification unlocks 1 topic for {h} hours. Pick one.', {h: hrs}))}<div class="vfx-perf"></div>${tl.map(topicRow).join('')}${good()}${vfQuote()}</div>`
+      : p.story ? done(esc(vt('This story is unlocked')), vt('Active for {t}', {t: lv(p.story)}))
+      : `<div class="vfx-hero">${head(vt('1 verification unlocks every episode for {h} hours.', {h: hrs}))}${stamps(1, 0)}<div class="vfx-perf"></div>${cd['1'] > 0 ? wait(cd['1']) : `<button class="btn block vfx-go" data-vfgo="1" type="button">${esc(vt('Verify this story'))}</button>`}${good()}${vfQuote()}</div>`;
+    const alt = p.global ? '' : `<div class="vfx-alt"><div><b>${esc(vt('Want every story?'))}</b><small>${esc(vt('4 in a row · {h} hours · any story', {h: hrs}))}</small></div>${cd['4'] > 0 && !run ? `<span class="vfx-wait">${lv(nowS + cd['4'])}</span>` : `<button class="btn ghost small" data-vfgo="4" type="button">${esc(vt(run ? 'Next' : 'Start'))}</button>`}${good()}</div>`;
     body = one + alt;
   }
-  const how = `<ol class="vfx-how"><li data-vfx-step="1"><b>Open the link and finish the ad page</b><small>Wait for the timer on the page, then tap the final button.</small></li><li data-vfx-step="2"><b>Come back and solve the short puzzle</b><small>Slide the piece into place and answer the small sum.</small></li><li data-vfx-step="3"><b>Send the code and your answer to the Audio Express bot</b><small>Paste the code there within a few minutes, then write the answer of the sum you solved here.</small></li></ol>`;
-  vfShell(`${resume}${body}${how}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
+  const how = `<ol class="vfx-how"><li data-vfx-step="1"><b>${esc(vt('Open the link and finish the ad page'))}</b><small>${esc(vt('Wait for the timer on the page, then tap the final button.'))}</small></li><li data-vfx-step="2"><b>${esc(vt('Come back and solve the short puzzle'))}</b><small>${esc(vt('Slide the piece into place and answer the small sum.'))}</small></li><li data-vfx-step="3"><b>${esc(vt('Send the code and your answer to the Audio Express bot'))}</b><small>${esc(vt('Paste the code there within a few minutes, then write the answer of the sum you solved here.'))}</small></li></ol>`;
+  vfShell(`${resume}${body}${how}<p class="note">&#127911; ${esc(vt('The newest {n} episodes of every story are always free.', {n: s.latest_n}))}</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
   vfxTick();
-  $('#verify').onclick = e => { const stp = e.target.closest('[data-vfx-step]'); if (stp){ stp.classList.toggle('open'); return; } const b = e.target.closest('[data-vfgo]'); if (!b) return; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }catch(x){} b.classList.add('busy'); const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
+  $('#verify').onclick = e => { const stp = e.target.closest('[data-vfx-step]'); if (stp){ stp.classList.toggle('open'); return; } const qq = e.target.closest('[data-vfq]'); if (qq){ VF.qi = ((VF.qi || 0) + 1 + Math.floor(Math.random() * (VF_QUOTES.length - 1))) % VF_QUOTES.length; qq.classList.add('sw'); setTimeout(() => { const p = qq.querySelector('p'); if (p) p.innerHTML = '&ldquo;' + esc(VF_QUOTES[VF.qi]) + '&rdquo;'; qq.classList.remove('sw'); }, 220); return; } const op = e.target.closest('[data-vfopen]'); if (op) return vfOpenStory(VF.story, op.dataset.vfopen === 'topic' ? op.dataset.vfot : ''); const b = e.target.closest('[data-vfgo]'); if (!b) return; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }catch(x){} if (b.dataset.vfgo === 'reset') return vfReset(); b.classList.add('busy'); const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
+}
+function vfOpenStory(id, topic){                                 // story card -> the story page; topic row -> that topic's page
+  if (!id) return; clearInterval(VF.tick); clearInterval(VF.timer); closeSheet('verify');
+  return openStory(id).then(() => {
+    if (!topic || String(V.id) !== String(id)) return;
+    const ok = ((V.story && V.story.topics) || []).some(t => String(t.id) === String(topic)); if (!ok) return;
+    V.topic = String(topic); V.pack = null; V.det = null; V.mode = 'topic'; V.page = 1; V.q = ''; V.filter = 'all'; V.eps = []; V.total = 0; V.epState = 'loading';
+    try{ pickPlan(); }catch(e){} renderStory(); $('#story').scrollTop = 0; return loadStoryPage(1);
+  });
+}
+async function vfReset(){                                          // give up the running verification and start clean
+  const l = VF.st && VF.st.link; if (!l) return vfHome();
+  const sess = VF.st.session || {}, opened = l.state === 'opened' || l.state === 'returned' || l.state === 'solved';
+  const msg = vt('Reset this verification?') + (opened ? vt(' The link you opened counts as used, so a short wait applies before you can start again.') : '') + (sess.mode === 4 && sess.done > 0 ? vt(' Your progress in this run will be lost.') : '');
+  const go = async () => {
+    try{ await api('/api/vf/reset', {method: 'POST', retry: false, body: JSON.stringify({token: l.token})}); VF.link = null; toast(vt('Verification reset.')); }
+    catch(e){ toast(vfErr(e)); }
+    openVerify(VF.story, VF.topic);
+  };
+  if (tg && tg.showConfirm) tg.showConfirm(msg, ok => { if (ok) go(); }); else if (confirm(msg)) go();
 }
 function vfxTick(){                                              // live countdowns on the verify pages; when one reaches zero the page refreshes itself
   clearInterval(VF.tick);
@@ -3591,9 +3788,10 @@ async function vfStart(mode){
     toast(m || vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} }
 }
 function vfWaiting(){
+  VF.page = 'wait';
   const s = VF.st.session || {}, left = Math.max(0, (s.links_max || 2) - (s.links_used || 0));
-  vfShell(`<div class="vf-card"><b>&#8987; Waiting for the ad</b><p>Complete the ad in your browser. You will return here automatically.</p><button class="btn block" id="vfReopen" style="margin-top:10px" type="button">&#128279; Reopen the same link</button></div>
-    <div class="vf-card"><b>Link not working?</b><small>Get a fresh link. This link is closed and counts as used. Links left after this: ${left}.</small><button class="btn block ghost" id="vfSwap" style="margin-top:10px" type="button">&#128260; Get another link</button></div>`);
+  vfShell(`<div class="vf-card" style="text-align:center"><div class="vf-orb"><span>&#8987;</span></div><b>${vts('Waiting for the ad')}</b><p>${vts('Finish the ad page in your browser. You will come back here automatically.')}</p><button class="btn block" id="vfReopen" style="margin-top:10px" type="button">&#128279; ${vts('Reopen the same link')}</button></div>
+    <div class="vf-card"><b>${vts('Link not working?')}</b><small>${vts('Get a fresh link. This link is closed and counts as used. Links left after this: {n}.', {n: left})}</small><button class="btn block ghost" id="vfSwap" style="margin-top:10px" type="button">&#128260; ${vts('Get another link')}</button></div>`);
   $('#vfSwap').onclick = vfSwap; $('#vfReopen').onclick = vfReopen;
 }
 async function vfReopen(){                                    // came back without finishing: open the SAME ad link again (no new link is used)
@@ -3605,7 +3803,7 @@ async function vfReopen(){                                    // came back witho
 async function vfSwap(){
   const tok = VF.link && VF.link.token || (VF.st.link && VF.st.link.token); if (!tok) return;
   const s = VF.st.session || {}, left = Math.max(0, (s.links_max || 2) - (s.links_used || 0));
-  const msg = left > 0 ? 'Get another link? This link will be closed and counts as used.' : 'This is your last link. Closing it ends this verification and starts the cooldown. Continue?';
+  const msg = vt(left > 0 ? 'Get another link? This link will be closed and counts as used.' : 'This is your last link. Closing it ends this verification and starts the cooldown. Continue?');
   const go = async () => { try{ const j = await api('/api/vf/swap', {method: 'POST', retry: false, body: JSON.stringify({token: tok})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
     catch(e){ const d = e.data || {}; toast(d.error === 'cooldown' ? 'Verification Not Complete. Please try again in ' + vfLeft(d.seconds || 0) + '.' : vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} } };
   if (tg && tg.showConfirm) tg.showConfirm(msg, ok => { if (ok) go(); }); else if (confirm(msg)) go();
@@ -3623,7 +3821,7 @@ function vfResume(){
   vfEnd(l.token);
 }
 function vfCaptcha(box, stage, onOk){
-  const site = VF.st.turnstile_site, send = async resp => { try{ await api('/api/vf/captcha', {method: 'POST', retry: false, body: JSON.stringify({token: VF.link.token, stage, response: resp || ''})}); box.innerHTML = '<div class="vf-chk">&#9989; Verified as human</div>'; onOk(); }catch(e){ toast(vfErr(e)); } };
+  const site = VF.st.turnstile_site, send = async resp => { try{ await api('/api/vf/captcha', {method: 'POST', retry: false, body: JSON.stringify({token: VF.link.token, stage, response: resp || ''})}); box.innerHTML = '<div class="vf-chk vf-done"><span class="vf-tk">&#10003;</span> ' + vts('Verified as human') + '</div>'; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); }catch(x){} onOk(); }catch(e){ toast(vfErr(e)); } };
   if (site){
     box.innerHTML = '<div id="vfTs"></div>';
     let wid = null;
@@ -3633,33 +3831,66 @@ function vfCaptcha(box, stage, onOk){
     if (window.turnstile) return draw();
     const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = draw; sc.onerror = () => fail('blocked'); document.head.appendChild(sc); return;
   }
-  box.innerHTML = `<label class="vf-chk"><input type="checkbox"> I'm not a robot</label>`;
-  box.querySelector('input').onchange = e => { if (e.target.checked){ e.target.disabled = true; setTimeout(() => send(''), 700); } };
+  box.innerHTML = `<button class="vf-human" type="button"><span class="bx"></span><span><b>${vts("I'm not a robot")}</b><small>${vts('Tap once to confirm')}</small></span></button>`;
+  const hb = box.querySelector('button'); hb.onclick = () => { if (hb.classList.contains('busy')) return; hb.classList.add('busy'); setTimeout(() => send(''), 700); };
 }
-function vfSlider(box, stage, target, onOk){
-  box.innerHTML = `<div class="vf-track"><span class="vf-notch" style="left:${target}%"></span><span class="vf-handle" style="left:0%"></span></div><small>Slide the piece into the dashed gap</small>`;
-  const tr = box.querySelector('.vf-track'), h = box.querySelector('.vf-handle'), note = box.querySelector('small'); let drag = false, t0 = 0, moves = 0, x = 0;
-  h.addEventListener('pointerdown', e => { drag = true; t0 = performance.now(); moves = 0; try{ h.setPointerCapture(e.pointerId); }catch(er){} e.preventDefault(); });
-  h.addEventListener('pointermove', e => { if (!drag) return; moves++; const r = tr.getBoundingClientRect(); x = Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)); h.style.left = x + '%'; });
-  const up = async () => { if (!drag) return; drag = false; const ms = performance.now() - t0;
+const VF_SCENES = [['#ffb347', '#ff5e62', '#2b1055'], ['#74ebd5', '#3a7bd5', '#0f2027'], ['#f6d365', '#fda085', '#6a3093'], ['#a8edea', '#7f7fd5', '#1d2671']];
+const vfScene = n => { const c = VF_SCENES[n % VF_SCENES.length], sx = 50 + (n * 61) % 200;          // a small drawn landscape: nothing to download, a different one each time
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${c[0]}'/><stop offset='.6' stop-color='${c[1]}'/><stop offset='1' stop-color='${c[2]}'/></linearGradient></defs><rect width='300' height='120' fill='url(#g)'/><circle cx='${sx}' cy='34' r='18' fill='#fff' opacity='.85'/><path d='M0 120V84l40-32 36 26 46-44 50 50 38-30 46 38 44-22v52z' fill='${c[2]}' opacity='.8'/><path d='M0 120v-18l60-16 70 18 60-22 110 20v18z' fill='#000' opacity='.35'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`; };
+function vfSlider(box, stage, target, onOk){                       // picture puzzle: drag the piece (or the handle below) into the dark gap
+  const PW = 52, scene = vfScene(Math.floor(Math.random() * 4));
+  box.innerHTML = `<div class="vf-pz"><span class="vf-gap"></span><span class="vf-pc"></span></div><div class="vf-track"><span class="vf-fill"></span><span class="vf-lbl" data-vt="Slide the piece into the gap">${esc(vt('Slide the piece into the gap'))}</span><span class="vf-handle" style="left:0%"></span></div>`;
+  const pz = box.querySelector('.vf-pz'), gap = box.querySelector('.vf-gap'), pc = box.querySelector('.vf-pc'), trk = box.querySelector('.vf-track'), h = box.querySelector('.vf-handle'), fl = box.querySelector('.vf-fill'), note = box.querySelector('.vf-lbl');
+  let W = 300, drag = '', t0 = 0, moves = 0, x = 0;
+  const put = v => { x = v; pc.style.left = (v / 100 * Math.max(1, W - PW)) + 'px'; h.style.left = v + '%'; fl.style.width = v + '%'; };
+  const lay = tg => { W = pz.clientWidth || 300; const at = tg / 100 * Math.max(1, W - PW); pz.style.backgroundImage = scene; gap.style.width = gap.style.height = pc.style.width = pc.style.height = PW + 'px'; gap.style.left = at + 'px';
+    pc.style.backgroundImage = scene; pc.style.backgroundSize = W + 'px 120px'; pc.style.backgroundPosition = '-' + at + 'px -34px'; put(x); };
+  lay(target);
+  const begin = (e, who) => { drag = who; t0 = performance.now(); moves = 0; pz.classList.remove('vf-snap', 'vf-shake'); trk.classList.remove('vf-snap'); box.classList.add('vf-drag'); try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(er){} e.preventDefault(); };
+  const move = e => { if (!drag) return; moves++; let v;
+    if (drag === 'pc'){ const r = pz.getBoundingClientRect(); v = (e.clientX - r.left - PW / 2) / Math.max(1, r.width - PW) * 100; } else { const r = trk.getBoundingClientRect(); v = (e.clientX - r.left) / r.width * 100; }
+    put(Math.max(0, Math.min(100, v))); };
+  const up = async () => { if (!drag) return; drag = ''; box.classList.remove('vf-drag'); const ms = performance.now() - t0;
     try{ const r = await api('/api/vf/puzzle', {method: 'POST', retry: false, body: JSON.stringify({token: VF.link.token, stage, x, ms, moves})});
-      if (r.ok){ box.classList.add('vf-ok'); note.textContent = 'Puzzle solved'; h.style.pointerEvents = 'none'; onOk(); }
-      else { h.style.left = '0%'; if (r.pz != null) box.querySelector('.vf-notch').style.left = r.pz + '%'; toast('Not quite. Please try again.'); } }
-    catch(e){ toast(vfErr(e)); } };
-  h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+      if (r.ok){ pz.classList.add('vf-snap'); trk.classList.add('vf-snap'); put(target); box.classList.add('vf-ok'); note.dataset.vt = 'Puzzle solved ✓'; note.textContent = vt('Puzzle solved ✓'); h.style.pointerEvents = pc.style.pointerEvents = 'none'; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); }catch(e){} onOk(); }
+      else { pz.classList.add('vf-snap', 'vf-shake'); trk.classList.add('vf-snap'); put(0); setTimeout(() => pz.classList.remove('vf-shake'), 400); if (r.pz != null) lay(r.pz); try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error'); }catch(e){} toast(vt('Not quite. Try again.')); } }
+    catch(e){ toast(vfErr(e)); put(0); } };
+  h.onpointerdown = e => begin(e, 'h'); pc.onpointerdown = e => begin(e, 'pc');
+  [h, pc].forEach(el => { el.onpointermove = move; el.onpointerup = up; el.onpointercancel = up; });
+}
+const vfSteps = (labels, keys) => `<div class="vf-steps" id="vfSteps">${labels.map((l, i) => `<div class="s" data-k="${keys[i]}"><i>${i + 1}</i>${vts(l)}</div>`).join('')}</div>`;
+const vfSum = q => {                                                // the sum written in school style, one number under the other
+  const m = String(q || '').match(/^\s*(\d+)\s*([+\u2212\u2013\-\u00d7x*])\s*(\d+)\s*$/); if (!m) return `<div class="vf-sum" style="font-size:28px;width:auto;text-align:center">${esc(q || '')} = ?</div>`;
+  const op = /[\-\u2013\u2212]/.test(m[2]) ? '\u2212' : /[x*\u00d7]/.test(m[2]) ? '\u00d7' : '+';
+  return `<div class="vf-sum" role="img" aria-label="${esc(m[1] + ' ' + op + ' ' + m[3])}"><div class="r"><span>${m[1]}</span></div><div class="r"><i>${op}</i><span>${m[3]}</span></div><div class="vf-line"></div><div class="r vf-ans"><span id="vfAns">?</span></div></div>`;
+};
+const vfDirGet = () => { if (VF.dir) return VF.dir; try{ VF.dir = localStorage.getItem('aj_vfdir') === 'last' ? 'last' : 'first'; }catch(e){ VF.dir = 'first'; } return VF.dir; };
+const vfDirHtml = () => { const d = vfDirGet(); return `<button type="button" data-dir="last" class="${d === 'last' ? 'on' : ''}" aria-pressed="${d === 'last'}">${vts('Write from last')}<small>${vts('42: type 2 → 4')}</small></button><button type="button" data-dir="first" class="${d === 'first' ? 'on' : ''}" aria-pressed="${d === 'first'}">${vts('Write from first')}<small>${vts('52: type 5 → 2')}</small></button>`; };
+function vfKey(k){
+  const inp = $('#vfA'); if (!inp) return; let v = inp.value, last = vfDirGet() === 'last';        // last: the units digit is typed first, every new digit goes to its left
+  if (k === 'b') v = last ? v.slice(1) : v.slice(0, -1); else if (k === 'c') v = ''; else if (v.length < 3) v = last ? k + v : v + k;
+  inp.value = v; const an = $('#vfAns'); if (an){ an.textContent = v || '?'; an.classList.toggle('has', !!v); }
+  VF.done.a = !!v; if (VF.paint) VF.paint();
 }
 function vfGate(btn, wait){                                   // the button opens only when the captcha, the puzzle and the waiting time are all done
-  VF.done = {c: false, p: false}; VF.wait = wait; clearInterval(VF.timer);
-  const paint = () => { const ok = VF.done.c && VF.done.p && VF.wait <= 0; btn.disabled = !ok; btn.textContent = ok ? btn.dataset.ready : VF.wait > 0 ? 'Please wait ' + Math.ceil(VF.wait) + ' s' : btn.dataset.todo; };
-  VF.timer = setInterval(() => { VF.wait = Math.max(0, VF.wait - 1); paint(); }, 1000); paint(); return paint;
+  VF.done = {c: false, p: false, a: false}; VF.wait = wait; VF.wait0 = Math.max(1, wait || 1); VF.needA = btn.id === 'vfFin'; clearInterval(VF.timer);
+  const paint = () => { const ok = VF.done.c && VF.done.p && VF.wait <= 0 && (!VF.needA || VF.done.a); btn.disabled = !ok;
+    btn.textContent = vt(ok ? btn.dataset.ready : VF.wait > 0 ? 'Please wait {s} s' : VF.done.c && VF.done.p && VF.needA ? 'Type your answer above' : btn.dataset.todo, {s: Math.ceil(VF.wait)});
+    btn.style.setProperty('--p', ok ? '100%' : Math.round((1 - VF.wait / VF.wait0) * 100) + '%');
+    const d = {c: VF.done.c, p: VF.done.p, a: VF.done.a, w: VF.wait <= 0}; document.querySelectorAll('#vfSteps .s').forEach(el => el.classList.toggle('on', !!d[el.dataset.k])); };
+  VF.paint = paint; VF.timer = setInterval(() => { VF.wait = Math.max(0, VF.wait - 1); paint(); }, 1000); paint(); return paint;
 }
 async function vfStartPage(){
-  vfShell('<div class="sk hero"></div>');
+  VF.page = 'start'; vfShell('<div class="sk hero"></div>');
   let b; try{ b = await api('/api/vf/begin', {method: 'POST', retry: false, body: JSON.stringify({token: VF.link.token})}); }catch(e){ return vfShell(`<div class="vf-card"><p>${esc(vfErr(e))}</p></div>`); }
-  const l = VF.link, sess = VF.st.session || {};
-  vfShell(`<div class="vf-card"><b>Verification ${sess.mode === 4 ? (sess.done + 1) + ' of ' + sess.need : ''}</b><small>Link ${l.idx} of ${sess.links_max || 2} &middot; ${l.role === 'required' ? 'Required' : 'Spare'}</small></div>
-    <div class="vf-card"><div id="vfC"></div></div><div class="vf-card"><div id="vfP"></div></div><button class="btn block" id="vfGo" data-ready="Continue to the ad" data-todo="Complete the steps above" type="button" disabled>Complete the steps above</button>
-    <p class="note">The ad opens in your browser. When it finishes, you will return here for the last step.</p>`, 'Step 1');
+  VF.page = 'start';
+  const l = VF.link, sess = VF.st.session || {}, jm = sess.links_max || 2;
+  const gk = sess.mode === 4 ? (sess.done > 0 ? ['Good news! {n} of your earlier verifications already count.', {n: sess.done}] : ['Good news! Each verification you finish counts.']) : ['Good news! This verification also counts towards Verify all stories.'];
+  vfShell(`<div class="vf-card"><b>${vts('Verification')}${sess.mode === 4 ? ' ' + vts('{n} of {m}', {n: sess.done + 1, m: sess.need}) : ''}</b><small>${vts(l.role === 'required' ? 'Link {i} of {j} · Required' : 'Link {i} of {j} · Spare', {i: l.idx, j: jm})}</small><p class="vfx-good">&#127881; ${vts(gk[0], gk[1])}</p></div>
+    ${vfSteps(['Human check', 'Puzzle', 'Ready'], ['c', 'p', 'w'])}
+    <div class="vf-card"><h3>${vts('1. Prove you are human')}</h3><div id="vfC"></div></div><div class="vf-card"><h3>${vts('2. Solve the puzzle')}</h3><div id="vfP"></div></div><button class="btn block" id="vfGo" data-ready="Continue to the ad" data-todo="Complete the steps above" type="button" disabled>${esc(vt('Complete the steps above'))}</button>
+    <p class="note">${vts('The ad opens in your browser. When it finishes, you will return here for the last step.')}</p>`, 'Step 1');
   const go = $('#vfGo'), paint = vfGate(go, b.wait);
   vfCaptcha($('#vfC'), 1, () => { VF.done.c = true; paint(); }); vfSlider($('#vfP'), 1, b.pz, () => { VF.done.p = true; paint(); });
   go.onclick = async () => { go.disabled = true; try{ const r = await api('/api/vf/open', {method: 'POST', retry: false, body: JSON.stringify({token: l.token})}); clearInterval(VF.timer);
@@ -3668,34 +3899,47 @@ async function vfStartPage(){
     catch(e){ toast(vfErr(e)); paint(); } };
 }
 async function vfEnd(token){
-  openSheet('verify'); vfShell('<div class="sk hero"></div>');
+  openSheet('verify'); VF.page = 'end'; vfShell('<div class="sk hero"></div>');
   if (!VF.st){ try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); }catch(e){ return vfShell(`<div class="vf-card"><p>${esc(vfErr(e))}</p></div>`); } }
   VF.link = {token}; let e0; try{ e0 = await api('/api/vf/end', {method: 'POST', retry: false, body: JSON.stringify({token})}); }catch(e){ return vfShell(`<div class="vf-card"><p>${esc(vfErr(e))}</p></div>`); }
   if (e0.code) return vfCode(e0.code);
-  vfShell(`<div class="vf-card"><b>Final step</b><small>Solve the sum and send the code you receive to the bot.</small></div>
-    <div class="vf-card"><div id="vfC"></div></div><div class="vf-card"><div id="vfP"></div></div>
-    <div class="vf-card"><b id="vfQ">${esc(e0.question || '')} = ?</b><input id="vfA" type="text" inputmode="numeric" autocomplete="off" placeholder="Your answer" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--text)"></div>
-    <button class="btn block" id="vfFin" data-ready="Get my code" data-todo="Complete the steps above" type="button" disabled>Complete the steps above</button>`, 'Last step');
-  const go = $('#vfFin'), paint = vfGate(go, e0.wait); vfCaptcha($('#vfC'), 2, () => { VF.done.c = true; paint(); }); vfSlider($('#vfP'), 2, e0.pz, () => { VF.done.p = true; paint(); });
-  go.onclick = async () => { go.disabled = true; try{ const r = await api('/api/vf/finish', {method: 'POST', retry: false, body: JSON.stringify({token, answer: $('#vfA').value})}); clearInterval(VF.timer); vfCode(r.code); }
-    catch(e){ const d = e.data || {}; if (d.error === 'wrong'){ toast('That answer is incorrect. Attempts remaining: ' + d.left); if (d.question) $('#vfQ').textContent = d.question + ' = ?'; } else if (d.error === 'failed'){ clearInterval(VF.timer); toast(vfErr(e)); return openVerify(VF.story, VF.topic); } else toast(vfErr(e)); paint(); } };
+  VF.page = 'end';
+  vfShell(`<div class="vf-card"><b>${vts('Final step')}</b><small>${vts('Three quick things, then you get your code.')}</small></div>
+    ${vfSteps(['Human check', 'Puzzle', 'Sum'], ['c', 'p', 'a'])}
+    <div class="vf-card"><h3>${vts('1. Prove you are human')}</h3><div id="vfC"></div></div><div class="vf-card"><h3>${vts('2. Solve the puzzle')}</h3><div id="vfP"></div></div>
+    <div class="vf-card" style="text-align:center"><h3>${vts('3. Solve the sum')}</h3><small>${vts('Remember your answer. You will send it to the bot.')}</small><div id="vfQ">${vfSum(e0.question)}</div><input id="vfA" type="hidden" value=""><div class="vf-dir" id="vfDir">${vfDirHtml()}</div>
+      <div class="vf-keys" id="vfKeys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-k="${n}">${n}</button>`).join('')}<button type="button" data-k="c" aria-label="Clear">C</button><button type="button" data-k="0">0</button><button type="button" data-k="b" aria-label="Delete">&#9003;</button></div></div>
+    <button class="btn block" id="vfFin" data-ready="Get my code" data-todo="Complete the steps above" type="button" disabled>${esc(vt('Complete the steps above'))}</button>`, 'Last step');
+  const go = $('#vfFin'), paint = vfGate(go, e0.wait);
+  $('#vfDir').onclick = ev => { const b = ev.target.closest('[data-dir]'); if (!b || b.dataset.dir === vfDirGet()) return; VF.dir = b.dataset.dir; try{ localStorage.setItem('aj_vfdir', VF.dir); }catch(x){} $('#vfDir').innerHTML = vfDirHtml(); const i = $('#vfA'); if (i) i.value = ''; vfKey('c'); };
+  $('#vfKeys').onclick = ev => { const b = ev.target.closest('[data-k]'); if (!b) return; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); }catch(x){} vfKey(b.dataset.k); };
+  if (!VF.kd){ VF.kd = true; document.addEventListener('keydown', ev => { if (!$('#vfKeys') || !$('#verify').classList.contains('open')) return; if (/^\d$/.test(ev.key)) vfKey(ev.key); else if (ev.key === 'Backspace') vfKey('b'); else if (ev.key === 'Enter'){ const f = $('#vfFin'); if (f && !f.disabled) f.click(); } }); }
+  vfCaptcha($('#vfC'), 2, () => { VF.done.c = true; paint(); }); vfSlider($('#vfP'), 2, e0.pz, () => { VF.done.p = true; paint(); });
+  go.onclick = async () => { go.disabled = true; const given = $('#vfA').value; try{ const r = await api('/api/vf/finish', {method: 'POST', retry: false, body: JSON.stringify({token, answer: given})}); clearInterval(VF.timer); VF.ans = given; try{ localStorage.setItem('aj_vfans', JSON.stringify({t: token, a: given})); }catch(x){} vfCode(r.code); }
+    catch(e){ const d = e.data || {}; if (d.error === 'wrong'){ toast(vt('That answer is incorrect. Attempts remaining: {n}', {n: d.left})); try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error'); }catch(x){} if (d.question) $('#vfQ').innerHTML = vfSum(d.question); VF.done.a = false; const sm = $('#vfQ .vf-sum'); if (sm){ sm.classList.add('vf-shake'); } if ($('#vfA')) $('#vfA').value = ''; } else if (d.error === 'failed'){ clearInterval(VF.timer); toast(vfErr(e)); return openVerify(VF.story, VF.topic); } else toast(vfErr(e)); paint(); } };
 }
 function vfCode(code){
+VF.page = 'code';
 const s = VF.st || {}, ab = String(AUDIO_BOT_USERNAME || BOT_USERNAME || '').replace(/^@/, ''), tries = s.tries_max || 5, days = s.ban_days || 7, ban = !!s.tries_ban;
-vfShell(`<div class="vf-card"><b>&#9989; Verification complete</b><div class="vf-code" id="vfCodeBox">${esc(code)}</div>
-<button class="btn block" id="vfCopy" type="button">Copy code</button>
-<p><b>A.</b> Paste this code in the Audio Express bot within ${s.code_min || 10} minutes.<br><b>B.</b> Then write there the answer of the sum you solved here.</p>
-<p class="note">&#9888;&#65039; ${ban ? `After ${tries} wrong tries you may be banned for ${days} days.` : `Warning: after ${tries} tries you have to do the complete verification process again.`}</p>${ab ? `<button class="btn block ghost" id="vfBot" type="button">Copy code &amp; open Audio Express</button>` : ''}</div>`, 'Verification code');
-const copy = async () => { try{ await navigator.clipboard.writeText(code); toast('Copied'); return true; }catch(e){ const r = document.createRange(); r.selectNodeContents($('#vfCodeBox')); const se = getSelection(); se.removeAllRanges(); se.addRange(r); toast('Select and copy the code'); return false; } };
+let ans = VF.ans; if (!ans){ try{ const o = JSON.parse(localStorage.getItem('aj_vfans') || 'null'); if (o && VF.link && o.t === VF.link.token) ans = o.a; }catch(e){} }
+const ansBox = ans ? `<div class="vf-yans"><small>${vts('Your answer')}</small><b>${esc(ans)}</b><small>${vts('Send this answer to the bot with the code.')}</small></div>` : '';
+vfShell(`<div class="vf-card vf-ticket" id="vfTicket"><div class="vf-tbadge">&#10003;</div><b style="font-size:18px">${vts('Verification complete')}</b><small>${vts('Here is your code')}</small><div class="vf-code" id="vfCodeBox">${esc(code)}</div>
+<button class="btn block" id="vfCopy" type="button">${vts('Copy code')}</button>
+<div class="vf-next"><div><em>A</em><span>${vts('Paste this code in the Audio Express bot within {m} minutes.', {m: s.code_min || 10})}</span></div><div><em>B</em><span>${vts('Then write there the answer of the sum you solved here.')}</span></div></div>${ansBox}
+<p class="note">&#9888;&#65039; ${ban ? vts('After {t} wrong tries you may be banned for {d} days.', {t: tries, d: days}) : vts('Warning: after {t} tries you have to do the complete verification process again.', {t: tries})}</p>${ab ? `<button class="btn block ghost" id="vfBot" type="button">${vts('Copy code & open Audio Express')}</button>` : ''}</div>`, 'Verification code');
+const copy = async () => { try{ await navigator.clipboard.writeText(code); toast(vt('Copied')); const sp = $('#vfCopy [data-vt]'); if (sp){ sp.dataset.vt = 'Copied ✓'; sp.textContent = vt('Copied ✓'); setTimeout(() => { sp.dataset.vt = 'Copy code'; sp.textContent = vt('Copy code'); }, 1800); } return true; }catch(e){ const r = document.createRange(); r.selectNodeContents($('#vfCodeBox')); const se = getSelection(); se.removeAllRanges(); se.addRange(r); toast(vt('Select and copy the code')); return false; } };
 $('#vfCopy').onclick = copy;
 if (ab) $('#vfBot').onclick = async () => { await copy(); const u = 'https://t.me/' + ab + '?start=vc'; setTimeout(() => { if (tg && tg.openTelegramLink){ tg.openTelegramLink(u); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(u, '_blank'); }, 250); };   // the Audio Express bot answers with: A. paste the code, B. write the answer
 const pop = document.createElement('div'); pop.className = 'vf-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true');
 pop.innerHTML = `<div><b>&#9888;&#65039; Important</b>
+${ans ? `<div class="vf-yans"><small>आपका उत्तर · Your answer · Aapka answer</small><b>${esc(ans)}</b></div>` : ''}
 <p lang="hi">कृपया ध्यान दें: अपना उत्तर याद रखें अथवा &#128221; कहीं नोट कर लें। उत्तर बॉट को भेजना अनिवार्य है। ${ban ? `${tries} बार गलत होने पर आपको ${days} दिन के लिए &#9940; प्रतिबंधित किया जा सकता है।` : `${tries} बार गलत होने पर आपको पूरी वेरिफिकेशन प्रक्रिया दोबारा करनी होगी।`} बायपास का प्रयास करने पर &#128683; स्थायी प्रतिबंध लगाया जाएगा।</p>
 <p lang="en">Please note: Remember your answer or &#128221; keep a record of it. You are required to send it to the bot. ${ban ? `After ${tries} incorrect attempts you may be &#9940; banned for ${days} days.` : `After ${tries} incorrect attempts you will have to complete the whole verification process again.`} Any attempt to bypass the system will result in a &#128683; permanent ban.</p>
 <p lang="hi-Latn">Kripya dhyan dein: Apna answer yaad rakhein ya &#128221; kahin note kar lein. Answer bot ko bhejna anivarya hai. ${ban ? `${tries} baar galat hone par aapko agle ${days} din ke liye &#9940; ban kiya ja sakta hai.` : `${tries} baar galat hone par aapko poori verification process dobara karni hogi.`} Bypass ka prayas karne par &#128683; permanent ban lagaya jayega.</p>
 <button class="btn block" id="vfOk" type="button">I understand / समझ गया / Samajh gaya</button></div>`;
 document.body.appendChild(pop); $('#vfOk').onclick = () => pop.remove();
+try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
+if (!matchMedia('(prefers-reduced-motion:reduce)').matches){ const cols = ['#f5c451', '#4ade80', '#60a5fa', '#f472b6', '#fb923c'], cf = document.createElement('div'); cf.className = 'vf-conf'; cf.innerHTML = Array.from({length: 28}, (_, i) => `<b style="--x:${Math.round(Math.random() * 260 - 130)}px;--r:${Math.round(Math.random() * 720 - 360)}deg;--d:${(Math.random() * .4).toFixed(2)}s;background:${cols[i % 5]}"></b>`).join(''); const tk = $('#vfTicket'); if (tk){ tk.appendChild(cf); setTimeout(() => cf.remove(), 2600); } }
 }
 
 /* ===================== Feedback & suggestions (Mini App, opened from the support row) ===================== */
