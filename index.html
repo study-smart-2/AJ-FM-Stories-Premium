@@ -3571,7 +3571,7 @@ function vfHome(){
     const alt = p.global ? '' : `<div class="vfx-alt"><div><b>Want every story?</b><small>4 in a row &middot; ${hrs} hours &middot; any story</small></div>${cd['4'] > 0 && !run ? `<span class="vfx-wait">${lv(nowS + cd['4'])}</span>` : `<button class="btn ghost small" data-vfgo="4" type="button">${run ? 'Next' : 'Start'}</button>`}</div>`;
     body = one + alt;
   }
-  const how = `<ol class="vfx-how"><li data-vfx-step="1"><b>Open the link and finish the ad page</b><small>Wait for the timer on the page, then tap the final button.</small></li><li data-vfx-step="2"><b>Come back and solve the short puzzle</b><small>Slide the piece into place and answer the small sum.</small></li><li data-vfx-step="3"><b>Send the code you get to the bot</b><small>Paste the code in the bot chat within a few minutes.</small></li></ol>`;
+  const how = `<ol class="vfx-how"><li data-vfx-step="1"><b>Open the link and finish the ad page</b><small>Wait for the timer on the page, then tap the final button.</small></li><li data-vfx-step="2"><b>Come back and solve the short puzzle</b><small>Slide the piece into place and answer the small sum.</small></li><li data-vfx-step="3"><b>Send the code and your answer to the Audio Express bot</b><small>Paste the code there within a few minutes, then write the answer of the sum you solved here.</small></li></ol>`;
   vfShell(`${resume}${body}${how}<p class="note">&#127911; The newest ${s.latest_n} episodes of every story are always free.</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
   vfxTick();
   $('#verify').onclick = e => { const stp = e.target.closest('[data-vfx-step]'); if (stp){ stp.classList.toggle('open'); return; } const b = e.target.closest('[data-vfgo]'); if (!b) return; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }catch(x){} b.classList.add('busy'); const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
@@ -3678,22 +3678,24 @@ async function vfEnd(token){
     <button class="btn block" id="vfFin" data-ready="Get my code" data-todo="Complete the steps above" type="button" disabled>Complete the steps above</button>`, 'Last step');
   const go = $('#vfFin'), paint = vfGate(go, e0.wait); vfCaptcha($('#vfC'), 2, () => { VF.done.c = true; paint(); }); vfSlider($('#vfP'), 2, e0.pz, () => { VF.done.p = true; paint(); });
   go.onclick = async () => { go.disabled = true; try{ const r = await api('/api/vf/finish', {method: 'POST', retry: false, body: JSON.stringify({token, answer: $('#vfA').value})}); clearInterval(VF.timer); vfCode(r.code); }
-    catch(e){ const d = e.data || {}; if (d.error === 'wrong'){ toast('That answer is incorrect. Attempts remaining: ' + d.left); if (d.question) $('#vfQ').textContent = d.question + ' = ?'; } else toast(vfErr(e)); paint(); } };
+    catch(e){ const d = e.data || {}; if (d.error === 'wrong'){ toast('That answer is incorrect. Attempts remaining: ' + d.left); if (d.question) $('#vfQ').textContent = d.question + ' = ?'; } else if (d.error === 'failed'){ clearInterval(VF.timer); toast(vfErr(e)); return openVerify(VF.story, VF.topic); } else toast(vfErr(e)); paint(); } };
 }
 function vfCode(code){
-  const s = VF.st || {}, bot = String(BOT_USERNAME || '').replace(/^@/, ''), tries = s.tries_max || 5, days = s.ban_days || 7;
-  vfShell(`<div class="vf-card"><b>&#128273; Your code</b><div class="vf-code" id="vfCodeBox">${esc(code)}</div>
-    <button class="btn block" id="vfCopy" type="button">Copy code</button>
-    <p>Step 1: paste this code in the bot chat within ${s.code_min || 10} minutes. Step 2: the bot then asks for your answer, write the answer of the sum you just solved.</p>${bot ? `<button class="btn block ghost" id="vfBot" type="button">Open the bot</button>` : ''}</div>`, 'Verification code');
-  $('#vfCopy').onclick = async () => { try{ await navigator.clipboard.writeText(code); toast('Copied'); }catch(e){ const r = document.createRange(); r.selectNodeContents($('#vfCodeBox')); const se = getSelection(); se.removeAllRanges(); se.addRange(r); toast('Select and copy the code'); } };
-  if (bot) $('#vfBot').onclick = () => { const u = 'https://t.me/' + bot; if (tg && tg.openTelegramLink){ tg.openTelegramLink(u); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(u, '_blank'); };
-  const pop = document.createElement('div'); pop.className = 'vf-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true');
-  pop.innerHTML = `<div><b>&#9888;&#65039; Important</b>
-    <p lang="hi">कृपया ध्यान दें: अपना उत्तर याद रखें अथवा &#128221; कहीं नोट कर लें। उत्तर बॉट को भेजना अनिवार्य है। ${tries} बार गलत होने पर आपको अगले ${days} दिनों के लिए &#9940; प्रतिबंधित किया जा सकता है। बाईपास का प्रयास करने पर &#128683; स्थायी प्रतिबंध लगाया जाएगा।</p>
-    <p lang="en">Please note: Remember your answer or &#128221; keep a record of it. You are required to send it to the bot. After ${tries} incorrect attempts you may be &#9940; banned for ${days} days. Any attempt to bypass the system will result in a &#128683; permanent ban.</p>
-    <p lang="hi-Latn">Kripya dhyan dein: Apna answer yaad rakhein ya &#128221; kahin note kar lein. Answer bot ko bhejna anivarya hai. ${tries} baar galat hone par aapko agle ${days} din ke liye &#9940; ban kiya ja sakta hai. Bypass ka prayas karne par &#128683; permanent ban lagaya jayega.</p>
-    <button class="btn block" id="vfOk" type="button">I understand / समझ गया / Samajh gaya</button></div>`;
-  document.body.appendChild(pop); $('#vfOk').onclick = () => pop.remove();
+const s = VF.st || {}, ab = String(AUDIO_BOT_USERNAME || BOT_USERNAME || '').replace(/^@/, ''), tries = s.tries_max || 5, days = s.ban_days || 7, ban = !!s.tries_ban;
+vfShell(`<div class="vf-card"><b>&#9989; Verification complete</b><div class="vf-code" id="vfCodeBox">${esc(code)}</div>
+<button class="btn block" id="vfCopy" type="button">Copy code</button>
+<p><b>A.</b> Paste this code in the Audio Express bot within ${s.code_min || 10} minutes.<br><b>B.</b> Then write there the answer of the sum you solved here.</p>
+<p class="note">&#9888;&#65039; ${ban ? `After ${tries} wrong tries you may be banned for ${days} days.` : `Warning: after ${tries} tries you have to do the complete verification process again.`}</p>${ab ? `<button class="btn block ghost" id="vfBot" type="button">Copy code &amp; open Audio Express</button>` : ''}</div>`, 'Verification code');
+const copy = async () => { try{ await navigator.clipboard.writeText(code); toast('Copied'); return true; }catch(e){ const r = document.createRange(); r.selectNodeContents($('#vfCodeBox')); const se = getSelection(); se.removeAllRanges(); se.addRange(r); toast('Select and copy the code'); return false; } };
+$('#vfCopy').onclick = copy;
+if (ab) $('#vfBot').onclick = async () => { await copy(); const u = 'https://t.me/' + ab + '?start=vc'; setTimeout(() => { if (tg && tg.openTelegramLink){ tg.openTelegramLink(u); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(u, '_blank'); }, 250); };   // the Audio Express bot answers with: A. paste the code, B. write the answer
+const pop = document.createElement('div'); pop.className = 'vf-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-modal', 'true');
+pop.innerHTML = `<div><b>&#9888;&#65039; Important</b>
+<p lang="hi">कृपया ध्यान दें: अपना उत्तर याद रखें अथवा &#128221; कहीं नोट कर लें। उत्तर बॉट को भेजना अनिवार्य है। ${ban ? `${tries} बार गलत होने पर आपको ${days} दिन के लिए &#9940; प्रतिबंधित किया जा सकता है।` : `${tries} बार गलत होने पर आपको पूरी वेरिफिकेशन प्रक्रिया दोबारा करनी होगी।`} बायपास का प्रयास करने पर &#128683; स्थायी प्रतिबंध लगाया जाएगा।</p>
+<p lang="en">Please note: Remember your answer or &#128221; keep a record of it. You are required to send it to the bot. ${ban ? `After ${tries} incorrect attempts you may be &#9940; banned for ${days} days.` : `After ${tries} incorrect attempts you will have to complete the whole verification process again.`} Any attempt to bypass the system will result in a &#128683; permanent ban.</p>
+<p lang="hi-Latn">Kripya dhyan dein: Apna answer yaad rakhein ya &#128221; kahin note kar lein. Answer bot ko bhejna anivarya hai. ${ban ? `${tries} baar galat hone par aapko agle ${days} din ke liye &#9940; ban kiya ja sakta hai.` : `${tries} baar galat hone par aapko poori verification process dobara karni hogi.`} Bypass ka prayas karne par &#128683; permanent ban lagaya jayega.</p>
+<button class="btn block" id="vfOk" type="button">I understand / समझ गया / Samajh gaya</button></div>`;
+document.body.appendChild(pop); $('#vfOk').onclick = () => pop.remove();
 }
 
 /* ===================== Feedback & suggestions (Mini App, opened from the support row) ===================== */
