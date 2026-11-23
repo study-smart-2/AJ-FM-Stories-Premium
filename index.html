@@ -88,6 +88,8 @@ button.vfx-sh:active,button.vfx-tn:active{opacity:.75}
 .vf-dir button small{display:block;margin-top:2px;font-weight:600;font-size:11px;color:var(--muted)}
 .vf-dir button.on{border-color:var(--gold);background:rgba(var(--gold-rgb),.14);box-shadow:inset 0 0 0 1px var(--gold)}
 .vf-lang{min-width:58px;padding-inline:10px}
+.vf-tut{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:12px 0 0;padding:12px;border-radius:14px;border:1px dashed var(--gold);background:rgba(var(--gold-rgb),.1);color:var(--text);font:700 14px var(--sans);cursor:pointer}
+.vf-tut:active{transform:scale(.98)}
 .vf-pz{position:relative;height:120px;border-radius:16px;overflow:hidden;margin-bottom:10px;border:1px solid var(--line);background-size:100% 100%;background-color:var(--surf)}
 .vf-gap,.vf-pc{position:absolute;top:34px;border-radius:12px}
 .vf-gap{background:rgba(0,0,0,.5);box-shadow:inset 0 0 0 2px rgba(255,255,255,.75),inset 0 4px 10px rgba(0,0,0,.55)}
@@ -3611,7 +3613,7 @@ function applyMode(t){                                           // the one plac
 function vfApplyTiers(){ document.body.classList.toggle('nopremium', FREE_BUILD || (!TIERS.premium && !S.admin)); if (S.tab === 'home' && S.home) renderHome(); }
 const VF_I18N = {
 hi: {
-'Free access is not available right now.': 'फ्री एक्सेस अभी उपलब्ध नहीं है।', 'Access suspended': 'एक्सेस निलंबित',
+'Free access is not available right now.': 'फ्री एक्सेस अभी उपलब्ध नहीं है।', 'Watch tutorial': 'ट्यूटोरियल देखें', 'The tutorial has been sent to your chat.': 'ट्यूटोरियल आपकी चैट में भेज दिया गया है।', 'Access suspended': 'एक्सेस निलंबित',
 'Your access has been permanently suspended. For any concerns, please contact the administrator.': 'आपका एक्सेस स्थायी रूप से निलंबित कर दिया गया है। किसी भी समस्या के लिए कृपया एडमिन से संपर्क करें।',
 'Your access is suspended until {d}.': 'आपका एक्सेस {d} तक निलंबित है।', 'Next verification in {t}': 'अगला वेरिफिकेशन {t} में',
 'Verification in progress': 'वेरिफिकेशन जारी है', 'Link {i} ({r})': 'लिंक {i} ({r})', 'required': 'ज़रूरी', 'spare': 'अतिरिक्त',
@@ -3654,7 +3656,7 @@ hi: {
 'Copy code & open Audio Express': 'कोड कॉपी करें और Audio Express खोलें', 'Your answer': 'आपका उत्तर', 'Send this answer to the bot with the code.': 'यह उत्तर कोड के साथ बॉट को भेजें।'
 },
 hing: {
-'Free access is not available right now.': 'Free access abhi available nahi hai.', 'Access suspended': 'Access suspend hai',
+'Free access is not available right now.': 'Free access abhi available nahi hai.', 'Watch tutorial': 'Tutorial dekhein', 'The tutorial has been sent to your chat.': 'Tutorial aapki chat me bhej diya gaya hai.', 'Access suspended': 'Access suspend hai',
 'Your access has been permanently suspended. For any concerns, please contact the administrator.': 'Aapka access permanently suspend kar diya gaya hai. Kisi bhi problem ke liye admin se contact karein.',
 'Your access is suspended until {d}.': 'Aapka access {d} tak suspend hai.', 'Next verification in {t}': 'Agli verification {t} baad',
 'Verification in progress': 'Verification chal rahi hai', 'Link {i} ({r})': 'Link {i} ({r})', 'required': 'zaroori', 'spare': 'extra',
@@ -3706,10 +3708,12 @@ function vfLangApply(){
   if (VF.paint) VF.paint();
 }
 function vfLangNext(){ VF.lang = LANGS[(LANGS.indexOf(vl()) + 1) % LANGS.length]; vfLangApply(); }
+const vfTutBtn = () => VF.st && VF.st.tutorial && VF.st.tutorial !== 'off' ? `<button class="vf-tut" data-vftut="1" type="button">&#9654;&#65039; ${vts('Watch tutorial')}</button>` : '';
 function vfShell(inner, title){
   $('#verify').innerHTML = `<div class="top"><button class="btn ghost small" id="vfBack" type="button">${vts('Back')}</button><strong>${vts(title || 'Free access')}</strong><button class="btn ghost small vf-lang" id="vfLang" type="button" aria-label="Language">&#127760; ${esc(LANG_LABEL[vl()] || 'EN')}</button></div><div class="vf-body">${inner}</div>`;
   $('#vfBack').onclick = () => { clearInterval(VF.timer); closeSheet('verify'); };
   $('#vfLang').onclick = vfLangNext;
+  document.querySelectorAll('#verify [data-vftut]').forEach(b => { b.onclick = ev => { ev.stopPropagation(); vfTutorial(b); }; });
 }
 const vfErr = e => (e && e.data && e.data.message) || (e && e.message) || 'Something went wrong. Please try again.';
 async function openVerify(story, topic){                          // 1 verification unlocks ONE topic of the story (a story without topics: the story itself); 4 in a row unlock everything
@@ -3740,7 +3744,7 @@ function vfHome(){
     const cv = info && isImg(info.cover) ? `<img class="vfx-cv" src="${esc(big(info.cover))}" alt="" decoding="async" onerror="this.onerror=null;this.src='${esc(info.cover)}'">` : '';
     const name = esc((info && info.title) || vt('This story')), tl = VF.topic ? VF.topics.filter(t => String(t.id) === String(VF.topic)) : VF.topics;
     const head = sub => `<button class="vfx-sh" data-vfopen="story" type="button" aria-label="${name}">${cv}<div><h2>${name}</h2><p>${esc(sub)}</p></div></button>`;
-    const topicRow = t => { const left = p.topics && p.topics[t.id] > nowS ? p.topics[t.id] - nowS : 0; return `<div class="vfx-top"><button class="vfx-tn" data-vfopen="topic" data-vfot="${esc(t.id)}" type="button" aria-label="${esc(t.name)}"><b>${esc(t.name)}</b><small>${left ? vt('Unlocked for {t}', {t: lv(nowS + left)}) : esc(vt('Every episode of this topic'))}</small></button>${left ? '<span class="vfx-tick">&#10003;</span>' : cd['1'] > 0 ? `<span class="vfx-wait">${lv(nowS + cd['1'])}</span>` : `<button class="btn small" data-vfgo="1" data-vft="${esc(t.id)}" type="button">${esc(vt('Verify'))}</button>`}</div>`; };
+    const topicRow = t => { const ex = Math.max(p.story || 0, (p.topics && p.topics[t.id]) || 0), left = ex > nowS ? ex - nowS : 0; return `<div class="vfx-top"><button class="vfx-tn" data-vfopen="topic" data-vfot="${esc(t.id)}" type="button" aria-label="${esc(t.name)}"><b>${esc(t.name)}</b><small>${left ? vt('Unlocked for {t}', {t: lv(nowS + left)}) : esc(vt('Every episode of this topic'))}</small></button>${left ? '<span class="vfx-tick">&#10003;</span>' : cd['1'] > 0 ? `<span class="vfx-wait">${lv(nowS + cd['1'])}</span>` : `<button class="btn small" data-vfgo="1" data-vft="${esc(t.id)}" type="button">${esc(vt('Verify'))}</button>`}</div>`; };
     const one = p.global ? done(esc(vt('This story is unlocked')), esc(vt('Covered by your all-stories pass')))
       : tl.length ? `<div class="vfx-hero">${head(vt('1 verification unlocks 1 topic for {h} hours. Pick one.', {h: hrs}))}<div class="vfx-perf"></div>${tl.map(topicRow).join('')}${good()}${vfQuote()}</div>`
       : p.story ? done(esc(vt('This story is unlocked')), vt('Active for {t}', {t: lv(p.story)}))
@@ -3749,7 +3753,7 @@ function vfHome(){
     body = one + alt;
   }
   const how = `<ol class="vfx-how"><li data-vfx-step="1"><b>${esc(vt('Open the link and finish the ad page'))}</b><small>${esc(vt('Wait for the timer on the page, then tap the final button.'))}</small></li><li data-vfx-step="2"><b>${esc(vt('Come back and solve the short puzzle'))}</b><small>${esc(vt('Slide the piece into place and answer the small sum.'))}</small></li><li data-vfx-step="3"><b>${esc(vt('Send the code and your answer to the Audio Express bot'))}</b><small>${esc(vt('Paste the code there within a few minutes, then write the answer of the sum you solved here.'))}</small></li></ol>`;
-  vfShell(`${resume}${body}${how}<p class="note">&#127911; ${esc(vt('The newest {n} episodes of every story are always free.', {n: s.latest_n}))}</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
+  vfShell(`${resume}${body}${vfTutBtn()}${how}<p class="note">&#127911; ${esc(vt('The newest {n} episodes of every story are always free.', {n: s.latest_n}))}</p>`, VF.story ? 'Verify this story' : 'Verify all stories');
   vfxTick();
   $('#verify').onclick = e => { const stp = e.target.closest('[data-vfx-step]'); if (stp){ stp.classList.toggle('open'); return; } const qq = e.target.closest('[data-vfq]'); if (qq){ VF.qi = ((VF.qi || 0) + 1 + Math.floor(Math.random() * (VF_QUOTES.length - 1))) % VF_QUOTES.length; qq.classList.add('sw'); setTimeout(() => { const p = qq.querySelector('p'); if (p) p.innerHTML = '&ldquo;' + esc(VF_QUOTES[VF.qi]) + '&rdquo;'; qq.classList.remove('sw'); }, 220); return; } const op = e.target.closest('[data-vfopen]'); if (op) return vfOpenStory(VF.story, op.dataset.vfopen === 'topic' ? op.dataset.vfot : ''); const b = e.target.closest('[data-vfgo]'); if (!b) return; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }catch(x){} if (b.dataset.vfgo === 'reset') return vfReset(); b.classList.add('busy'); const m = b.dataset.vfgo; if (m === 'resume') return vfResume(); if (m === 'reopen') return vfReopen(); if (m === 'swap'){ VF.link = {token: VF.st.link.token}; return vfSwap(); } b.disabled = true; VF.topic = b.dataset.vft || VF.topic || ''; vfStart(+m); };
 }
@@ -3784,14 +3788,14 @@ function vfxTick(){                                              // live countdo
 }
 async function vfStart(mode){
   try{ const j = await api('/api/vf/start', {method: 'POST', retry: false, body: JSON.stringify({mode, story: mode === 1 ? VF.story : '', topic: mode === 1 ? (VF.topic || '') : ''})}); VF.link = j.link; VF.st.session = j.session; vfStartPage(); }
-  catch(e){ const d = e.data || {}, m = {cooldown: 'Please try again in ' + vfLeft(d.seconds || 0) + '.', busy: 'Another verification is already in progress. Please complete it first.', banned: 'Your access is currently suspended.', exhausted: 'Verification Not Complete. All available links have been used. Please try again after the cooldown.', already: 'You already have access.', disabled: 'Free access is not available right now.'}[d.error];
+  catch(e){ const d = e.data || {}, m = {cooldown: 'Please try again in ' + vfLeft(d.seconds || 0) + '.', busy: 'Another verification is already in progress. Please complete it first.', banned: 'Your access is currently suspended.', exhausted: 'Verification Not Complete. All available links have been used. Please try again after the cooldown.', no_topic: 'Please choose a topic to verify.', already: 'You already have access.', disabled: 'Free access is not available right now.'}[d.error];
     toast(m || vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} }
 }
 function vfWaiting(){
   VF.page = 'wait';
   const s = VF.st.session || {}, left = Math.max(0, (s.links_max || 2) - (s.links_used || 0));
   vfShell(`<div class="vf-card" style="text-align:center"><div class="vf-orb"><span>&#8987;</span></div><b>${vts('Waiting for the ad')}</b><p>${vts('Finish the ad page in your browser. You will come back here automatically.')}</p><button class="btn block" id="vfReopen" style="margin-top:10px" type="button">&#128279; ${vts('Reopen the same link')}</button></div>
-    <div class="vf-card"><b>${vts('Link not working?')}</b><small>${vts('Get a fresh link. This link is closed and counts as used. Links left after this: {n}.', {n: left})}</small><button class="btn block ghost" id="vfSwap" style="margin-top:10px" type="button">&#128260; ${vts('Get another link')}</button></div>`);
+    <div class="vf-card"><b>${vts('Link not working?')}</b><small>${vts('Get a fresh link. This link is closed and counts as used. Links left after this: {n}.', {n: left})}</small><button class="btn block ghost" id="vfSwap" style="margin-top:10px" type="button">&#128260; ${vts('Get another link')}</button></div>${vfTutBtn()}`);
   $('#vfSwap').onclick = vfSwap; $('#vfReopen').onclick = vfReopen;
 }
 async function vfReopen(){                                    // came back without finishing: open the SAME ad link again (no new link is used)
@@ -3808,11 +3812,13 @@ async function vfSwap(){
     catch(e){ const d = e.data || {}; toast(d.error === 'cooldown' ? 'Verification Not Complete. Please try again in ' + vfLeft(d.seconds || 0) + '.' : vfErr(e)); try{ VF.st = await api('/api/vf/status?story=' + encodeURIComponent(VF.story)); vfHome(); }catch(x){} } };
   if (tg && tg.showConfirm) tg.showConfirm(msg, ok => { if (ok) go(); }); else if (confirm(msg)) go();
 }
-async function vfTutorial(){
+async function vfTutorial(btn){
+  if (btn){ if (btn.dataset.busy) return; btn.dataset.busy = '1'; btn.style.opacity = '.6'; }
   try{ const r = await api('/api/vf/tutorial', {method: 'POST', retry: false, body: '{}'});
     if (r.mode === 'link'){ if (tg && tg.openTelegramLink) tg.openTelegramLink(r.url); else window.open(r.url, '_blank'); }
-    else toast('The tutorial has been sent to your chat.');
+    else toast(vt('The tutorial has been sent to your chat.'));
   }catch(e){ toast(vfErr(e)); }
+  if (btn){ delete btn.dataset.busy; btn.style.opacity = ''; }
 }
 function vfResume(){
   const l = VF.st.link; if (!l) return vfHome(); VF.link = {token: l.token, idx: l.idx, role: l.role};
@@ -3890,7 +3896,7 @@ async function vfStartPage(){
   vfShell(`<div class="vf-card"><b>${vts('Verification')}${sess.mode === 4 ? ' ' + vts('{n} of {m}', {n: sess.done + 1, m: sess.need}) : ''}</b><small>${vts(l.role === 'required' ? 'Link {i} of {j} · Required' : 'Link {i} of {j} · Spare', {i: l.idx, j: jm})}</small><p class="vfx-good">&#127881; ${vts(gk[0], gk[1])}</p></div>
     ${vfSteps(['Human check', 'Puzzle', 'Ready'], ['c', 'p', 'w'])}
     <div class="vf-card"><h3>${vts('1. Prove you are human')}</h3><div id="vfC"></div></div><div class="vf-card"><h3>${vts('2. Solve the puzzle')}</h3><div id="vfP"></div></div><button class="btn block" id="vfGo" data-ready="Continue to the ad" data-todo="Complete the steps above" type="button" disabled>${esc(vt('Complete the steps above'))}</button>
-    <p class="note">${vts('The ad opens in your browser. When it finishes, you will return here for the last step.')}</p>`, 'Step 1');
+    ${vfTutBtn()}<p class="note">${vts('The ad opens in your browser. When it finishes, you will return here for the last step.')}</p>`, 'Step 1');
   const go = $('#vfGo'), paint = vfGate(go, b.wait);
   vfCaptcha($('#vfC'), 1, () => { VF.done.c = true; paint(); }); vfSlider($('#vfP'), 1, b.pz, () => { VF.done.p = true; paint(); });
   go.onclick = async () => { go.disabled = true; try{ const r = await api('/api/vf/open', {method: 'POST', retry: false, body: JSON.stringify({token: l.token})}); clearInterval(VF.timer);
@@ -3909,7 +3915,7 @@ async function vfEnd(token){
     <div class="vf-card"><h3>${vts('1. Prove you are human')}</h3><div id="vfC"></div></div><div class="vf-card"><h3>${vts('2. Solve the puzzle')}</h3><div id="vfP"></div></div>
     <div class="vf-card" style="text-align:center"><h3>${vts('3. Solve the sum')}</h3><small>${vts('Remember your answer. You will send it to the bot.')}</small><div id="vfQ">${vfSum(e0.question)}</div><input id="vfA" type="hidden" value=""><div class="vf-dir" id="vfDir">${vfDirHtml()}</div>
       <div class="vf-keys" id="vfKeys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-k="${n}">${n}</button>`).join('')}<button type="button" data-k="c" aria-label="Clear">C</button><button type="button" data-k="0">0</button><button type="button" data-k="b" aria-label="Delete">&#9003;</button></div></div>
-    <button class="btn block" id="vfFin" data-ready="Get my code" data-todo="Complete the steps above" type="button" disabled>${esc(vt('Complete the steps above'))}</button>`, 'Last step');
+    <button class="btn block" id="vfFin" data-ready="Get my code" data-todo="Complete the steps above" type="button" disabled>${esc(vt('Complete the steps above'))}</button>${vfTutBtn()}`, 'Last step');
   const go = $('#vfFin'), paint = vfGate(go, e0.wait);
   $('#vfDir').onclick = ev => { const b = ev.target.closest('[data-dir]'); if (!b || b.dataset.dir === vfDirGet()) return; VF.dir = b.dataset.dir; try{ localStorage.setItem('aj_vfdir', VF.dir); }catch(x){} $('#vfDir').innerHTML = vfDirHtml(); const i = $('#vfA'); if (i) i.value = ''; vfKey('c'); };
   $('#vfKeys').onclick = ev => { const b = ev.target.closest('[data-k]'); if (!b) return; try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); }catch(x){} vfKey(b.dataset.k); };
