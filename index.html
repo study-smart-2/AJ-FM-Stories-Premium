@@ -1260,7 +1260,7 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 #datasheet input[type=file]{padding:9px 10px;font-size:13.5px}
 @media (prefers-reduced-motion:reduce){.dbar i{transition:none}}
 </style>
-<script>(function(){var t='dark';try{t=localStorage.getItem('ajt')||'dark'}catch(e){}if(t!=='light'&&t!=='warm')t='dark';document.documentElement.setAttribute('data-theme',t)})();</script>
+<script>(function(){var t='light';try{t=localStorage.getItem('ajt')||'light'}catch(e){}if(t!=='dark'&&t!=='warm')t='light';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head>
 <body>
 <div id="splash" role="status" aria-live="polite">
@@ -1504,7 +1504,7 @@ Object.assign(S, {wish:new Set(), tier:0, notices:[], io:null, feed:{items:[], o
 /* ---------- language, theme, header ---------- */
 const store = {get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }};
 const TR = {
-  en: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Hours', splan:'Choose a plan', smore:'Read more', sless:'Show less', sbanners:'Banners', ssub:'Sub genres:', suball:'All', stopics:'Topics', slisten:'Listen', snotes:'Notes', stransl:'Translated', sorig:'Show original',
+  en: {sby:'Author :', splat:'Platform', seps:'Episodes', shrs:'Hours', splan:'Choose a plan', smore:'Read more', sless:'Show less', sbanners:'Banners', ssub:'Sub genres:', suball:'All', stopics:'Topics', slisten:'Listen', snotes:'Notes', stransl:'Translated', sorig:'Show original',
     poff:'Available Coupons & Offers', otitle:'Coupons & Offers', cpph:'Promo code', cpapply:'Apply', cpremove:'Remove', cpapplied:'Coupon {c} applied', cpsave:'You save {a}', cpnone:'No coupons are running right now. Check back soon.', cpcopy:'Copy', cpcopied:'Code copied', cpuse:'Use in cart', cpmin:'Min order {m}', cpexp:'Valid till {d}', cpavail:'{n} coupons available', cdisc:'Discount',
     rqtitle:'Request a Story', rqnew:'New Request', rqmine:'Already Requested Stories', rqname:'Story name', rqnameph:'Title of the story you want', rqplat:'Platform', rqplatph:'Pocket FM, Kuku FM, YouTube...', rqlang:'Language', rqstat:'Story status', rqlink:'Story link (web page only)', rqlinkph:'https://...', rqcover:'Story cover image (optional)', rqpick:'Choose image', rqsubmit:'Submit Your Request', rqsending:'Sending...', rqstore:'Already in the store:', rqdone:'Request sent. Track it under Already Requested Stories.', rqempty:'No requests yet', rqemptynote:'Stories you request show up here with their progress.', rqrej:'Rejected', rqrejnote:'The owner could not take this story up.', rqs1:'Pending', rqs2:'Searching', rqs3:'Posting', rqs4:'Completed', rqd1:'We search for it, check availability, and update you if we can take it up.', rqd2:'The team is checking where the story is available.', rqd3:'Approved stories are published episode by episode.', rqd4:'Everything is live on the platform. The request is marked completed.', rqbadlink:'Only a web page link is allowed. It must start with http:// or https://', rqneed:'Fill in the story name, platform, language and status.', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
     recent:'Recently added', ongoing:'Ongoing stories', completed:'Completed stories', upcoming:'Upcoming stories', viewall:'View all', listen:'Listen now', searchph:'Search title, author, genre or language',
@@ -1512,14 +1512,14 @@ const TR = {
     ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
     cartnote:'Cart and checkout arrive in the next update. For now, open a story and tap Rent or Buy.', melib:'My library', lang:'Language', theme:'Theme', soon:'Soon',
     wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', sptitle:"Welcome to AJ's FM Stories", spsub:'Free audio stories inside Telegram, delivered straight to your chat.', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'Everything in your cart is paid together in one checkout in the bot. One payment, one screenshot.', ctopic:'Topic', cplanl:'Plan', cskip:'{n} item(s) are not sold any more and were left out', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
-  hi: {sby:'लेखक', splat:'प्लेटफ़ॉर्म', seps:'एपिसोड', shrs:'घंटे', splan:'प्लान चुनें', smore:'और पढ़ें', sless:'कम दिखाएँ', sbanners:'बैनर', ssub:'उप-शैलियाँ:', suball:'सभी', stopics:'विषय', slisten:'सुनें', snotes:'नोट्स', stransl:'अनुवादित', sorig:'मूल दिखाएँ',
+  hi: {sby:'लेखक :', splat:'प्लेटफ़ॉर्म', seps:'एपिसोड', shrs:'घंटे', splan:'प्लान चुनें', smore:'और पढ़ें', sless:'कम दिखाएँ', sbanners:'बैनर', ssub:'उप-शैलियाँ:', suball:'सभी', stopics:'विषय', slisten:'सुनें', snotes:'नोट्स', stransl:'अनुवादित', sorig:'मूल दिखाएँ',
     gm:'सुप्रभात', ga:'नमस्कार', ge:'शुभ संध्या', cont:'जहाँ छोड़ा था वहीं से सुनें', trending:'ट्रेंडिंग कहानियाँ', flash:'फ्लैश ऑफ़र', deals:'सुपर डील्स', under:'{p} से कम',
     recent:'हाल ही में जोड़ी गईं', ongoing:'चल रही कहानियाँ', completed:'पूरी हो चुकी कहानियाँ', upcoming:'आने वाली कहानियाँ', viewall:'सभी देखें', listen:'अभी सुनें', searchph:'नाम, लेखक, जॉनर या भाषा खोजें',
     recents:'हाल की खोजें', tops:'टॉप सर्च', clear:'हटाएँ', notif:'सूचनाएँ', nonotif:'अभी कोई सूचना नहीं।', home:'होम', discover:'खोजें', library:'लाइब्रेरी', cart:'कार्ट', me:'मैं',
     ends:'खत्म होने में', ended:'खत्म', caught:'आप सब देख चुके हैं। हर हफ्ते नई कहानियाँ आती हैं।', removed:'हिस्ट्री से हटा दिया', cartempty:'आपका कार्ट खाली है',
     cartnote:'कार्ट और चेकआउट अगले अपडेट में आएगा। अभी कहानी खोलकर Rent या Buy दबाएँ।', melib:'मेरी लाइब्रेरी', lang:'भाषा', theme:'थीम', soon:'जल्द',
     wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', sptitle:"AJ's FM Stories में आपका स्वागत है", spsub:'टेलीग्राम के अंदर मुफ़्त ऑडियो कहानियाँ, सीधे आपकी चैट में।', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'आपके कार्ट की सभी चीज़ें बॉट में एक ही चेकआउट में खरीदी जाती हैं। एक भुगतान, एक स्क्रीनशॉट।', ctopic:'टॉपिक', cplanl:'प्लान', cskip:'{n} आइटम अब उपलब्ध नहीं हैं, उन्हें छोड़ दिया', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
-  hing: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Ghante', splan:'Plan chuno', smore:'Aur padho', sless:'Kam dikhao', sbanners:'Banners', ssub:'Sub genres:', suball:'Sab', stopics:'Topics', slisten:'Suno', snotes:'Notes', stransl:'Translate kiya gaya', sorig:'Original dikhao',
+  hing: {sby:'Author :', splat:'Platform', seps:'Episodes', shrs:'Ghante', splan:'Plan chuno', smore:'Aur padho', sless:'Kam dikhao', sbanners:'Banners', ssub:'Sub genres:', suball:'Sab', stopics:'Topics', slisten:'Suno', snotes:'Notes', stransl:'Translate kiya gaya', sorig:'Original dikhao',
     gm:'Good morning', ga:'Namaste', ge:'Shubh sandhya', cont:'Jahan chhoda wahin se suno', trending:'Trending kahaniyan', flash:'Flash offers', deals:'Super deals', under:'{p} se kam',
     recent:'Naye add hue', ongoing:'Chal rahi kahaniyan', completed:'Poori ho chuki kahaniyan', upcoming:'Aane wali kahaniyan', viewall:'Sab dekho', listen:'Abhi suno', searchph:'Naam, author, genre ya language search karo',
     recents:'Recent searches', tops:'Top searches', clear:'Hatao', notif:'Notifications', nonotif:'Abhi koi notification nahi.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
@@ -1538,7 +1538,7 @@ Object.assign(TR.hing, {cmbtitle:'Story Combinations', cmbbest:'BEST DEAL', cmba
   cmbmax:'Aap zyada se zyada 5 kahaniyan chun sakte ho', cmbmin:'Kam se kam 2 kahaniyan chuno', cmbchecking:'Check ho raha hai...', cmbfull:'Sirf full story plans', cmbcredit:'upgrade credit', cmbnosize:'Is size ke combo abhi nahi hain.', cmbnolist:'Koi kahani nahi mili.'});
 const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi'}, LANG_NAME = {en:'English', hi:'हिन्दी', hing:'Hinglish'};
 let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
-let THEME = store.get('ajt', 'dark'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'dark';      // Dark (warm) is the default; Light and Warm stay available
+let THEME = store.get('ajt', 'light'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'light';      // Light is the default; Light and Warm stay available
 const BRAND_FREE = {}, BRAND_PREM = {en:["Welcome to AJ's FM Stories Premium",'Your premium audio story store inside Telegram, delivered instantly to your chat.'], hi:["AJ's FM Stories Premium में आपका स्वागत है",'टेलीग्राम के अंदर आपका प्रीमियम ऑडियो स्टोरी स्टोर, सीधे आपकी चैट में।'], hing:["AJ's FM Stories Premium mein swagat hai",'Telegram ke andar aapka premium audio story store, seedha aapki chat mein.']};
 ['en', 'hi', 'hing'].forEach(l => { BRAND_FREE[l] = [TR[l].sptitle, TR[l].spsub]; });
 function applyBrand(){                                              // splash / tab title follow the access mode
@@ -1691,7 +1691,7 @@ const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data
 const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}" aria-label="Continue ${esc(i.story.title)}, episode ${i.episode.no}">${cover(i.story.cover)}
   <div style="min-width:0;flex:1"><b>${esc(i.story.title)}</b><small>Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}</small>
   <div class="bar"><i style="width:${i.episode.duration ? Math.min(100, i.pos / i.episode.duration * 100) : 0}%"></i></div></div></button>`);
-const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.sub_genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.collections || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
+const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.sub_genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (SUBROWS.rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.collections || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
 
 const awayBanner = () => { const a = S.away; return a && a.away ? `<div class="awaybar" role="status"><b>&#128680; Admin is unavailable</b><span>&#128221; ${esc(a.reason)}</span><span>&#9203; Back: ${new Date(a.until * 1000).toLocaleString()}</span><small>&#128179; Payments and messages wait until the admin is back. &#127911; Your stories keep working.</small></div>` : ''; };
 function reviewsSection(){
@@ -1700,6 +1700,28 @@ function reviewsSection(){
   return `<div class="sechead"><h2 class="sec">&#128172; What listeners say</h2></div>` +
     (a ? `<div class="rv-sum"><b>&#9733; ${esc(a)}</b><span>${esc(n)} rating${n === 1 ? '' : 's'}</span></div>` : '') +
     `<div class="rail">${R.items.map(r => `<div class="rv-card${r.featured ? ' feat' : ''}"><div class="rv-st" aria-label="${r.stars} stars">${'&#9733;'.repeat(r.stars)}</div><div class="rv-msg">${esc(r.message)}</div><div class="rv-by"><b>${esc(r.name)} ne</b>${r.title ? ' &middot; ' + esc(r.title) : ''}</div></div>`).join('')}</div>`;
+}
+/* ---------- sub genre rows on Home (built from the catalog when /api/home does not send them) ---------- */
+const SUBROWS = {rows: null, state: 'idle'};
+function buildSubRows(stories){
+  const mainNames = new Set(((S.home && S.home.genre_rows) || []).map(g => String(g.name).toLowerCase())), map = new Map();
+  (stories || []).forEach(st => subGenres(st).forEach(n => {
+    const k = n.toLowerCase(); if (!k || mainNames.has(k)) return;                    // a sub genre that is also a main genre already has its row
+    if (!map.has(k)) map.set(k, {name: n, items: []});
+    map.get(k).items.push(st);
+  }));
+  return [...map.values()].filter(r => r.items.length).sort((a, b) => b.items.length - a.items.length || a.name.localeCompare(b.name))
+    .map(r => ({name: r.name, items: r.items.sort((a, b) => (b.updated || 0) - (a.updated || 0)).slice(0, 12)}));
+}
+function subRowsHtml(){ return (SUBROWS.rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name)).join(''); }
+function paintSubRows(){ const el = $('#subRows'); if (el && S.tab === 'home') el.innerHTML = subRowsHtml(); }
+async function loadSubRows(){
+  if (SUBROWS.state === 'loading') return;
+  if (SUBROWS.rows){ paintSubRows(); return; }
+  if (B.all){ SUBROWS.rows = buildSubRows(B.all); SUBROWS.state = 'ok'; paintSubRows(); return; }
+  SUBROWS.state = 'loading';
+  try{ const d = await api('/api/catalog?limit=500&sort=updated', {timeout: 60000}); SUBROWS.rows = buildSubRows(d.stories || []); SUBROWS.state = 'ok'; paintSubRows(); }
+  catch(e){ SUBROWS.state = 'idle'; }
 }
 function renderHome(){
   const v = $('#view'); renderHeader();
@@ -1717,11 +1739,13 @@ function renderHome(){
     offersStrip(),                                                                            // between Ongoing and Completed (free build: only the Verify all stories card)
     secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
     ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (i % 4 === 1 ? offersStrip() : (!FREE_BUILD && i % 4 === 3) ? dailyCombosSection() : '')),      // then a coupon strip / daily combos after every 2 genre rows
-    ...(h.sub_genre_rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name))                    // then one row for every sub genre
+    ...(h.sub_genre_rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name)),                   // then one row for every sub genre (sent by the server)
+    (h.sub_genre_rows && h.sub_genre_rows.length) ? '' : '<div id="subRows">' + subRowsHtml() + '</div>'   // otherwise built here from the catalog
   ].join('');
   v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
     (S.homeState === 'error' ? `<div class="msg bad">Could not refresh: ${esc(S.homeErr)} <button class="link" id="retryHome">Retry</button></div>` : '');
   paintFeed(); watchFeed(); watchCombos(); watchDailyCombos(); watchSliders();
+  if (!(h.sub_genre_rows && h.sub_genre_rows.length)) loadSubRows();
 }
 function paintFeed(){
   const f = $('#feed'), F = S.feed; if (!f) return;
@@ -2387,7 +2411,7 @@ function renderMe(){
 }
 function resetAppData(){
   ['ajcart', 'ajt', 'ajl', 'ajrs', 'ajn'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
-  CART = []; THEME = 'dark'; LANG = 'en'; applyTheme(); applyLang(); renderHeader(); updateCartBadge(); renderMe(); toast(tr('presetdone'));
+  CART = []; THEME = 'light'; LANG = 'en'; applyTheme(); applyLang(); renderHeader(); updateCartBadge(); renderMe(); toast(tr('presetdone'));
 }
 
 /* ---------- request a story ---------- */
@@ -2987,7 +3011,7 @@ function renderStory(){
       <div class="tags">${mainGenres(s).map(g => `<button class="tag gold" type="button" data-subtag="1" data-main="${esc(g)}">${esc(g)}</button>`).join('')}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<button class="tag" type="button" style="opacity:.8" data-subtag="1" data-main="${esc(mainGenres(s)[0] || '')}" data-sub="${esc(g)}">${esc(g)}</button>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${ac === 'free' || a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
-    <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || (s.ep_first && s.ep_last ? s.ep_first + '-' + s.ep_last : V.totalAll || 0))}</b></div>
+    <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.platform || '-')}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || (s.ep_first && s.ep_last ? s.ep_first + '-' + s.ep_last : V.totalAll || 0))}</b></div>
       <div class="stat"><small>${tr('shrs')}</small><b>${s.seconds ? Math.round(s.seconds / 3600) || '<1' : 0}</b></div></div>
     ${ownedSummary(a)}${act}
     ${ac !== 'premium' && !a.full && !a.admin ? '<div class="pad" style="margin-bottom:8px"><button class="btn block" data-vf="1" type="button">&#128275; Verify to unlock</button></div>' : ''}
@@ -4169,7 +4193,7 @@ async function resetFlow(scope){
       toast('Erasing...', 60000);
       const r = await step(5, {text: word});
       const total = Object.values(r.deleted || {}).reduce((a, b) => a + b, 0);
-      S.home = null; S.homeState = 'idle'; S.wish = new Set(); Object.assign(S.feed, {items: [], offset: 0, state: 'idle', done: false, seeded: false, err: ''});
+      SUBROWS.rows = null; SUBROWS.state = 'idle'; S.home = null; S.homeState = 'idle'; S.wish = new Set(); Object.assign(S.feed, {items: [], offset: 0, state: 'idle', done: false, seeded: false, err: ''});
       Object.assign(B, {all: null, allState: 'idle', items: [], state: 'idle'});
       toast(`Done. ${total} records erased.`, 6000);
       loadAdmin(); loadHome();
