@@ -203,13 +203,19 @@ button.tag:active{transform:scale(.96)}
 @media (min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (min-width:860px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 .card{display:block;text-align:left;background:none;border:0;padding:0;min-width:0}
-.cv{aspect-ratio:3/4;width:100%;border-radius:12px;background:linear-gradient(160deg,var(--cv-a),var(--cv-b));border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;position:relative}
+.cv{aspect-ratio:1/1;width:100%;border-radius:12px;background:linear-gradient(160deg,var(--cv-a),var(--cv-b));border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;overflow:hidden;position:relative}
 .cv.has-img{aspect-ratio:auto;display:block;background:var(--surf)}
 .cv.has-img img{width:100%;height:auto;display:block}
-.cv .fb{display:flex;aspect-ratio:3/4;align-items:center;justify-content:center;font-size:44px}
+.cv .fb{display:flex;aspect-ratio:1/1;align-items:center;justify-content:center;font-size:44px}
 .badge{position:absolute;top:8px;left:8px;background:var(--gold);color:#1a1405;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;z-index:1}
 .card b{display:block;margin-top:8px;font-size:14.5px;line-height:1.25;overflow-wrap:anywhere}
 .card small{display:block;color:var(--muted);font-size:12.5px;overflow-wrap:anywhere}
+/* running title: a long story name scrolls like a ticker instead of wrapping into many lines */
+.card:not(.rcard) .plain>b,.card.ccard>b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
+.card b .mq{display:inline-flex;white-space:nowrap;will-change:transform;animation:mqrun var(--mqd,9s) linear infinite}
+.card b .mq>span{padding-right:2.2em}
+@keyframes mqrun{0%,12%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.card b .mq{animation:none}.card b[data-mq=run]{text-overflow:ellipsis}}
 .card .pr{color:var(--gold-2);font-weight:700;margin-top:2px;display:block}
 .empty{padding:36px 22px;text-align:center;color:var(--muted)}
 .empty .btn{margin-top:12px}
@@ -218,7 +224,7 @@ button.tag:active{transform:scale(.96)}
 /* skeletons */
 .sk{background:linear-gradient(90deg,var(--sk-a) 25%,var(--sk-b) 50%,var(--sk-a) 75%);background-size:200% 100%;border-radius:12px}
 @media (prefers-reduced-motion:no-preference){.sk{animation:sh 1.3s linear infinite}@keyframes sh{to{background-position:-200% 0}}}
-.sk.card-sk{aspect-ratio:3/4;width:136px;flex:none}
+.sk.card-sk{aspect-ratio:1/1;width:136px;flex:none}
 .sk.line{height:16px;margin:8px 16px}
 .sk.hero{height:150px;margin:6px 16px}
 /* featured + continue */
@@ -965,7 +971,7 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .card.rcard{display:grid;grid-template-columns:43% minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;column-gap:12px;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 5px 16px rgba(0,0,0,.08);min-width:0}
 .rcard .rcv{grid-row:1/3;grid-column:1;display:block;min-width:0;align-self:stretch;position:relative;overflow:hidden;border-radius:12px}
 .rcard .rcv .cv{width:100%;border-radius:12px;overflow:hidden}
-.rcard .rcv .cv:not(.has-img){aspect-ratio:3/4;height:auto}
+.rcard .rcv .cv:not(.has-img){aspect-ratio:1/1;height:auto}
 .rcard .rcv .cv.has-img{display:block;width:100%;height:auto;aspect-ratio:auto}
 .rcard .rcv .cv.has-img img{display:block;width:100%;height:auto;max-width:100%;object-fit:contain}
 .rcard .rcb{grid-row:1;grid-column:2;display:flex;flex-direction:column;gap:3px;min-width:0;min-height:100%;height:100%;text-align:left;padding:2px 0 4px;align-self:stretch;justify-content:flex-start}
@@ -1440,7 +1446,12 @@ const mainGenres = s => hasSubField(s) ? genreList(s) : genreList(s).slice(0, 1)
 let GENRE_CTX = '';
 let GSEED = String(Math.random());
 const hashStr = t => { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return Math.abs(h); };
-const mainGenre = s => mainGenres(s).join(', ');           // outside cards show ALL main genres (sub genres stay on the story page)
+/* Card genre label: inside a genre / sub genre row (or its View all screen) the card shows THAT genre; everywhere else the story's main genre(s),
+   or its sub genres when it has no main genre. */
+const mainGenre = s => {
+  if (GENRE_CTX){ const hit = [...mainGenres(s), ...subGenres(s)].find(x => x.toLowerCase() === GENRE_CTX.toLowerCase()); if (hit) return hit; }
+  return mainGenres(s).join(', ') || subGenres(s).join(', ');
+};
 const mainGenreOne = s => {
   const g = mainGenres(s); if (g.length < 2) return g[0] || '';
   const ctx = GENRE_CTX && g.find(x => x.toLowerCase() === GENRE_CTX.toLowerCase());
@@ -1701,6 +1712,27 @@ function reviewsSection(){
     (a ? `<div class="rv-sum"><b>&#9733; ${esc(a)}</b><span>${esc(n)} rating${n === 1 ? '' : 's'}</span></div>` : '') +
     `<div class="rail">${R.items.map(r => `<div class="rv-card${r.featured ? ' feat' : ''}"><div class="rv-st" aria-label="${r.stars} stars">${'&#9733;'.repeat(r.stars)}</div><div class="rv-msg">${esc(r.message)}</div><div class="rv-by"><b>${esc(r.name)} ne</b>${r.title ? ' &middot; ' + esc(r.title) : ''}</div></div>`).join('')}</div>`;
 }
+
+/* running title: titles that do not fit on one line on a card start scrolling (checked again whenever cards are drawn) */
+(function(){
+  let t = 0;
+  const run = () => { t = 0;
+    document.querySelectorAll('.card:not(.rcard) .plain>b:not([data-mq]),.card.ccard>b:not([data-mq])').forEach(b => {
+      if (!b.clientWidth) return;                                   // not laid out yet (hidden tab): try again later
+      b.dataset.mq = '1';
+      if (b.scrollWidth <= b.clientWidth + 1) return;
+      const txt = b.textContent; b.textContent = '';
+      const w = document.createElement('span'); w.className = 'mq'; w.style.setProperty('--mqd', Math.max(7, txt.length * 0.32).toFixed(1) + 's');
+      for (let i = 0; i < 2; i++){ const x = document.createElement('span'); x.textContent = txt; if (i) x.setAttribute('aria-hidden', 'true'); w.appendChild(x); }
+      b.appendChild(w); b.dataset.mq = 'run';
+    });
+  };
+  const queue = () => { if (!t) t = requestAnimationFrame(run); };
+  new MutationObserver(queue).observe(document.body, {childList: true, subtree: true});
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { document.querySelectorAll('.card b[data-mq="1"]').forEach(b => delete b.dataset.mq); queue(); });
+  window.addEventListener('load', queue);
+})();
+
 /* ---------- sub genre rows on Home (built from the catalog when /api/home does not send them) ---------- */
 const SUBROWS = {rows: null, state: 'idle'};
 function buildSubRows(stories){
@@ -1713,7 +1745,7 @@ function buildSubRows(stories){
   return [...map.values()].filter(r => r.items.length).sort((a, b) => b.items.length - a.items.length || a.name.localeCompare(b.name))
     .map(r => ({name: r.name, items: r.items.sort((a, b) => (b.updated || 0) - (a.updated || 0)).slice(0, 12)}));
 }
-function subRowsHtml(){ return (SUBROWS.rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name)).join(''); }
+function subRowsHtml(){ return (SUBROWS.rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name, inGenre(g.name, homeCard))).join(''); }
 function paintSubRows(){ const el = $('#subRows'); if (el && S.tab === 'home') el.innerHTML = subRowsHtml(); }
 async function loadSubRows(){
   if (SUBROWS.state === 'loading') return;
@@ -1739,7 +1771,7 @@ function renderHome(){
     offersStrip(),                                                                            // between Ongoing and Completed (free build: only the Verify all stories card)
     secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
     ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (i % 4 === 1 ? offersStrip() : (!FREE_BUILD && i % 4 === 3) ? dailyCombosSection() : '')),      // then a coupon strip / daily combos after every 2 genre rows
-    ...(h.sub_genre_rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name)),                   // then one row for every sub genre (sent by the server)
+    ...(h.sub_genre_rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name, inGenre(g.name, homeCard))),                   // then one row for every sub genre (sent by the server)
     (h.sub_genre_rows && h.sub_genre_rows.length) ? '' : '<div id="subRows">' + subRowsHtml() + '</div>'   // otherwise built here from the catalog
   ].join('');
   v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
@@ -2642,7 +2674,7 @@ function browseResults(){
   if (B.state === 'error' && !B.items.length){ r.innerHTML = retryBox(B.err, 'retryBrowse'); return; }
   if (B.state === 'loading' && !B.items.length){ r.innerHTML = `<div class="grid rows">${Array.from({length: 4}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>`; return; }
   if (!B.items.length){ r.innerHTML = `<div class="empty">No stories match${B.q ? ` "${esc(B.q)}"` : ' these filters'}.${browseActive() ? '<br><button class="btn ghost small" id="bclear2">Clear search and filters</button>' : ''}</div>`; return; }
-  r.innerHTML = `<div class="grid rows">${B.items.map(inGenre(B.genre, rowCard)).join('')}</div><div class="browse-tail"><div class="by" id="browseCount" aria-live="polite">${B.items.length} of ${B.total}</div>
+  r.innerHTML = `<div class="grid rows">${B.items.map(inGenre(B.sub || B.genre, rowCard)).join('')}</div><div class="browse-tail"><div class="by" id="browseCount" aria-live="polite">${B.items.length} of ${B.total}</div>
     ${B.items.length < B.total ? `<div id="browseEnd" class="browse-end" aria-hidden="true"></div><button class="btn ghost block" id="bmore"${B.state === 'loading' ? ' disabled' : ''}>${B.state === 'loading' ? 'Loading more stories…' : 'Load more stories ↓'}</button>` : `<div class="browse-finished">You’re all caught up ✨</div>`}
     ${B.state === 'error' ? `<div class="msg bad">${esc(B.err)} <button class="link" id="retryBrowse">Retry</button></div>` : ''}</div>`;
   watchBrowse();
@@ -2687,7 +2719,7 @@ function paintVall(){
   if (VA.state === 'error' && !VA.items.length){ r.innerHTML = retryBox(VA.err, 'vallRetry'); return; }
   if (VA.state === 'loading' && !VA.items.length){ r.innerHTML = `<div class="grid rows">${Array.from({length: 4}, () => '<div class="sk" style="height:190px;border-radius:16px"></div>').join('')}</div>`; return; }
   if (!VA.items.length){ r.innerHTML = '<div class="empty">No stories here yet.</div>'; return; }
-  r.innerHTML = `<div class="grid rows">${VA.items.map(inGenre(VA.spec && VA.spec.genre, rowCard)).join('')}</div><div class="browse-tail">${!VA.done ? `<button class="btn ghost block" id="vallMore"${VA.state === 'loading' ? ' disabled' : ''}>${VA.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${VA.state === 'error' ? `<div class="msg bad">${esc(VA.err)} <button class="link" id="vallRetry">Retry</button></div>` : ''}</div>`;
+  r.innerHTML = `<div class="grid rows">${VA.items.map(inGenre(VA.spec && (VA.spec.sub || VA.spec.genre), rowCard)).join('')}</div><div class="browse-tail">${!VA.done ? `<button class="btn ghost block" id="vallMore"${VA.state === 'loading' ? ' disabled' : ''}>${VA.state === 'loading' ? 'Loading\u2026' : 'Load more stories'}</button>` : ''}${VA.state === 'error' ? `<div class="msg bad">${esc(VA.err)} <button class="link" id="vallRetry">Retry</button></div>` : ''}</div>`;
 }
 async function loadVall(reset){
   const sig = fresh('vall'); if (reset) VA.items = [];
