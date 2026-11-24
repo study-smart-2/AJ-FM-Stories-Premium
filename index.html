@@ -180,6 +180,12 @@ h1,h2,h3,h4{margin:0}
 .promo{margin:4px 16px 14px;padding:14px 16px;border-radius:14px;background:linear-gradient(120deg,#3a2a0c,#171f35);border:1px solid var(--gold);color:var(--gold-2);font-weight:700}
 .promo small{display:block;color:var(--text);font-weight:400;opacity:.85}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 12px;scrollbar-width:none}
+.chips.sub{padding-top:0;margin-top:-4px;align-items:center}
+.chips.sub .sublbl{flex:none;font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;padding-right:2px}
+.chip.sub{min-height:34px;padding:5px 12px;font-size:13px;border-style:dashed;font-weight:600}
+.chip.sub.on{border-style:solid}
+button.tag{appearance:none;-webkit-appearance:none;font:inherit;cursor:pointer}
+button.tag:active{transform:scale(.96)}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);min-height:38px}
 .chip.on{border-color:var(--gold);color:var(--gold-2);background:rgba(var(--gold-rgb),.1)}
@@ -784,7 +790,7 @@ h2.title,.sec,.h3,.feat h3{text-wrap:balance;letter-spacing:-.012em}
 .bnav{background:color-mix(in srgb,var(--nav-bg) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
 .bnav button{position:relative;font-weight:600;transition:color .18s}
 .bnav button.on{font-weight:800}
-.bnav button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
+/* the old 3px bar above the active tab is gone: the active tab is now the raised round button, and the bar showed on both sides of it */ .bnav button.on::before{content:none}
 /* appbar and empty states */
 .appbar{padding:16px 16px 8px}
 .empty{padding:44px 24px;line-height:1.6}
@@ -1491,14 +1497,14 @@ const retryBox = (msg, id) => `<div class="empty"><div>${esc(msg)}</div><button 
 /* ---------- state ---------- */
 const CONT = {}, HIST = {};
 const S = {tab:'home', admin:false, home:null, homeState:'idle', homeErr:''};
-const B = {q:'', genre:'', status:'', language:'', sort:'newest', items:[], total:0, state:'idle', err:'', facets:null, view:'discover', all:null, allState:'idle', allErr:'', open:''};
+const B = {q:'', genre:'', sub:'', status:'', language:'', sort:'newest', items:[], total:0, state:'idle', err:'', facets:null, view:'discover', all:null, allState:'idle', allErr:'', open:''};
 const L = {seg:'owned'};
 Object.assign(S, {wish:new Set(), tier:0, notices:[], io:null, feed:{items:[], offset:0, state:'idle', done:false, seeded:false, err:''}});
 
 /* ---------- language, theme, header ---------- */
 const store = {get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }};
 const TR = {
-  en: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Hours', splan:'Choose a plan', smore:'Read more', sless:'Show less', sbanners:'Banners', ssub:'Sub genres:', stopics:'Topics', slisten:'Listen', snotes:'Notes', stransl:'Translated', sorig:'Show original',
+  en: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Hours', splan:'Choose a plan', smore:'Read more', sless:'Show less', sbanners:'Banners', ssub:'Sub genres:', suball:'All', stopics:'Topics', slisten:'Listen', snotes:'Notes', stransl:'Translated', sorig:'Show original',
     poff:'Available Coupons & Offers', otitle:'Coupons & Offers', cpph:'Promo code', cpapply:'Apply', cpremove:'Remove', cpapplied:'Coupon {c} applied', cpsave:'You save {a}', cpnone:'No coupons are running right now. Check back soon.', cpcopy:'Copy', cpcopied:'Code copied', cpuse:'Use in cart', cpmin:'Min order {m}', cpexp:'Valid till {d}', cpavail:'{n} coupons available', cdisc:'Discount',
     rqtitle:'Request a Story', rqnew:'New Request', rqmine:'Already Requested Stories', rqname:'Story name', rqnameph:'Title of the story you want', rqplat:'Platform', rqplatph:'Pocket FM, Kuku FM, YouTube...', rqlang:'Language', rqstat:'Story status', rqlink:'Story link (web page only)', rqlinkph:'https://...', rqcover:'Story cover image (optional)', rqpick:'Choose image', rqsubmit:'Submit Your Request', rqsending:'Sending...', rqstore:'Already in the store:', rqdone:'Request sent. Track it under Already Requested Stories.', rqempty:'No requests yet', rqemptynote:'Stories you request show up here with their progress.', rqrej:'Rejected', rqrejnote:'The owner could not take this story up.', rqs1:'Pending', rqs2:'Searching', rqs3:'Posting', rqs4:'Completed', rqd1:'We search for it, check availability, and update you if we can take it up.', rqd2:'The team is checking where the story is available.', rqd3:'Approved stories are published episode by episode.', rqd4:'Everything is live on the platform. The request is marked completed.', rqbadlink:'Only a web page link is allowed. It must start with http:// or https://', rqneed:'Fill in the story name, platform, language and status.', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', cont:'Continue listening', trending:'Trending stories', flash:'Flash highlights', deals:'Super deals', under:'Under {p}',
     recent:'Recently added', ongoing:'Ongoing stories', completed:'Completed stories', upcoming:'Upcoming stories', viewall:'View all', listen:'Listen now', searchph:'Search title, author, genre or language',
@@ -1506,14 +1512,14 @@ const TR = {
     ends:'Ends in', ended:'Ended', caught:"You're all caught up. New stories land every week.", removed:'Removed from Continue listening', cartempty:'Your cart is empty',
     cartnote:'Cart and checkout arrive in the next update. For now, open a story and tap Rent or Buy.', melib:'My library', lang:'Language', theme:'Theme', soon:'Soon',
     wishon:'Added to wishlist', wishoff:'Removed from wishlist', close:'Close', tsys:'System', tdark:'Dark', tlight:'Light', twarm:'Warm', loading:'Loading stories...', more:'More to explore', sptip1:'Connecting to secure vault...', sptip2:'Syncing your library...', sptip3:'Loading your stories...', sptip4:'Applying your theme...', splbl:'LOADING', sptitle:"Welcome to AJ's FM Stories", spsub:'Free audio stories inside Telegram, delivered straight to your chat.', dtitle:'Discover & Categories', dstatus:'Status', dcol:'Collections', dgenre:'Genres', dlang:'Languages', dcount:'{n} stories', dsee:'See all {n} stories', dtrend:'Trending now', dupd:'Recently updated', dbud:'Lowest price first', dnone:'No stories here yet.', dback:'Discover', ltitle:'My Library', lw:'Wishlist', ll:'Listening', lo:'My Stories', lr:'Rentals', lh:'History', lopen:'Open', lres:'Resume', lrem:'Remove', lref:'Refresh', lhead:'Listening history', lew:'Your wishlist is empty. Tap the heart on a story to save it here.', lel:'Nothing to continue yet. Start a story and it appears here.', leo:'No stories to keep yet. After your payment is approved, your story appears here.', ler:'No active rentals right now.', leh:'No purchase requests yet.', lkeep:'Yours to keep', luntil:'Access until {d}', lleft:'{t} left', ctitle:'Shopping Cart', cempty:'No Stories in Cart', cemptynote:'Explore the catalog and add the stories you like.', cbrowse:'Browse at Home Page', crem:'Remove', csub:'Subtotal', ctotal:'Total bill', cgo:'Proceed to Secure Checkout', cpay:'Pay', cnote:'Everything in your cart is paid together in one checkout in the bot. One payment, one screenshot.', ctopic:'Topic', cplanl:'Plan', cskip:'{n} item(s) are not sold any more and were left out', cadd:'Add to cart', cin:'In cart', cadded:'Added to cart', cremd:'Removed from cart', citems:'{n} items', cown:'Already owned, removed from cart', ptitle:'My Account', pguide:'How the App Works & Guide', preq:'Request a Story', psup:'Help & Support', pfb:'Feedback & Suggestions', pdisp:'Display Settings', preset:'Reset App Data', presetq:'This clears the cart, theme, language and search history on this device. Your purchases and library are not affected.', presetdone:'App data reset', preqph:'Story title or keywords', preqgo:'Search', preqfound:'Already in the store:', preqnone:'Not in the store yet. Send your request through the bot.', preqbot:'Request in the bot', pid:'Telegram ID', pbot:'Opens in the bot'},
-  hi: {sby:'लेखक', splat:'प्लेटफ़ॉर्म', seps:'एपिसोड', shrs:'घंटे', splan:'प्लान चुनें', smore:'और पढ़ें', sless:'कम दिखाएँ', sbanners:'बैनर', ssub:'उप-शैलियाँ:', stopics:'विषय', slisten:'सुनें', snotes:'नोट्स', stransl:'अनुवादित', sorig:'मूल दिखाएँ',
+  hi: {sby:'लेखक', splat:'प्लेटफ़ॉर्म', seps:'एपिसोड', shrs:'घंटे', splan:'प्लान चुनें', smore:'और पढ़ें', sless:'कम दिखाएँ', sbanners:'बैनर', ssub:'उप-शैलियाँ:', suball:'सभी', stopics:'विषय', slisten:'सुनें', snotes:'नोट्स', stransl:'अनुवादित', sorig:'मूल दिखाएँ',
     gm:'सुप्रभात', ga:'नमस्कार', ge:'शुभ संध्या', cont:'जहाँ छोड़ा था वहीं से सुनें', trending:'ट्रेंडिंग कहानियाँ', flash:'फ्लैश ऑफ़र', deals:'सुपर डील्स', under:'{p} से कम',
     recent:'हाल ही में जोड़ी गईं', ongoing:'चल रही कहानियाँ', completed:'पूरी हो चुकी कहानियाँ', upcoming:'आने वाली कहानियाँ', viewall:'सभी देखें', listen:'अभी सुनें', searchph:'नाम, लेखक, जॉनर या भाषा खोजें',
     recents:'हाल की खोजें', tops:'टॉप सर्च', clear:'हटाएँ', notif:'सूचनाएँ', nonotif:'अभी कोई सूचना नहीं।', home:'होम', discover:'खोजें', library:'लाइब्रेरी', cart:'कार्ट', me:'मैं',
     ends:'खत्म होने में', ended:'खत्म', caught:'आप सब देख चुके हैं। हर हफ्ते नई कहानियाँ आती हैं।', removed:'हिस्ट्री से हटा दिया', cartempty:'आपका कार्ट खाली है',
     cartnote:'कार्ट और चेकआउट अगले अपडेट में आएगा। अभी कहानी खोलकर Rent या Buy दबाएँ।', melib:'मेरी लाइब्रेरी', lang:'भाषा', theme:'थीम', soon:'जल्द',
     wishon:'विशलिस्ट में जोड़ा', wishoff:'विशलिस्ट से हटाया', close:'बंद करें', tsys:'सिस्टम', tdark:'डार्क', tlight:'लाइट', twarm:'वॉर्म', loading:'कहानियाँ लोड हो रही हैं...', more:'और खोजें', sptip1:'सुरक्षित वॉल्ट से जुड़ रहे हैं...', sptip2:'आपकी लाइब्रेरी सिंक हो रही है...', sptip3:'कहानियाँ लोड हो रही हैं...', sptip4:'आपकी थीम लगाई जा रही है...', splbl:'लोड हो रहा है', sptitle:"AJ's FM Stories में आपका स्वागत है", spsub:'टेलीग्राम के अंदर मुफ़्त ऑडियो कहानियाँ, सीधे आपकी चैट में।', dtitle:'डिस्कवर और कैटेगरी', dstatus:'स्टेटस', dcol:'कलेक्शन', dgenre:'जॉनर', dlang:'भाषाएँ', dcount:'{n} कहानियाँ', dsee:'सभी {n} कहानियाँ देखें', dtrend:'अभी ट्रेंडिंग', dupd:'हाल में अपडेट', dbud:'सबसे कम कीमत पहले', dnone:'यहाँ अभी कोई कहानी नहीं।', dback:'डिस्कवर', ltitle:'मेरी लाइब्रेरी', lw:'विशलिस्ट', ll:'सुन रहे हैं', lo:'मेरी कहानियाँ', lr:'रेंटल', lh:'हिस्ट्री', lopen:'खोलें', lres:'जारी रखें', lrem:'हटाएँ', lref:'रिफ्रेश', lhead:'सुनने का इतिहास', lew:'आपकी विशलिस्ट खाली है। कहानी पर दिल दबाकर यहाँ सेव करें।', lel:'अभी कुछ जारी रखने को नहीं है। कोई कहानी शुरू करें।', leo:'अभी कोई कहानी नहीं। पेमेंट अप्रूव होने पर कहानी यहाँ दिखेगी।', ler:'अभी कोई एक्टिव रेंटल नहीं।', leh:'अभी कोई खरीद अनुरोध नहीं।', lkeep:'हमेशा आपकी', luntil:'{d} तक एक्सेस', lleft:'{t} बाकी', ctitle:'शॉपिंग कार्ट', cempty:'कार्ट में कोई कहानी नहीं', cemptynote:'कैटलॉग देखें और पसंदीदा कहानियाँ जोड़ें।', cbrowse:'होम पेज पर देखें', crem:'हटाएँ', csub:'सबटोटल', ctotal:'कुल बिल', cgo:'सुरक्षित चेकआउट पर जाएँ', cpay:'पे करें', cnote:'आपके कार्ट की सभी चीज़ें बॉट में एक ही चेकआउट में खरीदी जाती हैं। एक भुगतान, एक स्क्रीनशॉट।', ctopic:'टॉपिक', cplanl:'प्लान', cskip:'{n} आइटम अब उपलब्ध नहीं हैं, उन्हें छोड़ दिया', cadd:'कार्ट में जोड़ें', cin:'कार्ट में है', cadded:'कार्ट में जोड़ा', cremd:'कार्ट से हटाया', citems:'{n} आइटम', cown:'पहले से आपकी है, कार्ट से हटाई', ptitle:'मेरा अकाउंट', pguide:'ऐप कैसे काम करता है और गाइड', preq:'कहानी रिक्वेस्ट करें', psup:'हेल्प और सपोर्ट', pfb:'फीडबैक और सुझाव', pdisp:'डिस्प्ले सेटिंग्स', preset:'ऐप डेटा रीसेट', presetq:'इससे इस डिवाइस का कार्ट, थीम, भाषा और सर्च हिस्ट्री साफ़ होगी। आपकी खरीद और लाइब्रेरी पर असर नहीं पड़ेगा।', presetdone:'ऐप डेटा रीसेट हो गया', preqph:'कहानी का नाम या कीवर्ड', preqgo:'खोजें', preqfound:'स्टोर में पहले से है:', preqnone:'अभी स्टोर में नहीं है। बॉट से रिक्वेस्ट भेजें।', preqbot:'बॉट में रिक्वेस्ट करें', pid:'टेलीग्राम ID', pbot:'बॉट में खुलेगा'},
-  hing: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Ghante', splan:'Plan chuno', smore:'Aur padho', sless:'Kam dikhao', sbanners:'Banners', ssub:'Sub genres:', stopics:'Topics', slisten:'Suno', snotes:'Notes', stransl:'Translate kiya gaya', sorig:'Original dikhao',
+  hing: {sby:'by', splat:'Platform', seps:'Episodes', shrs:'Ghante', splan:'Plan chuno', smore:'Aur padho', sless:'Kam dikhao', sbanners:'Banners', ssub:'Sub genres:', suball:'Sab', stopics:'Topics', slisten:'Suno', snotes:'Notes', stransl:'Translate kiya gaya', sorig:'Original dikhao',
     gm:'Good morning', ga:'Namaste', ge:'Shubh sandhya', cont:'Jahan chhoda wahin se suno', trending:'Trending kahaniyan', flash:'Flash offers', deals:'Super deals', under:'{p} se kam',
     recent:'Naye add hue', ongoing:'Chal rahi kahaniyan', completed:'Poori ho chuki kahaniyan', upcoming:'Aane wali kahaniyan', viewall:'Sab dekho', listen:'Abhi suno', searchph:'Naam, author, genre ya language search karo',
     recents:'Recent searches', tops:'Top searches', clear:'Hatao', notif:'Notifications', nonotif:'Abhi koi notification nahi.', home:'Home', discover:'Discover', library:'Library', cart:'Cart', me:'Me',
@@ -2530,7 +2536,7 @@ async function feedbackAction(id, action){
 }
 
 /* ---------- browse ---------- */
-function browseActive(){ return !!(B.q || B.genre || B.status || B.language || B.sort !== 'newest'); }
+function browseActive(){ return !!(B.q || B.genre || B.sub || B.status || B.language || B.sort !== 'newest'); }
 const browseMode = () => (B.view === 'list' || browseActive()) ? 'list' : 'discover';
 function renderBrowse(){
   $('#view').innerHTML = `<div class="pad"><input class="search" id="bq" type="search" placeholder="Search title, author, genre or language" value="${esc(B.q)}" aria-label="Search stories"></div><div id="bbody"></div>`;
@@ -2543,7 +2549,7 @@ function paintBrowse(){
   body.innerHTML = `<div class="pad" style="padding-top:8px"><button class="link" id="dback">&larr; ${tr('dback')}</button></div>
     <div class="ctl" style="padding-top:6px"><select id="bsort" aria-label="Sort"><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">A to Z</option><option value="popular">Most listened</option><option value="updated">Recently updated</option>${FREE_BUILD ? '' : '<option value="price_low">Price: Low to High</option><option value="price_high">Price: High to Low</option>'}</select>
     <select id="bstatus" aria-label="Status"><option value="">All stories</option>${sts.map(x => `<option>${esc(x)}</option>`).join('')}</select></div>
-    <div id="blang"></div><div class="chips" id="bchips" aria-label="Genres"></div><div class="actions" id="bclearbox" style="padding-bottom:8px"></div><div id="bres"></div>`;
+    <div id="blang"></div><div class="chips" id="bchips" aria-label="Genres"></div><div id="bsub"></div><div class="actions" id="bclearbox" style="padding-bottom:8px"></div><div id="bres"></div>`;
   $('#bsort').value = B.sort; $('#bstatus').value = B.status;
   browseChips(); browseResults();
   if (B.state === 'idle') loadBrowse(true);
@@ -2588,7 +2594,7 @@ function toggleRow(key){
 }
 function seeAllRow(key){
   const r = (B.rows || []).find(x => x.key === key); if (!r) return;
-  Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', ...r.see, view:'list', state:'idle'}); renderBrowse();
+  Object.assign(B, {q:'', genre:'', sub:'', status:'', language:'', sort:'newest', ...r.see, view:'list', state:'idle'}); renderBrowse();
 }
 async function loadDiscover(){
   if (B.allState === 'loading') return; B.allState = 'loading'; paintDiscover();
@@ -2600,6 +2606,8 @@ function browseChips(){
   const g = (B.facets && B.facets.genres) || [];
   const c = $('#bchips'); if (!c) return;
   c.innerHTML = [`<button class="chip${B.genre ? '' : ' on'}" data-bgenre="">All genres</button>`, ...g.map(x => `<button class="chip${B.genre === x.name ? ' on' : ''}" data-bgenre="${esc(x.name)}">${esc(x.name)}</button>`)].join('');
+  const sg = (B.facets && B.facets.sub_genres && B.genre && B.facets.sub_genres[B.genre]) || [], sb = $('#bsub');       // after the genre: its sub genres
+  if (sb) sb.innerHTML = sg.length ? `<div class="chips sub" aria-label="${esc(tr('ssub'))}"><span class="sublbl">${esc(tr('ssub').replace(/:$/, ''))}</span><button class="chip sub${B.sub ? '' : ' on'}" data-bsub="">${esc(tr('suball'))}</button>${sg.map(x => `<button class="chip sub${B.sub === x.name ? ' on' : ''}" data-bsub="${esc(x.name)}">${esc(x.name)}<small>${x.count}</small></button>`).join('')}</div>` : '';
   const langs = (B.facets && B.facets.languages) || [];
   $('#blang').innerHTML = langs.length > 1 ? `<div class="ctl" style="grid-template-columns:1fr"><select id="blangsel" aria-label="Language"><option value="">All languages</option>${langs.map(l => `<option${B.language === l ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>` : '';
   $('#bclearbox').innerHTML = browseActive() ? '<button class="btn ghost small" id="bclear">Clear search and filters</button>' : '';
@@ -2619,7 +2627,7 @@ async function loadBrowse(reset){
   if (reset){ B.items = []; }
   B.state = 'loading'; browseResults();
   const qs = new URLSearchParams({limit: 24, offset: B.items.length, sort: B.sort});
-  for (const k of ['q', 'genre', 'status', 'language']) if (B[k]) qs.set(k, B[k]);
+  for (const k of ['q', 'genre', 'sub', 'status', 'language']) if (B[k]) qs.set(k, B[k]);
   try{
     const d = await api('/api/catalog?' + qs, {signal: sig, timeout: 60000});
     if (reset) B.items = [];
@@ -2975,7 +2983,7 @@ function renderStory(){
   el.innerHTML = `<div class="sh">${heroBg(s)}
       <div class="sh-top"><button class="fab" id="storyBack" aria-label="Back">&#8592;</button><div><button class="fab" id="storyCopy" aria-label="Copy story link">&#128279;</button><button class="fab" id="storyShare" aria-label="Share story">&#10150;</button><button class="fab" id="storyWish" aria-pressed="${!!wishOn}" aria-label="Wishlist">${wishOn ? '&#9829;' : '&#9825;'}</button></div></div>
       ${heroBanners(s)}<h2 class="title">${esc(s.title)}</h2>${(s.aliases || []).length ? `<div class="by">Also known as: ${s.aliases.map(esc).join(' &middot; ')}</div>` : ''}<div class="by">${tr('sby')} ${esc(s.author || "AJ's FM")}</div>
-      <div class="tags">${mainGenres(s).map(g => `<span class="tag gold">${esc(g)}</span>`).join('')}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<span class="tag" style="opacity:.8">${esc(g)}</span>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
+      <div class="tags">${mainGenres(s).map(g => `<button class="tag gold" type="button" data-subtag="1" data-main="${esc(g)}">${esc(g)}</button>`).join('')}${subGenres(s).length ? `<span class="tag" style="background:none;border:0;opacity:.6;padding-left:4px">${tr('ssub')}</span>` + subGenres(s).map(g => `<button class="tag" type="button" style="opacity:.8" data-subtag="1" data-main="${esc(mainGenres(s)[0] || '')}" data-sub="${esc(g)}">${esc(g)}</button>`).join('') : ''}${s.language ? `<span class="tag">${esc(s.language)}</span>` : ''}${s.voice ? `<span class="tag">${esc(s.voice)} voice</span>` : ''}
       <span class="tag${s.status === 'Ongoing' ? ' live' : ' gold'}">${esc(s.status || 'Ongoing')}</span>${ac === 'free' || a.full || a.admin || !(s.options || []).length ? '' : `<span class="tag gold">${esc(range)}</span>`}${s.published === false ? '<span class="tag warn">Hidden from store</span>' : ''}</div></div>
     ${s.preview ? `<div class="desc clamp" id="desc" data-tx="${esc(s.preview)}">${esc(tx(s.preview))}</div><div class="pad"><button class="link" id="more">${tr('smore')}</button></div>` : ''}
     <div class="stats"><div class="stat"><small>${tr('splat')}</small><b>${esc(s.author || "AJ's FM")}</b></div><div class="stat"><small>${tr('seps')}</small><b>${esc(s.episodes_text || (s.ep_first && s.ep_last ? s.ep_first + '-' + s.ep_last : V.totalAll || 0))}</b></div>
@@ -4666,7 +4674,7 @@ document.addEventListener('click', async e => {
   if (atcClick(c)) return;
   if (homeClick(c)) return;
   if (comboClick(c)) return;
-  if ((m = c('.bnav button'))){ if (m.dataset.tab === 'browse' && S.tab === 'browse') Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover'}); return setTab(m.dataset.tab); }
+  if ((m = c('.bnav button'))){ if (m.dataset.tab === 'browse' && S.tab === 'browse') Object.assign(B, {q:'', genre:'', sub:'', status:'', language:'', sort:'newest', view:'discover'}); return setTab(m.dataset.tab); }
   if (c('#retryHome')){ S.homeState = 'idle'; return loadHome(); }
   if (c('#retryBrowse')) return loadBrowse(B.items.length ? false : true);
   if (c('#retryLib')) return loadLibrary();
@@ -4699,12 +4707,14 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-cont]'))){ const i = CONT[m.dataset.cont]; if (i) playEpisode({id: i.episode.id, no: i.episode.no, to: i.episode.to, title: i.episode.title, duration: i.episode.duration}, i.story, i.pos); return; }
   if ((m = c('[data-hist]'))){ const h = HIST[m.dataset.hist]; if (h) playEpisode({id: h.episode_id, no: h.no, to: h.to, title: h.title, duration: h.duration}, {id: h.story_id, title: h.story_title, cover: h.cover}, h.completed ? 0 : h.pos); return; }
   if ((m = c('[data-seg]'))){ L.seg = m.dataset.seg; $$('[data-seg]').forEach(b => { b.classList.toggle('on', b === m); b.setAttribute('aria-selected', b === m); }); return loadLibrary(); }
-  if ((m = c('[data-bgenre]'))){ B.genre = m.dataset.bgenre; browseChips(); return loadBrowse(true); }
-  if ((m = c('.chip[data-genre]'))){ Object.assign(B, {q:'', genre: m.dataset.genre, status:'', language:'', sort:'newest', view:'list', state:'idle'}); return setTab('browse'); }
-  if (c('#bclear') || c('#bclear2')){ Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest'}); renderBrowse(); return loadBrowse(true); }
+  if ((m = c('[data-bsub]'))){ B.sub = m.dataset.bsub; browseChips(); return loadBrowse(true); }
+  if ((m = c('[data-bgenre]'))){ B.genre = m.dataset.bgenre; B.sub = ''; browseChips(); return loadBrowse(true); }
+  if ((m = c('[data-subtag]'))){ closeSheet('story'); Object.assign(B, {q:'', genre: m.dataset.main || '', sub: m.dataset.sub || '', status:'', language:'', sort:'newest', view:'list', state:'idle'}); return setTab('browse'); }
+  if ((m = c('.chip[data-genre]'))){ Object.assign(B, {q:'', genre: m.dataset.genre, sub:'', status:'', language:'', sort:'newest', view:'list', state:'idle'}); return setTab('browse'); }
+  if (c('#bclear') || c('#bclear2')){ Object.assign(B, {q:'', genre:'', sub:'', status:'', language:'', sort:'newest'}); renderBrowse(); return loadBrowse(true); }
   if ((m = c('[data-drow]'))){ toggleRow(m.dataset.drow); return; }
   if ((m = c('[data-dsee]'))){ seeAllRow(m.dataset.dsee); return; }
-  if (c('#dback')){ Object.assign(B, {q:'', genre:'', status:'', language:'', sort:'newest', view:'discover'}); renderBrowse(); return; }
+  if (c('#dback')){ Object.assign(B, {q:'', genre:'', sub:'', status:'', language:'', sort:'newest', view:'discover'}); renderBrowse(); return; }
   if (c('#retryDisc')){ B.allState = 'idle'; return loadDiscover(); }
   if (c('#bmore')) return loadBrowse(false);
   if ((m = c('[data-story]'))){
