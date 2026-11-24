@@ -184,7 +184,7 @@ h1,h2,h3,h4{margin:0}
 .chips.sub .sublbl{flex:none;font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;padding-right:2px}
 .chip.sub{min-height:34px;padding:5px 12px;font-size:13px;border-style:dashed;font-weight:600}
 .chip.sub.on{border-style:solid}
-button.tag{appearance:none;-webkit-appearance:none;font:inherit;cursor:pointer}
+button.tag{appearance:none;-webkit-appearance:none;font:inherit;font-size:12.5px;line-height:1.4;min-height:0;flex:none;white-space:nowrap;background:none;cursor:pointer}
 button.tag:active{transform:scale(.96)}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);min-height:38px}
@@ -256,8 +256,8 @@ button.tag:active{transform:scale(.96)}
 .hero .cv.has-img img{width:auto;max-width:100%;max-height:50vh}
 h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px;color:var(--gold-2);overflow-wrap:anywhere}
 .by{color:var(--muted);font-size:13.5px;overflow-wrap:anywhere}
-.tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
-.tag{font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--text)}
+.tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:10px}
+.tag{font-size:12.5px;line-height:1.4;white-space:nowrap;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--text)}
 .tag.live{border-color:var(--ok);color:var(--ok)}.tag.gold{border-color:var(--gold);color:var(--gold-2)}.tag.bad{border-color:var(--bad);color:var(--bad)}.tag.warn{border-color:var(--warn);color:var(--warn)}
 .desc{margin:12px 16px 2px;color:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere}
 .desc.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
@@ -1691,7 +1691,7 @@ const contCard2 = i => `<div class="contw">${contCard(i)}<button class="cx" data
 const contCard = i => (CONT[i.episode.id] = i, `<button class="cont" data-cont="${i.episode.id}" data-story="${esc(i.story.id)}" aria-label="Continue ${esc(i.story.title)}, episode ${i.episode.no}">${cover(i.story.cover)}
   <div style="min-width:0;flex:1"><b>${esc(i.story.title)}</b><small>Episode ${epn(i.episode)}${i.pos ? ' | ' + clock(i.pos) : ' | start'}</small>
   <div class="bar"><i style="width:${i.episode.duration ? Math.min(100, i.pos / i.episode.duration * 100) : 0}%"></i></div></div></button>`);
-const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.collections || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
+const shownIds = () => { const h = S.home || {}, ids = new Set(S.feed.items.map(s => s.id)); ['trending', 'recent', 'ongoing', 'completed', 'upcoming', 'deals'].forEach(k => (h[k] || []).forEach(s => ids.add(s.id))); (h.genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.sub_genre_rows || []).forEach(g => g.items.forEach(s => ids.add(s.id))); (h.collections || []).forEach(g => g.items.forEach(s => ids.add(s.id))); return ids; };
 
 const awayBanner = () => { const a = S.away; return a && a.away ? `<div class="awaybar" role="status"><b>&#128680; Admin is unavailable</b><span>&#128221; ${esc(a.reason)}</span><span>&#9203; Back: ${new Date(a.until * 1000).toLocaleString()}</span><small>&#128179; Payments and messages wait until the admin is back. &#127911; Your stories keep working.</small></div>` : ''; };
 function reviewsSection(){
@@ -1716,7 +1716,8 @@ function renderHome(){
     ...(h.collections || []).map(colSection),
     offersStrip(),                                                                            // between Ongoing and Completed (free build: only the Verify all stories card)
     secRail(tr('completed'), h.completed, 'completed'), secRail(tr('upcoming'), h.upcoming, 'upcoming', upCard),
-    ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (i % 4 === 1 ? offersStrip() : (!FREE_BUILD && i % 4 === 3) ? dailyCombosSection() : ''))      // then a coupon strip / daily combos after every 2 genre rows
+    ...h.genre_rows.map((g, i) => secRail(esc(g.name), g.items, 'g:' + g.name, inGenre(g.name, homeCard)) + (i % 4 === 1 ? offersStrip() : (!FREE_BUILD && i % 4 === 3) ? dailyCombosSection() : '')),      // then a coupon strip / daily combos after every 2 genre rows
+    ...(h.sub_genre_rows || []).map(g => secRail(esc(g.name), g.items, 's:' + g.name))                    // then one row for every sub genre
   ].join('');
   v.innerHTML = (sections.replace(/<[^>]*>/g, '').trim() ? sections : '<div class="empty">No stories are published yet. Please check back soon.</div>') + '<div id="feed"></div><div id="feedEnd" style="height:1px"></div>' +
     (S.homeState === 'error' ? `<div class="msg bad">Could not refresh: ${esc(S.homeErr)} <button class="link" id="retryHome">Retry</button></div>` : '');
@@ -2652,8 +2653,8 @@ const browseSearch = deb(() => { if (browseIO) browseIO.disconnect(); loadBrowse
 const VA = {key:'', title:'', spec:{}, items:[], state:'idle', err:'', done:false};
 const VA_SPEC = {trending:{sort:'popular'}, recent:{sort:'newest'}, updated:{sort:'updated'}, ongoing:{sort:'updated', status:'Ongoing'}, completed:{sort:'updated', status:'Completed'}, upcoming:{sort:'newest', status:'Upcoming'}};
 function viewAll(key){                                   // "View all" on Home opens its OWN screen with every story of that row (the Discover tab is not touched)
-  const g = key.indexOf('g:') === 0;
-  Object.assign(VA, {key, spec: g ? {sort:'updated', genre:key.slice(2)} : (VA_SPEC[key] || {sort:'newest'}), title: g ? key.slice(2) : (tr(key) || 'Stories'), items: [], state: 'loading', err: '', done: false});
+  const g = key.indexOf('g:') === 0, sg = key.indexOf('s:') === 0;
+  Object.assign(VA, {key, spec: g ? {sort:'updated', genre:key.slice(2)} : sg ? {sort:'updated', sub:key.slice(2)} : (VA_SPEC[key] || {sort:'newest'}), title: (g || sg) ? key.slice(2) : (tr(key) || 'Stories'), items: [], state: 'loading', err: '', done: false});
   $('#vall').innerHTML = `<div class="search-head"><button class="btn ghost small" id="vallBack" aria-label="Back">&larr;</button><h2 class="sec vtitle">${esc(VA.title)}</h2></div><div id="vallBody"></div>`;
   openSheet('vall'); $('#vall').scrollTop = 0; paintVall(); loadVall(true);
 }
