@@ -305,6 +305,7 @@ h2.title{font-family:var(--serif);font-size:32px;line-height:1.05;margin:0 0 4px
 .field textarea,.box textarea{min-height:100px;resize:vertical}
 .field.check{display:flex;gap:10px;align-items:center}.field.check input{width:22px;height:22px;min-height:0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px}.two .field{margin:0 0 12px}
+.bulkbox{margin:0 16px 12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.bulkbox .by{padding:0 0 8px}.bulkbox .btn:disabled{opacity:.5}
 .optrow{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
 .o4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.o4 input{padding:8px 6px;font-size:13px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px}
@@ -2806,12 +2807,12 @@ function openChat(){
   if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank');
 }
 const playEpisode = ep => sendEpisode(ep, false);      // other callers pass a story as the 2nd argument, so the demo flag lives in its own function
-async function sendEpisode(ep, demo){
+async function sendEpisode(ep, demo, count){
   if (!ep) return;
   if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); return toast('Locked. Choose a plan to unlock it.'); }
   return once('send' + ep.id, async () => {
     try{
-      const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: SENDN(), ...(demo ? {demo: true} : {})})});
+      const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: count || SENDN(), ...(demo ? {demo: true} : {})})});
       toast('Opening the audio bot...', 2500);
       const url = `https://t.me/${r.bot || AUDIO_BOT_USERNAME || BOT_USERNAME}?start=d_${r.token}`;      // the bot gets /start and sends the episodes into the chat
       if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank');
@@ -2822,11 +2823,54 @@ async function sendEpisode(ep, demo){
 document.addEventListener('visibilitychange', () => { if (!document.hidden && CART.length && Date.now() - _rcAt > 8000) refreshCart(); });      // back from the bot after paying: bought plans leave the cart
 setTimeout(() => { if (CART.length) refreshCart(); }, 2500);
 
+
+/* ---------- bulk episode getter: From - To, at most 50 episodes in one go ---------- */
+const BULK_MAX = 50;
+function bulkDefaults(){
+  const nums = (V.eps || []).map(e => +e.no).filter(n => n > 0), first = nums.length ? Math.min(...nums) : 1, last = nums.length ? Math.max(...nums) : first;
+  return {from: first, to: Math.min(last, first + BULK_MAX - 1)};
+}
+function bulkRead(){
+  const from = parseInt(($('#bk_from') || {}).value), to = parseInt(($('#bk_to') || {}).value);
+  if (!(from >= 1) || !(to >= 1)) return {err: 'Type the first and the last episode number.'};
+  if (to < from) return {err: '"To" must be the same as or bigger than "From".'};
+  const n = to - from + 1;
+  if (n > BULK_MAX) return {err: `Maximum ${BULK_MAX} episodes at once. You chose ${n}.`};
+  return {from, to, n};
+}
+function bulkHint(){
+  const h = $('#bk_hint'), r = bulkRead(); if (!h) return;
+  V.bulk = {from: ($('#bk_from') || {}).value, to: ($('#bk_to') || {}).value};
+  h.textContent = r.err ? r.err : `${r.n} episode${r.n === 1 ? '' : 's'} (${r.from} to ${r.to}) will be sent to your chat.`;
+  h.style.color = r.err ? 'var(--bad)' : '';
+  const b = $('#bk_go'); if (b) b.disabled = !!r.err;
+}
+function bulkPanel(){
+  if (!V.bulkOpen) return '';
+  const d = V.bulk || (V.bulk = bulkDefaults());
+  return `<div class="bulkbox"><div class="by">Get many episodes together (up to ${BULK_MAX}). The audio bot sends them one after another.</div>
+    <div class="two" style="margin:0"><label class="field"><span>From episode</span><input id="bk_from" type="number" min="1" inputmode="numeric" value="${esc(d.from)}"></label><label class="field"><span>To episode</span><input id="bk_to" type="number" min="1" inputmode="numeric" value="${esc(d.to)}"></label></div>
+    <div class="by" id="bk_hint"></div>
+    <button class="btn small" id="bk_go" type="button">&#127911; Send these episodes</button></div>`;
+}
+async function bulkSend(){
+  const r = bulkRead(); if (r.err) return toast(r.err);
+  return once('bulk', async () => {
+    try{
+      const d = await api(`/api/story/${encodeURIComponent(V.id)}?after=${r.from - 1}&limit=1${V.mode === 'topic' && V.topic ? '&topic=' + encodeURIComponent(V.topic) : ''}`);
+      const ep = d.eps && d.eps[0];
+      if (!ep) return toast(`Episode ${r.from} was not found.`);
+      await sendEpisode(ep, false, r.n);
+    }catch(e){ toast(errText(e), 5000); }
+  });
+}
+document.addEventListener('input', e => { if (e.target && (e.target.id === 'bk_from' || e.target.id === 'bk_to')) bulkHint(); });
+
 /* ---------- story page ---------- */
 const V = {id:null, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'idle', err:'', epState:'idle', topic:null, mode:'overview', pack:null, sel:null};
 const storyTag = s => ({id: s.id, title: s.title, cover: s.cover});
 async function openStory(id){
-  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null, mode:'overview', pack:null, det:null});
+  Object.assign(V, {id, story:null, access:null, eps:[], total:0, totalAll:0, page:1, q:'', filter:'all', resume:null, state:'loading', err:'', epState:'loading', topic:null, mode:'overview', pack:null, det:null, bulkOpen:false, bulk:null});
   renderStory(); openSheet('story'); $('#story').scrollTop = 0;
   await loadStoryPage(1);
 }
@@ -3093,11 +3137,12 @@ function renderEps(){
     <span>Page ${V.page} of ${pages}<br>${pgCount}</span><button class="btn ghost small" data-pg="next" ${V.page >= pages ? 'disabled' : ''} aria-label="Next page">Next</button></div>
     <div class="jump"><input id="epJump" type="number" min="1" max="${pages}" inputmode="numeric" placeholder="Go to page (1-${pages})" aria-label="Jump to page"><button class="btn ghost small" id="epGo">Go</button></div>` : '';
   const keep = document.activeElement && document.activeElement.id === 'epq';
-  const sendbar = `<div class="by" style="padding:0 16px 6px">Tap an episode and the audio bot opens and sends only that episode to you.</div><div class="chiprow" style="padding:0 16px 10px"><button class="chip" id="openChatBtn">Open chat</button></div>`;
+  const sendbar = `<div class="by" style="padding:0 16px 6px">Tap an episode and the audio bot opens and sends only that episode to you.</div><div class="chiprow" style="padding:0 16px 10px"><button class="chip" id="openChatBtn">Open chat</button><button class="chip${V.bulkOpen ? ' on' : ''}" id="bulkBtn" aria-expanded="${!!V.bulkOpen}">Bulk get (max ${BULK_MAX})</button></div>${bulkPanel()}`;
   box.innerHTML = sendbar + ctl + pager + body + (V.total > PAGE_SIZE ? pager.split('<div class="jump">')[0] : '');
   $('#epf').value = V.filter;
   if (keep){ const i = $('#epq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   box.dataset.page = V.page;
+  if (V.bulkOpen) bulkHint();
 }
 async function playFirst(from, demo){
   try{
@@ -4798,6 +4843,8 @@ document.addEventListener('click', async e => {
   if (c('#more')){ const d = $('#desc'); d.classList.toggle('clamp'); c('#more').textContent = d.classList.contains('clamp') ? tr('smore') : tr('sless'); return; }
   if (c('#startListen')) return once('start', () => playFirst(1, accOf(V.story) !== 'free' && !(V.access && (V.access.owned || V.access.admin))));
   if (c('#openChatBtn')) return openChat();
+  if (c('#bulkBtn')){ V.bulkOpen = !V.bulkOpen; if (V.bulkOpen && !V.bulk) V.bulk = bulkDefaults(); return renderEps(); }
+  if (c('#bk_go')) return bulkSend();
   if ((m = c('[data-sendn]'))){ store.set('ajsendn', m.dataset.sendn); return renderEps(); }
   if (c('#resume')) return playEpisode({id: V.resume.episode_id, no: V.resume.no, to: V.resume.to, title: V.resume.title}, storyTag(V.story), V.resume.pos);
   if ((m = c('[data-free]'))) return once('free', () => playFirst(parseInt(m.dataset.free) || 1));
