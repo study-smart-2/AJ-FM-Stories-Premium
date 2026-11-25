@@ -2812,7 +2812,7 @@ async function sendEpisode(ep, demo, count){
   if (ep.locked){ if (accOf(V.story) !== 'premium') return openVerify(V.id, V.topic || ''); return toast('Locked. Choose a plan to unlock it.'); }
   return once('send' + ep.id, async () => {
     try{
-      const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: count || SENDN(), ...(demo ? {demo: true} : {})})});
+      const r = await api('/api/deliver', {method: 'POST', retry: false, timeout: 60000, body: JSON.stringify({episode_id: ep.id, count: count || SENDN(), ...(count > 1 ? {bulk: true} : {}), ...(demo ? {demo: true} : {})})});
       toast('Opening the audio bot...', 2500);
       const url = `https://t.me/${r.bot || AUDIO_BOT_USERNAME || BOT_USERNAME}?start=d_${r.token}`;      // the bot gets /start and sends the episodes into the chat
       if (tg && tg.openTelegramLink){ tg.openTelegramLink(url); setTimeout(() => { try{ tg.close(); }catch(e){} }, 350); } else window.open(url, '_blank');
