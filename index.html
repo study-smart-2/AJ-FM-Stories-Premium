@@ -373,6 +373,15 @@ html.tt,html.tt *{transition:background-color .25s ease,color .25s ease,border-c
 .sp-spin{position:relative;z-index:1;width:28px;height:28px;color:var(--gold-2);border:2px solid rgba(var(--gold-rgb),.2);border-top-color:var(--gold-2);border-radius:50%;margin-top:4px}
 @media (prefers-reduced-motion:no-preference){.sp-spin{animation:spspin .8s linear infinite}@keyframes spspin{to{transform:rotate(360deg)}}@keyframes spglow{0%,100%{transform:scale(.96);opacity:.55}50%{transform:scale(1.04);opacity:1}}}
 @media (prefers-reduced-motion:reduce){.sp-card,#splash,#splash:before,#splash:after{transition:none;animation:none}}
+/* splash video intro (AJ walks in, pulls the board, welcomes) - sits on top of the normal splash; any problem and it just goes away */
+.sp-vid{position:absolute;inset:0;z-index:6;display:grid;place-items:center;overflow:hidden;background:var(--spv-bg,linear-gradient(#120a28,#3e2078));transition:opacity .35s ease}
+.sp-vid[hidden]{display:none}
+.sp-vid video{width:100%;height:100%;object-fit:contain;display:block;background:transparent}
+.sp-skip,.sp-snd{position:absolute;z-index:7;border:1px solid rgba(255,255,255,.35);background:rgba(20,12,40,.55);color:#fff;font:600 13px/1 system-ui,-apple-system,sans-serif;padding:9px 15px;border-radius:999px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer}
+.sp-skip{top:calc(env(safe-area-inset-top,0px) + 14px);right:14px}
+.sp-snd{left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
+.sp-snd[hidden]{display:none}
+html[data-theme=light] .sp-skip,html[data-theme=light] .sp-snd,html[data-theme=warm] .sp-skip,html[data-theme=warm] .sp-snd{color:#2b1a5e;background:rgba(255,255,255,.72);border-color:rgba(90,60,200,.35)}
 /* discover */
 .dsec{margin:0;padding:16px 16px 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-2);font-weight:700}
 .dcard{margin:0 16px 10px;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden;transition:border-color .25s}
@@ -932,6 +941,15 @@ html[data-theme=light] .plc.on::after,html[data-theme=warm] .plc.on::after{backg
 .cpcard .cphead{font-size:19px;line-height:1.25;font-weight:800;color:var(--text);margin:6px 0 2px;overflow-wrap:anywhere}
 .ocard .obody>b{display:block;font-size:20px;line-height:1.25;font-weight:800}
 /* admin story details */
+/* admin story page: swipe left/right to the next/previous story, position counter, story id chip */
+#sdet{touch-action:pan-y}
+.sdpage{will-change:transform}
+#sdet .sdtop .vtitle{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sdpos{margin-left:auto;display:flex;align-items:center;gap:4px;flex:none}
+.sdpos small{color:var(--muted);font:600 12.5px ui-monospace,SFMono-Regular,Menlo,monospace;min-width:46px;text-align:center}
+.sdpos .btn{padding:5px 11px;min-width:0;font-size:16px;line-height:1}
+.sdpos .btn[disabled]{opacity:.3}
+.idchip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;cursor:copy}
 .sdtop{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--ink);border-bottom:1px solid var(--line)}
 #sdet .pad{padding:12px 16px 0}
 #sdet .box{margin:0 0 14px}
@@ -1271,6 +1289,11 @@ html{overflow-x:hidden}body{padding-top:0;overflow-x:hidden;overflow-x:clip}    
 </head>
 <body>
 <div id="splash" role="status" aria-live="polite">
+  <div class="sp-vid" id="spVid" hidden>
+    <video id="spVideo" playsinline webkit-playsinline preload="auto" disablepictureinpicture></video>
+    <button class="sp-skip" id="spSkip" type="button" data-i="spskip">Skip</button>
+    <button class="sp-snd" id="spSnd" type="button" data-i="spsound" hidden>Tap for sound</button>
+  </div>
   <div class="sp-deck" id="spDeck"><div class="sp-card p0"><div class="sp-emo">&#128081;</div></div></div>
   <div class="sp-txt"><h1 id="spTitle">Welcome to AJ's FM Stories</h1><p id="spSub">Free audio stories inside Telegram, delivered straight to your chat.</p></div>
   <div class="sp-spin" aria-hidden="true"></div>
@@ -1548,6 +1571,9 @@ Object.assign(TR.hi, {cmbtitle:'स्टोरी कॉम्बिनेश�
 Object.assign(TR.hing, {cmbtitle:'Story Combinations', cmbbest:'BEST DEAL', cmball:'Sabhi', cmbn:'{n} Kahaniyan', cmbcombo:'{n} kahaniyon ka combo', cmbsave:'{a} bachao', cmbown:'Apna combo banao', cmbmore:'Zyada lo, zyada bachao:', cmbrule:'{m}+ = {t}',
   cmbpick:'Apna combo deal dekhne ke liye 2 se 5 kahaniyan chuno', cmbcheck:'Combo check karo', cmbbuy:'Combo kharido', cmbtotal:'Total', cmbdisc:'Combo discount', cmbnodisc:'abhi nahi', cmbpay:'Aap denge', cmbadd:'{t} pane ke liye {a} aur jodo', cmbsel:'{n} chuni',
   cmbmax:'Aap zyada se zyada 5 kahaniyan chun sakte ho', cmbmin:'Kam se kam 2 kahaniyan chuno', cmbchecking:'Check ho raha hai...', cmbfull:'Sirf full story plans', cmbcredit:'upgrade credit', cmbnosize:'Is size ke combo abhi nahi hain.', cmbnolist:'Koi kahani nahi mili.'});
+TR.en.spskip = 'Skip'; TR.en.spsound = '\uD83D\uDD0A Tap for sound';
+TR.hi.spskip = 'छोड़ें'; TR.hi.spsound = '\uD83D\uDD0A आवाज़ के लिए टैप करें';
+TR.hing.spskip = 'Skip karo'; TR.hing.spsound = '\uD83D\uDD0A Awaaz ke liye tap karo';
 const LANGS = ['en', 'hi', 'hing'], LANG_LABEL = {en:'EN', hi:'हि', hing:'Hi'}, LANG_NAME = {en:'English', hi:'हिन्दी', hing:'Hinglish'};
 let LANG = store.get('ajl', 'en'); if (!TR[LANG]) LANG = 'en';
 let THEME = store.get('ajt', 'light'); if (!{dark:1, light:1, warm:1}[THEME]) THEME = 'light';      // Light is the default; Light and Warm stay available
@@ -3672,7 +3698,7 @@ function paintAdminStories(){
     return `<div class="mrow scard" data-sopen="${esc(s.id)}" role="button" tabindex="0" aria-label="Open details of ${esc(s.title)}" style="cursor:pointer">
       <div style="display:flex;gap:12px;align-items:flex-start">${isImg(s.cover) ? `<img src="${esc(s.cover)}" alt="" loading="lazy" style="width:76px;height:76px;object-fit:cover;border-radius:12px;flex:none;background:var(--panel)">` : `<div style="width:76px;height:76px;border-radius:12px;flex:none;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:26px">${esc(s.cover || '?')}</div>`}
         <div style="min-width:0;flex:1"><h4 style="margin:0 0 4px">${esc(s.title)}</h4>
-          <div>${s.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${s.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${esc(s.status || 'Ongoing')}</span> <span class="tag">${s.episodes} eps</span></div>
+          <div><span class="tag idchip" data-cpid="${esc(s.id)}" title="Tap to copy the story ID">ID ${esc(s.id)}</span> ${s.published ? '<span class="tag live">Published</span>' : '<span class="tag warn">Hidden</span>'}${s.featured ? ' <span class="tag gold">Featured</span>' : ''} <span class="tag">${esc(s.status || 'Ongoing')}</span> <span class="tag">${s.episodes} eps</span></div>
           ${gl ? `<div class="by" style="color:var(--warn);margin-top:4px">&#9888; Missing episodes: ${esc(gl)}</div>` : ''}</div></div>
       <div style="margin:10px 0 0">${tp.map(t => `<div class="by" style="margin:6px 0 0">${t.name ? `<b>${esc(t.name)}</b><br>` : ''}${secLine(t.s)}</div>`).join('')}</div>
       <div class="actions" style="padding:10px 0 0">${storyBtns(s)}</div></div>`; }).join('') || '<div class="empty">No stories in this tab.</div>'; axIn(box);
@@ -3681,11 +3707,19 @@ async function adminComplete(id, title){
   if (!confirm(`Mark "${title}" as Completed? It stops from the daily update reports and shows in the Completed row.`)) return;
   await once('cmp' + id, async () => { try{ await api('/api/admin/story/complete', {method: 'POST', retry: false, body: JSON.stringify({id})}); toast('Marked as completed'); }catch(e){ toast(adminErr(e)); } loadAdmin(); load(); });
 }
-async function openStoryDetails(id){                         // tap on a story card: every detail on one screen
+const SD = {ids: [], i: -1, tok: 0, busy: false, swiped: false};
+const adminVisible = () => A.list.filter(s => inSub(s, A.sub)).sort(SORTS[A.sort] || SORTS.az);       // the same stories, in the same order as the cards
+async function openStoryDetails(id, dir){                    // tap on a story card: every detail on one screen; swipe sideways = next / previous story
   const s0 = A.list.find(x => String(x.id) === String(id)); if (!s0) return;
-  $('#sdet').innerHTML = `<div class="sdtop"><button class="btn ghost small" id="sdetBack" aria-label="Back">&larr; Back</button><h2 class="sec vtitle">${esc(s0.title)}</h2></div><div id="sdetBody" class="pad"><div class="sk hero"></div></div>`;
+  SD.ids = adminVisible().map(x => String(x.id)); SD.i = SD.ids.indexOf(String(id)); const tok = ++SD.tok, n = SD.ids.length;
+  const pos = SD.i >= 0 && n > 1 ? `<span class="sdpos"><button class="btn ghost small" id="sdPrev" aria-label="Previous story"${SD.i === 0 ? ' disabled' : ''}>&lsaquo;</button><small>${SD.i + 1} / ${n}</small><button class="btn ghost small" id="sdNext" aria-label="Next story"${SD.i === n - 1 ? ' disabled' : ''}>&rsaquo;</button></span>` : '';
+  const sd = $('#sdet');
+  sd.innerHTML = `<div id="sdPage" class="sdpage"><div class="sdtop"><button class="btn ghost small" id="sdetBack" aria-label="Back">&larr; Back</button><h2 class="sec vtitle">${esc(s0.title)}</h2>${pos}</div><div id="sdetBody" class="pad"><div class="sk hero"></div></div></div>`;
+  sd.scrollTop = 0;
   openSheet('sdet');
-  let f = s0; try{ f = {...s0, ...(await api('/api/admin/story/' + encodeURIComponent(id))).story, adm: s0.adm}; }catch(e){ if (!$('#sdetBody')) return; $('#sdetBody').innerHTML = retryBox(adminErr(e), 'sdetRetry'); $('#sdetRetry').onclick = () => openStoryDetails(id); return; }
+  if (dir){ try{ $('#sdPage').animate([{transform: `translateX(${dir * 100}%)`}, {transform: 'translateX(0)'}], {duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)'}); }catch(e){} }      // the new page slides in from the side
+  let f = s0; try{ f = {...s0, ...(await api('/api/admin/story/' + encodeURIComponent(id))).story, adm: s0.adm}; }catch(e){ if (tok !== SD.tok || !$('#sdetBody')) return; $('#sdetBody').innerHTML = retryBox(adminErr(e), 'sdetRetry'); $('#sdetRetry').onclick = () => openStoryDetails(id); return; }
+  if (tok !== SD.tok) return;                                // the admin has already swiped on to another story
   const body = $('#sdetBody'); if (!body) return;
   const opts = f.options || [], tp = (f.adm || {}).topics || [];
   const secName = {1: 'Full story / topic plans', 2: 'Episode packs', 3: 'Rentals'};
@@ -3703,6 +3737,47 @@ async function openStoryDetails(id){                         // tap on a story c
     <div class="box"><b>Plans</b>${tp.map(t => `<div>${t.name ? `<div style="margin:6px 0 2px"><b>${esc(t.name)}</b></div>` : ''}${planRows(t.id)}</div>`).join('') || '<div class="by">No plans yet.</div>'}</div>
     <div class="sdacts">${storyBtns(f)}</div>`;
 }
+
+function sdGo(dir){                                          // dir +1 = next story, -1 = previous
+  const page = $('#sdPage'); if (SD.busy || !page) return;
+  const j = SD.i + dir;
+  if (j < 0 || j >= SD.ids.length){ try{ page.animate([{transform: 'translateX(0)'}, {transform: `translateX(${-dir * 26}px)`}, {transform: 'translateX(0)'}], {duration: 240, easing: 'ease-out'}); }catch(e){} return; }     // no story that way: a small bounce
+  SD.busy = true; const from = getComputedStyle(page).transform; let a;
+  try{ a = page.animate([{transform: from === 'none' ? 'translateX(0)' : from}, {transform: `translateX(${-dir * 100}%)`}], {duration: 190, easing: 'ease-in', fill: 'forwards'}); }catch(e){}
+  page.style.transform = '';
+  const go = () => { SD.busy = false; openStoryDetails(SD.ids[j], dir); };
+  if (a) a.onfinish = go; else go();
+}
+(function sdSwipe(){
+  let d = null; const SEL = '#sdet';
+  document.addEventListener('pointerdown', e => {
+    const el = e.target.closest && e.target.closest(SEL); if (!el || SD.busy || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('input,textarea,select')) return;
+    d = {x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId, lock: 0, dx: 0, el};
+  }, true);
+  document.addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.lock){
+      if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.4){ d.lock = 1; try{ d.el.setPointerCapture(e.pointerId); }catch(_){} }
+      else if (Math.abs(dy) > 12){ d = null; return; } else return;                  // up/down: the page scrolls as usual
+    }
+    d.dx = dx; const page = $('#sdPage'); if (!page) return;
+    const j = SD.i + (dx < 0 ? 1 : -1), edge = j < 0 || j >= SD.ids.length;
+    page.style.transform = `translateX(${edge ? dx * 0.25 : dx}px)`;                // the page follows the finger (stiff at the first / last story)
+  }, true);
+  const end = e => {
+    if (!d || e.pointerId !== d.id) return; const q = d; d = null; if (!q.lock) return;
+    SD.swiped = true; setTimeout(() => { SD.swiped = false; }, 80);
+    const page = $('#sdPage'); if (!page) return;
+    const w = q.el.clientWidth || 360, v = Math.abs(q.dx) / Math.max(1, Date.now() - q.t), dir = q.dx < 0 ? 1 : -1, j = SD.i + dir;
+    const far = Math.abs(q.dx) > Math.min(110, w * 0.28) || (v > 0.5 && Math.abs(q.dx) > 40);
+    if (e.type !== 'pointercancel' && far && j >= 0 && j < SD.ids.length) return sdGo(dir);
+    try{ page.animate([{transform: `translateX(${q.dx}px)`}, {transform: 'translateX(0)'}], {duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)'}); }catch(_){}
+    page.style.transform = '';
+  };
+  document.addEventListener('pointerup', end, true); document.addEventListener('pointercancel', end, true);
+  document.addEventListener('click', e => { if (SD.swiped && e.target.closest && e.target.closest(SEL)){ e.stopPropagation(); e.preventDefault(); } }, true);   // a swipe is not a tap on a button
+})();
 
 /* ===================== Free tier: ad verification (Mini App steps) ===================== */
 const VF = {story: '', st: null, link: null, wait: 0, timer: null, done: {c: false, p: false}};
@@ -5006,6 +5081,9 @@ document.addEventListener('click', async e => {
   if ((m = c('[data-apub]'))) return adminPublish(m.dataset.apub, +m.dataset.to);
   if ((m = c('[data-acomplete]'))) return adminComplete(m.dataset.acomplete, m.dataset.title);
   if (c('#sdetBack')){ closeSheet('sdet'); return true; }
+  if (c('#sdPrev')) return sdGo(-1);
+  if (c('#sdNext')) return sdGo(1);
+  if ((m = c('[data-cpid]'))){ try{ navigator.clipboard.writeText(m.dataset.cpid).then(() => toast('Story ID copied: ' + m.dataset.cpid), () => toast('ID: ' + m.dataset.cpid)); }catch(e){ toast('ID: ' + m.dataset.cpid); } return true; }
   if ((m = c('[data-sopen]')) && !c('button')) return openStoryDetails(m.dataset.sopen);
   if ((m = c('[data-adel]'))) return adminDelete(m.dataset.adel, m.dataset.title);
   if ((m = c('[data-oact]'))) return orderAction(+m.dataset.oid, m.dataset.oact);
@@ -5113,6 +5191,48 @@ function splashInit(){
   const t0 = Date.now();
   let idx = 0, cards = [], homeDone = false, closed = false;
   $('#spTitle').textContent = tr('sptitle'); $('#spSub').textContent = tr('spsub');
+  // ---- video intro: plays first, the normal splash (logo + covers) is the fallback under it ----
+  let vidBusy = false;
+  const vbox = $('#spVid'), vid = $('#spVideo'), skipB = $('#spSkip'), sndB = $('#spSnd');
+  if (skipB) skipB.textContent = tr('spskip'); if (sndB) sndB.textContent = tr('spsound');
+  const dropVideo = () => { vidBusy = false; try{ if (vid){ vid.pause(); vid.removeAttribute('src'); vid.load(); } }catch(e){} if (vbox) vbox.remove(); };
+  const finishVideo = () => { if (!vidBusy) return; vidBusy = false; try{ vid.pause(); }catch(e){} if (vbox){ vbox.style.opacity = '0'; setTimeout(() => vbox.remove(), 380); } };
+  (function startVideo(){
+    if (!vbox || !vid) return;
+    let recent = false, saver = false, still = false;
+    try{ recent = Date.now() - Number(localStorage.getItem('ajsp') || 0) < 30 * 60 * 1000; }catch(e){}     // opened again within 30 minutes: no intro
+    try{ saver = !!(navigator.connection && navigator.connection.saveData); }catch(e){}
+    try{ still = window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+    if (recent || saver || still){ dropVideo(); return; }
+    const th = ['dark', 'light', 'warm'].includes(document.documentElement.dataset.theme) ? document.documentElement.dataset.theme : 'light';
+    const url = 'splash_' + th + '.mp4';
+    vbox.style.setProperty('--spv-bg', {dark: 'linear-gradient(#120a28,#3e2078)', light: 'linear-gradient(#faf7ff,#e4daff)', warm: 'linear-gradient(#fff4e8,#ffd8be)'}[th]);
+    vidBusy = true;
+    let shown = false, stallT = 0;
+    const show = () => {
+      if (shown || closed || !vidBusy) return; shown = true; vbox.hidden = false;
+      try{ localStorage.setItem('ajsp', String(Date.now())); }catch(e){}
+      vid.muted = false; vid.volume = 1;                                   // try with sound first; if the phone refuses, play muted and offer "tap for sound"
+      const p = vid.play();
+      if (p && p.catch) p.catch(() => { vid.muted = true; if (sndB) sndB.hidden = false; const q = vid.play(); if (q && q.catch) q.catch(dropVideo); });
+    };
+    vid.addEventListener('canplay', show);                                 // enough data to start without stuttering
+    vid.addEventListener('ended', finishVideo);
+    vid.addEventListener('error', dropVideo);
+    vid.addEventListener('waiting', () => { clearTimeout(stallT); stallT = setTimeout(() => { if (vidBusy && vid.readyState < 3) finishVideo(); }, 3500); });   // the net stalls: go on to the app
+    vid.addEventListener('playing', () => clearTimeout(stallT));
+    if (skipB) skipB.onclick = finishVideo;
+    if (sndB) sndB.onclick = () => { vid.muted = false; vid.volume = 1; sndB.hidden = true; const q = vid.play(); if (q && q.catch) q.catch(() => {}); };
+    vbox.addEventListener('click', e => { if (e.target === vid && vid.muted && sndB && !sndB.hidden) sndB.click(); });
+    setTimeout(() => { if (!shown) dropVideo(); }, 3000);                  // slow network: nobody waits, the normal splash goes on
+    // a saved copy (Cache Storage) starts at once next time, even with a weak connection
+    const CK = 'ajfm-splash-v1', use = u => { vid.src = u; vid.load(); };
+    vid.addEventListener('canplaythrough', () => { try{ if ('caches' in window && !vid.dataset.cached) caches.open(CK).then(c => c.match(url).then(r => { if (!r) fetch(url).then(res => { if (res.ok) c.put(url, res); }).catch(() => {}); })).catch(() => {}); }catch(e){} }, {once: true});
+    try{
+      if ('caches' in window) caches.open(CK).then(c => c.match(url)).then(r => r ? r.blob().then(b => { vid.dataset.cached = '1'; use(URL.createObjectURL(b)); }) : use(url)).catch(() => use(url));
+      else use(url);
+    }catch(e){ use(url); }
+  })();
   const ints = [];
   const close = () => { if (closed) return; closed = true; ints.forEach(clearInterval); window.splashDone = null; el.classList.add('out'); setTimeout(() => el.remove(), 500); };
   window.splashDone = () => { homeDone = true; };
@@ -5121,7 +5241,7 @@ function splashInit(){
     const e = Date.now() - t0;
     if (!homeDone && S.tab !== 'home' && e > 1200) homeDone = true;
     if (e > 9000) homeDone = true;                                       // never trap the user on the splash
-    if (homeDone && e >= 1800) close();
+    if (homeDone && e >= 1800 && !vidBusy) close();                    // the intro video is never cut short by the app being ready
   }, 100));
   ints.push(setInterval(() => { if (cards.length > 1){ idx = (idx + 1) % cards.length; layout(); } }, 2200));
   api('/api/catalog?limit=40&sort=popular', {timeout: 8000, retry: false}).then(d => {
